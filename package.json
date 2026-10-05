@@ -1,0 +1,11 @@
+{
+  "name": "gakuya-series",
+  "private": true,
+  "description": "楽屋シリーズ（bamiriunei-arch.github.io）の自動テスト",
+  "scripts": {
+    "test": "node test-all.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}

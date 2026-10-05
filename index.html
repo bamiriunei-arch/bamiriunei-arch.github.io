@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>楽屋シリーズ</title>
+<!-- いちばん上の場所（https://bamiriunei-arch.github.io/）を開いたら、入口の楽屋に移る -->
+<meta http-equiv="refresh" content="0; url=gakuya/">
+<link rel="canonical" href="gakuya/">
+<style>
+  :root{color-scheme:light dark; --bg:#ECEFEC; --ink:#1B211F; --muted:#5C6662; --tape:#2B2F36}
+  @media (prefers-color-scheme: dark){:root{--bg:#111315; --ink:#E7EBE9; --muted:#9AA39F; --tape:#E7EBE9}}
+  body{margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif; padding:16px}
+  a{color:inherit; font-weight:700}
+  p{margin:0; text-align:center; line-height:1.8}
+  small{color:var(--muted)}
+</style>
+</head>
+<body>
+<p>楽屋シリーズ<br><a href="gakuya/">楽屋（入口）を開く</a><br><small>自動で移らないときは、上を押してください</small></p>
+<script>location.replace('gakuya/' + location.hash);</script>
+</body>
+</html>
