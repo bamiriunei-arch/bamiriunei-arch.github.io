@@ -1,0 +1,31 @@
+{
+  "name": "楽器決め・編成計画",
+  "short_name": "楽器決め",
+  "description": "新入部員の楽器の割り振り案を、希望と定員から理由つきで出す。今の学年構成から、来年・再来年のパートの人数を予測する",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEFEC",
+  "theme_color": "#ECEFEC",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

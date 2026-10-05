@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="演奏会やコンクールの楽器運搬。運ぶものの一覧、車の割り当て、積む順、行き帰りのチェックをスマホで">
+<meta name="theme-color" content="#ECEFEC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="搬入出">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316191C'/%3E%3Crect x='6' y='13' width='20' height='7' rx='1' fill='%23178A86' transform='rotate(-10 16 16)'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>搬入出リスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* ==== 楽屋シリーズ 共通部品（見た目） ここから ==== */
+/* 全ツールで同じ内容です。変えるときは全ツールそろえて変えてください。
+   レイアウト：舞台床のような落ち着いた灰緑の作業面に、ツールごとの色のバミリテープを1色だけ使う */
+:root{
+  --bg:#ECEFEC; --surface:#FFFFFF; --surface-2:#F4F6F4; --surface-3:#E6EAE7;
+  --ink:#1B211F; --muted:#5C6662; --line:#D4D9D6; --line-strong:#B5BDB8;
+  --ok:#2B7A4B; --ok-soft:#E2F3E8; --warn:#9A5B00; --warn-soft:#FFF1D0; --bad:#B3261E; --bad-soft:#FBE3E0;
+  --focus:#2F6FD0; --shadow:0 1px 2px rgba(18,24,22,.07),0 8px 22px rgba(18,24,22,.09);
+  --tape:#D73A44; --tape-ink:#FFFFFF;
+  --tape-soft:color-mix(in srgb,var(--tape) 13%,var(--surface));
+  --tape-line:color-mix(in srgb,var(--tape) 45%,var(--line));
+  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-rule:#9A9A9A; --paper-mute:#5E5E5E; --paper-head:#EFEFEF; --paper-mark:#FFE58A;
+  --f-ui:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --f-doc:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+    --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+    --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+    --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+  --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+  --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+  --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-ui); font-size:14px; line-height:1.6; -webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+a{color:inherit}
+h1,h2,h3,h4{text-wrap:balance; margin:0}
+.mono,.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+/* ---- 骨組み ---- */
+.gky-app{min-height:100%; display:flex; flex-direction:column}
+.gky-top{position:sticky; top:env(safe-area-inset-top,0px); z-index:30; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
+  padding-block:10px; padding-inline:16px; background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-brand{display:flex; align-items:center; gap:10px; min-width:0; text-decoration:none}
+.gky-tape{flex:none; display:inline-block; width:26px; height:10px; background:var(--tape); transform:rotate(-8deg); border-radius:1px;
+  clip-path:polygon(2px 0,100% 0,calc(100% - 2px) 50%,100% 100%,0 100%,2px 50%,0 0)}
+.gky-brand b{font-size:19px; font-weight:700; letter-spacing:.06em; white-space:nowrap}
+.gky-brand small{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gky-top-actions{margin-left:auto; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+@media (max-width:600px){ .gky-top-actions{width:100%; margin-left:0} .gky-top-actions>select{flex:1 1 150px; min-width:0} }
+.gky-home{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px 3px 8px; white-space:nowrap}
+.gky-home:hover{color:var(--ink); border-color:var(--line-strong)}
+.gky-home i{display:inline-block; width:12px; height:5px; background:var(--muted); transform:rotate(-8deg)}
+.gky-tabs{position:sticky; top:calc(env(safe-area-inset-top,0px) + var(--top-h,57px)); z-index:20; display:flex; gap:2px; padding-inline:12px; background:var(--surface); border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+.gky-tabs::-webkit-scrollbar{display:none}
+.gky-tabs button{position:relative; border:0; background:transparent; padding:11px 12px 10px; cursor:pointer; white-space:nowrap; color:var(--muted); font-weight:500; font-size:14px}
+.gky-tabs button[aria-selected="true"]{color:var(--ink); font-weight:700}
+.gky-tabs button[aria-selected="true"]::after{content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:3px; background:var(--tape); border-radius:2px 2px 0 0}
+.gky-tabs .count{display:inline-grid; place-items:center; min-width:19px; height:19px; padding:0 5px; margin-left:5px; border-radius:10px; background:var(--warn-soft); color:var(--warn); font-size:11px; font-weight:700; font-family:var(--f-mono)}
+.gky-tabs .count:empty{display:none}
+.gky-tabs .count.ok{background:var(--ok-soft); color:var(--ok)}
+.gky-main{flex:1; width:100%; max-width:1180px; margin:0 auto; padding-block:16px 64px; padding-inline:16px}
+.gky-main.wide{max-width:none}
+.gky-cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px}
+@media (max-width:860px){.gky-cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- 部品 ---- */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 12px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; white-space:nowrap; text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--tape); border-color:var(--tape); color:var(--tape-ink); font-weight:700}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent; background:transparent}
+.btn.ghost:hover{background:var(--surface-2); border-color:var(--line)}
+.btn.danger{color:var(--bad)}
+.btn.armed{background:var(--bad); border-color:var(--bad); color:#fff}
+.btn.sm{min-height:28px; padding:0 9px; font-size:12px}
+.btn.lg{min-height:44px; padding:0 16px; font-size:15px}
+.btn:disabled{opacity:.45; cursor:default}
+.btn svg,.ibtn svg{width:16px; height:16px; flex:none}
+.ibtn{width:32px; height:32px; display:inline-grid; place-items:center; border-radius:6px; cursor:pointer; border:1px solid transparent; background:transparent; color:var(--muted); padding:0}
+.ibtn:hover{background:var(--surface-2); border-color:var(--line); color:var(--ink)}
+.ibtn.del:hover{color:var(--bad)}
+.btnrow{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+input[type="text"],input[type="search"],input[type="number"],input[type="date"],input[type="time"],input[type="url"],input[type="tel"],select,textarea{
+  border:1px solid var(--line-strong); border-radius:6px; background:var(--surface); padding:6px 9px; min-height:34px; width:100%; min-width:0}
+select{width:auto; max-width:100%}
+textarea{resize:vertical; line-height:1.65; min-height:64px}
+input[type="number"]{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+input::placeholder,textarea::placeholder{color:color-mix(in srgb,var(--muted) 72%,transparent)}
+input.bad,select.bad{border-color:var(--bad); background:var(--bad-soft)}
+label.chk{display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-size:13px}
+label.chk input{width:16px; height:16px; accent-color:var(--tape); flex:none}
+.fld{display:flex; flex-direction:column; gap:3px; min-width:0}
+.fld>span{font-size:12px; color:var(--muted); font-weight:500}
+.fld .hint{font-size:11.5px; color:var(--muted)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px 12px}
+.grid .wide{grid-column:1/-1}
+
+.sec{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px 16px; margin-bottom:14px; min-width:0}
+.sec>h2,.sec>h3{font-size:15px; font-weight:700; margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px}
+.sec>h2 small,.sec>h3 small{font-weight:400; color:var(--muted); font-size:12px}
+.sec .note{font-size:12px; color:var(--muted); margin:8px 0 0}
+.lead{font-size:13px; color:var(--muted); margin:0 0 12px; max-width:68ch}
+.intro{display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:14px; border-radius:var(--r); background:var(--surface); border:1px dashed var(--line-strong); font-size:13px}
+.intro p{margin:0; flex:1; min-width:0}
+.sample-flag{display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:4px; background:var(--warn-soft); color:var(--warn); font-size:12px; font-weight:700; white-space:nowrap}
+
+/* テープ形のラベル */
+.tape{--tc:var(--tape); --ti:var(--tape-ink); display:inline-flex; align-items:center; height:22px; padding:0 10px; flex:none;
+  background:var(--tc); color:var(--ti); font-size:12px; font-weight:700; letter-spacing:.06em; line-height:1; white-space:nowrap;
+  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 22%,calc(100% - 2px) 45%,100% 70%,calc(100% - 3px) 100%,3px 100%,0 78%,2px 52%,0 26%)}
+.chip{display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; font-size:12px; background:var(--surface-2); color:var(--muted); border:1px solid var(--line); white-space:nowrap}
+.chip.ok{background:var(--ok-soft); color:var(--ok); border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+.chip.warn{background:var(--warn-soft); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 35%,var(--line))}
+.chip.bad{background:var(--bad-soft); color:var(--bad); border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
+.chip.tp{background:var(--tape-soft); color:var(--ink); border-color:var(--tape-line)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--tape); color:var(--tape-ink); border-color:var(--tape)}
+.dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--line-strong); flex:none}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+
+/* 集計の小さな札 */
+.sums{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+.sum{display:inline-flex; align-items:baseline; gap:6px; padding:6px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:12px; color:var(--muted)}
+.sum b{font-family:var(--f-mono); font-size:15px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.sum.warn{border-color:color-mix(in srgb,var(--warn) 55%,var(--line)); background:var(--warn-soft)} .sum.warn b{color:var(--warn)}
+.sum.bad{border-color:color-mix(in srgb,var(--bad) 55%,var(--line)); background:var(--bad-soft)} .sum.bad b{color:var(--bad)}
+.sum.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line)); background:var(--ok-soft)} .sum.ok b{color:var(--ok)}
+
+/* 表 */
+.tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
+table.tbl{border-collapse:collapse; width:100%; font-size:13px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:middle}
+.tbl thead th{position:sticky; top:0; z-index:1; background:var(--surface-2); font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl td.num,.tbl th.num{text-align:right; font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.tbl tr.sel td{background:var(--tape-soft)}
+.tbl input,.tbl select{min-height:30px; padding:3px 6px}
+
+/* 一覧 */
+.list{display:flex; flex-direction:column; gap:8px}
+.item{display:flex; align-items:center; gap:10px; padding:9px 10px 9px 12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); min-width:0}
+.item.on{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape)}
+.item .main{flex:1; min-width:0}
+.item .t1{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.item .t2{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+button.item{width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit}
+button.item:hover{border-color:var(--line-strong)}
+.empty{padding:28px 16px; text-align:center; color:var(--muted); font-size:13px; border:1px dashed var(--line-strong); border-radius:var(--r); background:var(--surface)}
+.empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px}
+
+/* 確認の一覧 */
+.issues{display:flex; flex-direction:column; gap:6px}
+.issue{display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:13px}
+.issue .dot{margin-top:7px}
+.issue.bad{border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.issue.warn{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+.issue .main{flex:1; min-width:0}
+.issue .sub{font-size:12px; color:var(--muted)}
+
+/* シート（重ねて出す画面） */
+.gky-veil{position:fixed; inset:0; z-index:80; background:rgba(10,14,12,.45); display:flex; align-items:flex-end; justify-content:center; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px)); padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.gky-veil{align-items:center}}
+.gky-sheet{width:min(640px,100%); max-height:100%; display:flex; flex-direction:column; background:var(--surface); border-radius:12px; box-shadow:var(--shadow); border:1px solid var(--line)}
+.gky-sheet.wide{width:min(980px,100%)}
+.gky-sheet>header{display:flex; align-items:center; gap:10px; padding:12px 12px 10px 16px; border-bottom:1px solid var(--line)}
+.gky-sheet>header h2{flex:1; font-size:16px}
+.gky-sheet>.body{padding:14px 16px; overflow:auto; min-height:0}
+.gky-sheet>footer{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; padding:10px 16px 14px; border-top:1px solid var(--line)}
+.gky-sheet>footer .left{margin-right:auto}
+
+.gky-toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); z-index:100; max-width:min(560px,calc(100% - 32px));
+  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:var(--ink); color:var(--bg); font-size:13px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s}
+.gky-toast.on{opacity:1; transform:translateX(-50%); pointer-events:auto}
+.gky-toast button{border:0; background:transparent; color:inherit; font-weight:700; text-decoration:underline; cursor:pointer; padding:0}
+@media (prefers-reduced-motion:reduce){.gky-toast{transition:none}}
+
+/* 印刷・PDFのプレビュー */
+.gky-pv{position:fixed; inset:0; z-index:90; display:flex; flex-direction:column; background:var(--surface-3)}
+.gky-pv>header{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-block:10px; padding-inline:16px; padding-top:calc(10px + env(safe-area-inset-top,0px)); background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-pv>header h2{font-size:15px; flex:1; min-width:10em}
+.gky-pv .stage{flex:1; overflow:auto; padding:18px 16px 60px}
+.gky-pv .scaler{transform-origin:top left; display:flex; flex-direction:column; gap:18px}
+.gky-pv .msg{font-size:12px; color:var(--muted)}
+
+/* 紙（印刷物）はテーマに関係なく白い紙に黒い字 */
+.gky-page{position:relative; width:794px; height:1123px; background:var(--paper); color:var(--paper-ink); box-shadow:0 2px 10px rgba(0,0,0,.18);
+  font-family:var(--f-doc); font-size:10pt; line-height:1.5; display:flex; flex-direction:column; padding:42px 44px 30px; overflow:hidden}
+.gky-page.landscape{width:1123px; height:794px}
+.gky-page .pg-head{display:flex; align-items:flex-end; gap:12px; border-bottom:1.5px solid var(--paper-line); padding-bottom:6px; margin-bottom:10px}
+.gky-page .pg-title{font-size:15pt; font-weight:700; letter-spacing:.04em}
+.gky-page .pg-sub{font-size:9.5pt; color:var(--paper-mute); flex:1; text-align:right}
+.gky-page .pg-body{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:8px}
+.gky-page .pg-foot{display:flex; justify-content:space-between; font-size:8pt; color:var(--paper-mute); margin-top:8px}
+.gky-page h3{font-size:11.5pt; margin:4px 0 0; padding-left:7px; border-left:3px solid var(--paper-line)}
+.gky-page h4{font-size:10pt; margin:2px 0 0}
+.gky-page p{margin:0}
+.gky-page .muted{color:var(--paper-mute)}
+.gky-page table{border-collapse:collapse; width:100%; font-size:9pt; table-layout:fixed}
+.gky-page th,.gky-page td{border:0.75px solid var(--paper-line); padding:3px 5px; vertical-align:top; overflow-wrap:anywhere}
+.gky-page th{background:var(--paper-head); font-weight:700; text-align:left}
+.gky-page td.num,.gky-page th.num{text-align:right; font-variant-numeric:tabular-nums}
+.gky-page td.c,.gky-page th.c{text-align:center}
+.gky-page .mark{background:var(--paper-mark)}
+.gky-page .box{border:0.75px solid var(--paper-line); padding:6px 8px}
+#gky-print-root{display:none}
+@media print{
+  body.gky-printing>*:not(#gky-print-root){display:none!important}
+  body.gky-printing{background:#fff!important}
+  body.gky-printing #gky-print-root{display:block}
+  #gky-print-root .gky-page{box-shadow:none; margin:0; break-after:page; page-break-after:always}
+  #gky-print-root .gky-page:last-child{break-after:auto; page-break-after:auto}
+}
+/* ==== 楽屋シリーズ 共通部品（見た目） ここまで ==== */
+
+/* ==== 搬入出リストだけの見た目 ==== */
+/* レイアウト：搬入口で片手で使えるように、チェックは大きな行。車ごとに荷台の順番どおりに並べる */
+:root{ --tape:#178A86; --tape-ink:#FFFFFF; }
+.phases{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-bottom:10px}
+@media (max-width:560px){ .phases{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.phases button{display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 10px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); cursor:pointer; text-align:left; min-width:0}
+.phases button[aria-pressed="true"]{background:var(--tape); color:var(--tape-ink); border-color:var(--tape)}
+.phases button b{font-size:13px}
+.phases button span{font-size:11.5px; opacity:.85; font-family:var(--f-mono)}
+.prog{height:10px; border-radius:5px; background:var(--surface-3); overflow:hidden; margin:4px 0 12px}
+.prog i{display:block; height:100%; background:var(--tape); transition:width .2s}
+.chk-list{display:flex; flex-direction:column; gap:6px}
+.crow{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px; align-items:center; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px; cursor:pointer; user-select:none; -webkit-user-select:none; min-height:56px}
+.crow .box{width:30px; height:30px; border-radius:7px; border:2px solid var(--line-strong); display:grid; place-items:center; flex:none}
+.crow.on{background:color-mix(in srgb,var(--ok) 10%,var(--surface)); border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}
+.crow.on .box{background:var(--ok); border-color:var(--ok)}
+.crow.on .box::after{content:""; width:12px; height:7px; border-left:3px solid #fff; border-bottom:3px solid #fff; transform:rotate(-45deg) translate(1px,-2px)}
+.crow .t1{font-weight:700; font-size:15px}
+.crow .t2{font-size:12px; color:var(--muted)}
+.crow .qty{font-family:var(--f-mono); font-weight:600; font-size:15px}
+.vh{display:flex; align-items:center; gap:8px; margin:14px 0 6px; font-weight:700}
+.vh:first-child{margin-top:0}
+.ed td input,.ed td select{min-height:30px}
+.ed td input[type=number]{width:4.2em}
+.order .item{padding:6px 8px 6px 10px}
+.order .n{font-family:var(--f-mono); color:var(--muted); width:2em; text-align:right; flex:none}
+.presets{display:flex; flex-direction:column; gap:12px}
+.presets h4{font-size:12px; color:var(--muted); margin:0 0 4px}
+.presets .row{display:flex; flex-wrap:wrap; gap:6px}
+.presets label{display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); font-size:13px; cursor:pointer}
+.presets input{width:16px; height:16px; accent-color:var(--tape)}
+</style>
+</head>
+<body>
+<div class="gky-app">
+  <header class="gky-top">
+    <a class="gky-brand" href="#" id="brand" title="搬入出リストについて"><span class="gky-tape"></span><b>搬入出リスト</b><small>運ぶもの・積む順・チェック</small></a>
+    <div class="gky-top-actions">
+      <select id="trSel" aria-label="本番を選ぶ"></select>
+      <button class="btn sm" id="btnTrip">本番の設定</button>
+      <button class="ibtn" id="btnUndo" title="元に戻す（Ctrl+Z）" aria-label="元に戻す"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3.5L2.5 6.5l3 3"/><path d="M2.5 6.5h7a4 4 0 010 8h-3"/></svg></button>
+      <button class="ibtn" id="btnRedo" title="やり直す（Ctrl+Shift+Z）" aria-label="やり直す"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3.5l3 3-3 3"/><path d="M13.5 6.5h-7a4 4 0 000 8h3"/></svg></button>
+      <a class="gky-home" id="homeLink" href="#" target="_blank" rel="noopener"><i></i>楽屋</a>
+    </div>
+  </header>
+  <nav class="gky-tabs" id="tabs" role="tablist">
+    <button data-tab="check">チェック</button>
+    <button data-tab="items">運ぶもの</button>
+    <button data-tab="cars">車と積む順</button>
+    <button data-tab="out">照合・印刷</button>
+  </nav>
+  <main class="gky-main">
+    <div id="sampleBar"></div>
+
+    <section data-panel="check" hidden>
+      <div class="phases" id="phases"></div>
+      <div class="btnrow" style="margin-bottom:6px"><select id="ckCar" aria-label="車でしぼる"></select><label class="chk"><input type="checkbox" id="ckLeft"> まだのものだけ</label></div>
+      <div class="prog"><i id="progBar"></i></div>
+      <div class="chk-list" id="ckList"></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn ghost" id="ckReset">この段階のチェックを外す</button></div>
+    </section>
+
+    <section data-panel="items" hidden>
+      <div class="sums" id="itSums"></div>
+      <div class="btnrow" style="margin-bottom:10px">
+        <button class="btn primary" id="itAdd">＋ 1つ足す</button>
+        <button class="btn" id="itPreset">よく運ぶものから選ぶ</button>
+        <button class="btn" id="itGakki">楽器台帳から</button>
+        <button class="btn" id="itBamiri">バミリの配置図から</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl ed" id="itTable"></table></div>
+      <p class="note">「早く使う」にしたものは、会場ですぐ降ろせるように最後に積みます。「帰りも」を外すと、帰りのチェックに出ません（会場に置いてくるもの・使い切るもの）。</p>
+    </section>
+
+    <section data-panel="cars" hidden>
+      <div class="gky-cols">
+        <div class="sec">
+          <h2>車</h2>
+          <div class="list" id="carList"></div>
+          <div class="btnrow" style="margin-top:8px"><button class="btn" id="carAdd">＋ 車を足す</button></div>
+        </div>
+        <div class="sec">
+          <h2>積む順<small>上から順に積む（降ろすのは下から）</small></h2>
+          <select id="ordCar" aria-label="車を選ぶ" style="margin-bottom:8px"></select>
+          <div class="order list" id="ordList"></div>
+          <div class="btnrow" style="margin-top:8px"><button class="btn" id="ordAuto">決まりで並べ直す</button></div>
+          <p class="note">決まりで並べ直すと、大きいもの → ふつうのもの → 小さいもの → 会場で早く使うもの の順になります（早く使うものが一番手前＝一番先に降ろせる）。</p>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="out" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec"><h2>行きと帰りの照合</h2><div id="cmp"></div></div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>印刷・配る</h2>
+            <div class="list">
+              <button class="item" id="prCars"><div class="main"><div class="t1">車ごとの積み込み表</div><div class="t2">積む順・担当・4つのチェック欄。1台1ページ</div></div></button>
+              <button class="item" id="prAll"><div class="main"><div class="t1">運ぶものの一覧</div><div class="t2">全部の品物を種類ごとに</div></div></button>
+            </div>
+            <div class="btnrow" style="margin-top:10px"><button class="btn" id="cpWho">担当の一覧をコピー</button></div>
+          </div>
+          <div class="sec">
+            <h2>ファイル</h2>
+            <div class="btnrow"><button class="btn" id="jsonOut">この本番をファイルに保存</button><button class="btn" id="jsonIn">ファイルから読み込む</button><button class="btn" id="csvOut">CSVで保存</button></div>
+            <p class="note">ファイルを渡すと、ほかの人のスマホでも同じリストでチェックできます（チェックの記録はそれぞれの端末の中です）。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここから ==== */
+/* 全ツールで同じ内容です。変えるときは全ツールそろえて変え、GKY.VERSION を上げてください。
+   ・楽屋データ（部員・曲・楽器）の読み書き      GKY.org / GKY.saveOrg
+   ・ファイルの保存と読み込み                    GKY.saveFile / GKY.openFile
+   ・CSV（Excelで開ける形）                      GKY.csv / GKY.parseCSV
+   ・パートの名前のそろえ方                      GKY.PARTS / GKY.partOf / GKY.baseOf
+   ・ほかのツールのファイルの見分け              GKY.identify / GKY.stagemane / GKY.bamiri
+   ・印刷とPDF                                   GKY.doc
+   ・小さな画面部品                              GKY.toast / GKY.sheet / GKY.arm               */
+const GKY = (() => {
+  const VERSION = '1';
+  /* Claudeの画面の中で開いているか（そのときはファイル保存の方法と印刷のしかたが変わる） */
+  const IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function');
+  const TEST = /[?&]test\b/.test(location.search);
+
+  /* ---------- 小物 ---------- */
+  const $ = (q, el = document) => el.querySelector(q);
+  const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = (p = 'x') => p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const norm = s => String(s ?? '').normalize('NFKC').trim();
+  /* 曲名などを見比べるための形（空白・記号・大文字小文字の違いをなくす） */
+  const key = s => norm(s).toLowerCase().replace(/[\s・･「」『』（）()［］\[\]〈〉《》“”"'’‘、。,.:：;；!！?？~〜ー－―‐\-_/／]+/g, '');
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  /* 少し待ってからまとめて実行する。ページを閉じる・ほかのアプリに切りかえるときは、待っている分をすぐ実行する（保存のもれを防ぐ） */
+  const pendings = new Set();
+  const debounce = (fn, ms = 400) => {
+    let t = 0, args = [];
+    const f = (...a) => { args = a; clearTimeout(t); pendings.add(f); t = setTimeout(() => { pendings.delete(f); fn(...args); }, ms); };
+    f.flush = () => { if (!pendings.has(f)) return; clearTimeout(t); pendings.delete(f); fn(...args); };
+    return f;
+  };
+  const flushAll = () => [...pendings].forEach(f => f.flush());
+  window.addEventListener('pagehide', flushAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushAll(); });
+  const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+  /* ---------- 時間と日付 ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  /* 秒 → 8:43 */
+  const clock = s => { if (s == null || !isFinite(s)) return '—'; s = Math.round(s); const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s % 60; return (neg ? '−' : '') + (m >= 60 ? Math.floor(m / 60) + ':' + pad(m % 60) : m) + ':' + pad(r); };
+  /* 秒 → 8'43" （吹奏楽の資料でよく使う書き方） */
+  const dur = s => { if (s == null || !isFinite(s)) return ''; s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return m + "'" + pad(r) + '"'; };
+  /* 8:43 / 8'43" / 8分43秒 / 523 → 秒。読めないときは null */
+  function parseDur(v) {
+    const t = norm(v).replace(/\s/g, '');
+    if (!t) return null;
+    let m;
+    if ((m = t.match(/^(\d+):(\d{1,2}):(\d{1,2})$/))) return +m[1] * 3600 + +m[2] * 60 + +m[3];
+    if ((m = t.match(/^(\d+)[:'′分](\d{1,2})(?:["″秒]|'')?$/))) return +m[1] * 60 + +m[2];
+    if ((m = t.match(/^(\d+)[分'′]$/))) return +m[1] * 60;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)秒?$/))) return Math.round(+m[1]);
+    return null;
+  }
+  const ymd = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parseYmd = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const WD = ['日', '月', '火', '水', '木', '金', '土'];
+  const jpDate = (s, withWeek = true) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日' + (withWeek ? '（' + WD[d.getDay()] + '）' : ''); };
+  const mdDate = (s) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）'; };
+  const addDays = (s, n) => { const d = parseYmd(s); if (!d) return ''; d.setDate(d.getDate() + n); return ymd(d); };
+  const daysBetween = (a, b) => { const x = parseYmd(a), y = parseYmd(b); if (!x || !y) return null; return Math.round((y - x) / 86400000); };
+  /* 4月はじまりの年度 */
+  const fiscalYear = (d = new Date()) => d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const stamp = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
+
+  /* ---------- ブラウザへの保存（この端末の中だけ） ---------- */
+  const store = {
+    get(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } },
+    keys() { try { return Object.keys(localStorage); } catch (e) { return []; } },
+    raw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    setRaw(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  };
+
+  /* ---------- パート ---------- */
+  /* バミリの奏者ラベルと同じ書き方にそろえています */
+  const SECTIONS = { ww: '木管', br: '金管', str: '弦', perc: '打楽器', key: '鍵盤・ハープ', etc: 'その他' };
+  const PARTS = [
+    ['Pic', 'ピッコロ', 'ww'], ['Fl', 'フルート', 'ww'], ['Ob', 'オーボエ', 'ww'], ['E.H.', 'イングリッシュホルン', 'ww'], ['Fg', 'ファゴット', 'ww'],
+    ['E♭Cl', 'E♭クラリネット', 'ww'], ['Cl', 'クラリネット', 'ww'], ['A.Cl', 'アルトクラリネット', 'ww'], ['B.Cl', 'バスクラリネット', 'ww'],
+    ['S.Sax', 'ソプラノサックス', 'ww'], ['A.Sax', 'アルトサックス', 'ww'], ['T.Sax', 'テナーサックス', 'ww'], ['B.Sax', 'バリトンサックス', 'ww'],
+    ['Tp', 'トランペット', 'br'], ['Cor', 'コルネット', 'br'], ['Hn', 'ホルン', 'br'], ['Tb', 'トロンボーン', 'br'], ['B.Tb', 'バストロンボーン', 'br'],
+    ['Euph', 'ユーフォニアム', 'br'], ['Tuba', 'テューバ', 'br'],
+    ['St.B', '弦バス', 'str'], ['Perc', '打楽器', 'perc'], ['Pf', 'ピアノ', 'key'], ['Hp', 'ハープ', 'key'],
+  ];
+  /* 打楽器の中の楽器（コウバンなどの「受け持ち」で使う） */
+  const PERC = [
+    ['Timp', 'ティンパニ'], ['S.D.', 'スネアドラム'], ['B.D.', 'バスドラム'], ['Cym', 'クラッシュシンバル'], ['Sus.Cym', 'サスペンデッドシンバル'],
+    ['Tam-t', 'タムタム'], ['Drs', 'ドラムセット'], ['Mar', 'マリンバ'], ['Xylo', 'シロフォン'], ['Vib', 'ヴィブラフォン'], ['Glk', 'グロッケン'],
+    ['Chime', 'チャイム'], ['Tamb', 'タンバリン'], ['Tri', 'トライアングル'], ['W.B.', 'ウッドブロック'], ['Toms', 'タムタム（太鼓）'],
+    ['Cong', 'コンガ'], ['Bongo', 'ボンゴ'], ['Timb', 'ティンバレス'], ['Perc', '打楽器（小物）'],
+  ];
+  const PART_CODES = new Set(PARTS.map(p => p[0]));
+  const PERC_CODES = new Set(PERC.map(p => p[0]));
+  /* よく使う呼び方 → 記号 */
+  const ALIAS = {
+    'ぴっころ': 'Pic', 'ピッコロ': 'Pic', 'picc': 'Pic', 'pic': 'Pic', 'ピッコ': 'Pic',
+    'ふるーと': 'Fl', 'フルート': 'Fl', 'fl': 'Fl', 'flute': 'Fl',
+    'おーぼえ': 'Ob', 'オーボエ': 'Ob', 'ob': 'Ob', 'eh': 'E.H.', 'e.h.': 'E.H.', 'イングリッシュホルン': 'E.H.', 'コールアングレ': 'E.H.',
+    'ふぁごっと': 'Fg', 'ファゴット': 'Fg', 'バスーン': 'Fg', 'fg': 'Fg', 'bsn': 'Fg',
+    'クラ': 'Cl', 'クラリネット': 'Cl', 'くら': 'Cl', 'cl': 'Cl', 'b♭cl': 'Cl', 'bbcl': 'Cl', 'エスクラ': 'E♭Cl', 'e♭cl': 'E♭Cl', 'ebcl': 'E♭Cl',
+    'アルトクラ': 'A.Cl', 'アルトクラリネット': 'A.Cl', 'a.cl': 'A.Cl', 'acl': 'A.Cl',
+    'バスクラ': 'B.Cl', 'バスクラリネット': 'B.Cl', 'b.cl': 'B.Cl', 'bcl': 'B.Cl',
+    'ソプラノサックス': 'S.Sax', 'ソプラノ': 'S.Sax', 'ss': 'S.Sax', 's.sax': 'S.Sax', 'ssax': 'S.Sax',
+    'アルトサックス': 'A.Sax', 'アルト': 'A.Sax', 'as': 'A.Sax', 'a.sax': 'A.Sax', 'asax': 'A.Sax',
+    'テナーサックス': 'T.Sax', 'テナー': 'T.Sax', 'ts': 'T.Sax', 't.sax': 'T.Sax', 'tsax': 'T.Sax',
+    'バリトンサックス': 'B.Sax', 'バリトン': 'B.Sax', 'バリサク': 'B.Sax', 'bs': 'B.Sax', 'b.sax': 'B.Sax', 'bsax': 'B.Sax',
+    'トランペット': 'Tp', 'ラッパ': 'Tp', 'tp': 'Tp', 'trp': 'Tp', 'tpt': 'Tp', 'コルネット': 'Cor', 'cor': 'Cor', 'crt': 'Cor',
+    'ホルン': 'Hn', 'hn': 'Hn', 'hr': 'Hn', 'horn': 'Hn',
+    'トロンボーン': 'Tb', 'ボーン': 'Tb', 'tb': 'Tb', 'trb': 'Tb', 'バストロンボーン': 'B.Tb', 'バストロ': 'B.Tb', 'b.tb': 'B.Tb', 'btb': 'B.Tb',
+    'ユーフォニアム': 'Euph', 'ユーフォ': 'Euph', 'euph': 'Euph', 'eup': 'Euph', 'eu': 'Euph', 'ユーフォニウム': 'Euph',
+    'テューバ': 'Tuba', 'チューバ': 'Tuba', 'tuba': 'Tuba', 'tu': 'Tuba',
+    '弦バス': 'St.B', 'げんばす': 'St.B', 'コントラバス': 'St.B', 'st.b': 'St.B', 'stb': 'St.B', 'cb': 'St.B', 'ベース': 'St.B',
+    '打楽器': 'Perc', 'パーカッション': 'Perc', 'perc': 'Perc', 'per': 'Perc', 'だがっき': 'Perc',
+    'ピアノ': 'Pf', 'pf': 'Pf', 'pno': 'Pf', 'ハープ': 'Hp', 'hp': 'Hp', 'harp': 'Hp',
+    'ティンパニ': 'Timp', 'timp': 'Timp', 'tim': 'Timp', 'スネア': 'S.D.', 'スネアドラム': 'S.D.', '小太鼓': 'S.D.', 'sd': 'S.D.', 's.d.': 'S.D.', 'sn': 'S.D.',
+    'バスドラム': 'B.D.', 'バスドラ': 'B.D.', '大太鼓': 'B.D.', 'bd': 'B.D.', 'b.d.': 'B.D.', 'シンバル': 'Cym', 'cym': 'Cym', 'cymb': 'Cym',
+    'サスペンデッドシンバル': 'Sus.Cym', 'サスシン': 'Sus.Cym', 'sus.cym': 'Sus.Cym', 'タムタム': 'Tam-t', 'ドラ': 'Tam-t', 'ドラムセット': 'Drs', 'ドラム': 'Drs', 'drs': 'Drs', 'dr': 'Drs',
+    'マリンバ': 'Mar', 'mar': 'Mar', 'mrb': 'Mar', 'シロフォン': 'Xylo', '木琴': 'Xylo', 'xylo': 'Xylo', 'xyl': 'Xylo',
+    'ヴィブラフォン': 'Vib', 'ビブラフォン': 'Vib', '鉄琴': 'Glk', 'vib': 'Vib', 'グロッケン': 'Glk', 'glk': 'Glk', 'glock': 'Glk',
+    'チャイム': 'Chime', 'chime': 'Chime', 'chimes': 'Chime', 'タンバリン': 'Tamb', 'tamb': 'Tamb', 'トライアングル': 'Tri', 'tri': 'Tri',
+    'ウッドブロック': 'W.B.', 'wb': 'W.B.', 'w.b.': 'W.B.', 'コンガ': 'Cong', 'ボンゴ': 'Bongo', 'ティンバレス': 'Timb',
+  };
+  /* 入力された名前を記号にそろえる（わからなければそのまま） */
+  function partOf(v) {
+    const t = norm(v);
+    if (!t) return '';
+    if (PART_CODES.has(t) || PERC_CODES.has(t)) return t;
+    const k = t.toLowerCase().replace(/\s/g, '');
+    if (ALIAS[k]) return ALIAS[k];
+    if (ALIAS[t]) return ALIAS[t];
+    for (const p of PARTS) if (p[0].toLowerCase() === k || p[1] === t) return p[0];
+    for (const p of PERC) if (p[0].toLowerCase() === k || p[1] === t) return p[0];
+    return t;
+  }
+  /* 「Cl1」「1st Cl」「Tp 2」→ 楽器の記号（Cl, Tp）。打楽器の中の楽器はそのまま */
+  function baseOf(label) {
+    let t = norm(label).replace(/\s+/g, ' ');
+    t = t.replace(/^(?:\d+(?:st|nd|rd|th)|[1-9]番?)\s*/i, '').replace(/\s*(?:\d+(?:st|nd|rd|th)?|[ⅠⅡⅢⅣ]|[1-9]番)$/i, '').trim();
+    return partOf(t) || t;
+  }
+  /* その受け持ちに入れる楽器の仲間（打楽器はまとめて Perc） */
+  const familyOf = label => { const b = baseOf(label); return PERC_CODES.has(b) ? 'Perc' : b; };
+  const partName = code => { const p = PARTS.find(x => x[0] === code) || PERC.find(x => x[0] === code); return p ? p[1] : code; };
+  const sectionOf = code => { const f = familyOf(code); const p = PARTS.find(x => x[0] === f); return p ? p[2] : 'etc'; };
+  const partOrder = code => { const f = familyOf(code); const i = PARTS.findIndex(x => x[0] === f); const j = PERC.findIndex(x => x[0] === baseOf(code)); return (i < 0 ? 900 : i * 10) + (j < 0 ? 0 : j / 100); };
+  const GRADES = ['小4', '小5', '小6', '中1', '中2', '中3', '高1', '高2', '高3', '大学', '一般'];
+  /* その学年が「あと何年でいなくなるか」（中3・高3は今年度で終わり＝0）。わからなければ null */
+  function yearsLeft(grade) {
+    const g = norm(grade);
+    let m;
+    if ((m = g.match(/^小([1-6])$/))) return 6 - +m[1] + 3; // 中学まで続けると考える
+    if ((m = g.match(/^中([1-3])$/))) return 3 - +m[1];
+    if ((m = g.match(/^高([1-3])$/))) return 3 - +m[1];
+    return null;
+  }
+  const nextGrade = g => { const t = norm(g); let m; if ((m = t.match(/^(小|中|高)([1-6])$/))) { const n = +m[2] + 1; const max = m[1] === '小' ? 6 : 3; if (n <= max) return m[1] + n; return m[1] === '小' ? '中1' : m[1] === '中' ? '' : ''; } return t; };
+
+  /* ---------- 楽屋データ（全ツールで共通の 部員・曲・楽器） ---------- */
+  /* 同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、この端末のブラウザの中でこのデータを共有します */
+  const ORG_KEY = 'gakuya.org';
+  const normMember = m => ({
+    id: typeof m.id === 'string' && m.id ? m.id : uid('m'), name: norm(m.name), kana: norm(m.kana), grade: norm(m.grade),
+    part: partOf(m.part), subs: (Array.isArray(m.subs) ? m.subs : String(m.subs || '').split(/[、,\/／・\s]+/)).map(partOf).filter(Boolean),
+    note: String(m.note ?? ''), active: m.active !== false,
+  });
+  const normSong = s => ({
+    id: typeof s.id === 'string' && s.id ? s.id : uid('s'), title: norm(s.title), kana: norm(s.kana), composer: norm(s.composer), arranger: norm(s.arranger),
+    publisher: norm(s.publisher), dur: s.dur == null || s.dur === '' || !isFinite(+s.dur) ? null : Math.round(+s.dur),
+    parts: (Array.isArray(s.parts) ? s.parts : []).map(x => norm(x)).filter(Boolean),
+  });
+  const normInst = i => ({ id: typeof i.id === 'string' && i.id ? i.id : uid('g'), no: norm(i.no), name: norm(i.name), part: partOf(i.part), owner: norm(i.owner), state: norm(i.state) });
+  function normOrg(o) {
+    o = o && typeof o === 'object' ? o : {};
+    const u = o.updated && typeof o.updated === 'object' ? o.updated : {};
+    return {
+      app: 'gakuya', format: 1,
+      org: { name: norm(o.org && o.org.name), year: (o.org && +o.org.year) || null },
+      members: (Array.isArray(o.members) ? o.members : []).filter(m => m && (m.name || m.id)).map(normMember),
+      songs: (Array.isArray(o.songs) ? o.songs : []).filter(s => s && s.title).map(normSong),
+      instruments: (Array.isArray(o.instruments) ? o.instruments : []).filter(i => i && (i.name || i.no)).map(normInst),
+      updated: { org: +u.org || 0, members: +u.members || 0, songs: +u.songs || 0, instruments: +u.instruments || 0 },
+    };
+  }
+  /* いまの楽屋データ（なければ空） */
+  const org = () => normOrg(store.get(ORG_KEY));
+  const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length); };
+  /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
+  function saveOrg(section, value) {
+    const cur = org();
+    if (section === 'org') cur.org = Object.assign(cur.org, value);
+    else if (section === 'members') cur.members = value.map(normMember);
+    else if (section === 'songs') cur.songs = value.map(normSong);
+    else if (section === 'instruments') cur.instruments = value.map(normInst);
+    else if (section === 'all') { const n = normOrg(value); Object.assign(cur, { org: n.org, members: n.members, songs: n.songs, instruments: n.instruments }); }
+    const now = Date.now();
+    if (section === 'all') Object.keys(cur.updated).forEach(k => cur.updated[k] = now); else cur.updated[section] = now;
+    return store.set(ORG_KEY, cur);
+  }
+  /* 別のタブで楽屋データが変わったら知らせる */
+  function onOrgChange(fn) { window.addEventListener('storage', e => { if (e.key === ORG_KEY) fn(org()); }); }
+  const orgFile = o => ({ app: 'gakuya', format: 1, exportedAt: new Date().toISOString(), ...normOrg(o) });
+
+  /* ---------- ほかのツールのファイルを見分ける ---------- */
+  function identify(o) {
+    if (!o || typeof o !== 'object') return null;
+    if (o.app === 'gakuya') return 'gakuya';
+    if (o.app === 'stagemane' || Array.isArray(o.concerts) || (o.info && Array.isArray(o.program))) return 'stagemane';
+    if (Array.isArray(o.items) && o.W && o.D) return 'bamiri';
+    if (Array.isArray(o.performers) && Array.isArray(o.sets)) return 'drillboard';
+    if (typeof o.app === 'string') return o.app;
+    return null;
+  }
+  const APP_NAMES = { gakuya: '楽屋', stagemane: 'ステマネ', bamiri: 'バミリ', drillboard: 'ドリルボード', kouban: 'コウバン', gakufu: '楽譜ライブラリ', tempomap: 'テンポマップ', shikomi: '仕込み図', gakki: '楽器台帳', gakkigime: '楽器決め・編成計画', hannyu: '搬入出リスト', gassou: '合奏ノート', gyakusan: '本番逆算スケジュール' };
+  /* ステマネのファイル → 演奏会の一覧（曲は出てくる順） */
+  function stagemane(o) {
+    const list = o && o.concert ? [o.concert] : Array.isArray(o && o.concerts) ? o.concerts : (o && o.info && Array.isArray(o.program) ? [o] : []);
+    return list.filter(c => c && typeof c === 'object').map(c => {
+      const info = c.info || {};
+      let part = '';
+      const pieces = [];
+      (Array.isArray(c.program) ? c.program : []).forEach(it => {
+        if (!it || typeof it !== 'object') return;
+        if (it.type === 'part') part = norm(it.name);
+        if (it.type === 'piece' && norm(it.title)) {
+          pieces.push({ id: String(it.id || uid('p')), title: norm(it.title), composer: norm(it.composer), arranger: norm(it.arranger), conductor: norm(it.conductor),
+            dur: it.dur != null && isFinite(+it.dur) ? Math.round(+it.dur) : null, encore: norm(it.encore), part, contOf: it.contOf || '',
+            medley: (Array.isArray(it.parts) ? it.parts : []).map(p => norm(p && p.title)).filter(Boolean) });
+        }
+      });
+      return { title: norm(info.title), org: norm(info.org), date: String(info.date || ''), venue: norm(info.venue), start: String(info.start || ''), open: String(info.open || ''), end: String(info.end || ''), pieces, program: Array.isArray(c.program) ? c.program : [] };
+    });
+  }
+  /* バミリのファイル → 奏者・打楽器などの置き場所 */
+  function bamiri(o) {
+    if (!o || !Array.isArray(o.items)) return null;
+    return { title: norm(o.title), W: +o.W || 1400, D: +o.D || 900, items: o.items.filter(i => i && typeof i === 'object'), raw: o };
+  }
+
+  /* ---------- ファイルの保存 ---------- */
+  const safeName = n => String(n || 'file').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
+  async function saveFile(name, data, mime = 'application/octet-stream') {
+    name = safeName(name);
+    if (IN_VIEWER) {
+      let dl = null;
+      try { dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+      if (!dl) { toast('この画面ではファイルを保存できません。公開ページ（GitHub Pages）で開くと保存できます'); return false; }
+      try {
+        const r = await dl.save({ filename: name, data });
+        if (r && r.status === 'saved') toast('保存しました：' + name);
+        return true;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'declined') toast('保存をとりやめました');
+        else if (c === 'rate_limited') toast('保存の確認がもう開いています。先にそちらを済ませてください');
+        else if (c === 'rejected_extension' || c === 'extension_not_enabled') toast('この形式のファイルはここでは保存できません');
+        else toast('保存できませんでした（' + (c || 'わからないエラー') + '）');
+        return false;
+      }
+    }
+    const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    toast('保存しました：' + name);
+    return true;
+  }
+  const saveJSON = (name, obj) => saveFile(name, JSON.stringify(obj, null, 1), 'application/json');
+  /* ファイルを選んでもらう。as: 'text' | 'dataurl' | 'buffer' | 'file' */
+  function openFile({ accept = '', as = 'text', multiple = false } = {}) {
+    return new Promise(resolve => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = accept; inp.multiple = multiple; inp.hidden = true;
+      document.body.appendChild(inp);
+      const done = v => { inp.remove(); resolve(v); };
+      inp.addEventListener('cancel', () => done(null));
+      inp.addEventListener('change', async () => {
+        const files = Array.from(inp.files || []);
+        if (!files.length) return done(null);
+        const read = f => new Promise((res, rej) => {
+          if (as === 'file') return res({ name: f.name, size: f.size, type: f.type, file: f });
+          const r = new FileReader();
+          r.onload = () => res({ name: f.name, size: f.size, type: f.type, data: r.result, file: f });
+          r.onerror = () => rej(r.error);
+          if (as === 'dataurl') r.readAsDataURL(f); else if (as === 'buffer') r.readAsArrayBuffer(f); else r.readAsText(f, 'utf-8');
+        });
+        try { const out = await Promise.all(files.map(read)); done(multiple ? out : out[0]); }
+        catch (e) { toast('ファイルを読み込めませんでした'); done(null); }
+      });
+      inp.click();
+    });
+  }
+  /* JSONのファイルを選んで、中身と種類を返す */
+  async function openJSON() {
+    const f = await openFile({ accept: '.json,.txt,application/json,text/plain' });
+    if (!f) return null;
+    try {
+      const o = JSON.parse(String(f.data).replace(/^﻿/, ''));
+      return { name: f.name, data: o, kind: identify(o) };
+    } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
+  }
+
+  /* ---------- CSV（Excelでそのまま開ける形） ---------- */
+  const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  function parseCSV(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    const sep = (text.split('\n')[0].match(/\t/g) || []).length > (text.split('\n')[0].match(/,/g) || []).length ? '\t' : ',';
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+      if (c === '"') q = true;
+      else if (c === sep) { row.push(cell); cell = ''; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (c !== '\r') cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => String(x).trim() !== ''));
+  }
+
+  /* ---------- 画面の小物 ---------- */
+  let toastTimer = 0;
+  function toast(msg, actionLabel, action, ms = 3200) {
+    let el = $('#gkyToast');
+    if (!el) { el = document.createElement('div'); el.id = 'gkyToast'; el.className = 'gky-toast'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+    el.innerHTML = '';
+    const s = document.createElement('span'); s.textContent = msg; el.appendChild(s);
+    if (actionLabel && action) { const b = document.createElement('button'); b.textContent = actionLabel; b.onclick = () => { el.classList.remove('on'); action(); }; el.appendChild(b); }
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), actionLabel ? Math.max(ms, 6000) : ms);
+  }
+  /* 重ねて出す画面。content は要素かHTML。戻り値の close() で閉じる */
+  function sheet({ title, content, actions = [], wide = false, onClose } = {}) {
+    const veil = document.createElement('div');
+    veil.className = 'gky-veil';
+    veil.innerHTML = `<div class="gky-sheet${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><h2>${esc(title)}</h2><button class="ibtn" data-close aria-label="閉じる"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></header><div class="body"></div>${actions.length ? '<footer></footer>' : ''}</div>`;
+    const body = $('.body', veil);
+    if (typeof content === 'string') body.innerHTML = content; else if (content) body.appendChild(content);
+    const foot = $('footer', veil);
+    const prevFocus = document.activeElement;
+    const close = () => { veil.remove(); document.removeEventListener('keydown', onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); if (onClose) onClose(); };
+    actions.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (a.primary ? ' primary' : '') + (a.danger ? ' danger' : '') + (a.left ? ' left' : '');
+      b.textContent = a.label;
+      b.onclick = async () => { const r = a.onClick ? await a.onClick(body, close) : undefined; if (r !== false && !a.keep) close(); };
+      foot.appendChild(b);
+    });
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    veil.addEventListener('click', e => { if (e.target === veil) close(); });
+    $('[data-close]', veil).onclick = close;
+    document.body.appendChild(veil);
+    const first = $('input,select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
+    setTimeout(() => first && first.focus(), 30);
+    return { el: veil, body, close };
+  }
+  /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
+  function arm(btn, onConfirm, label = 'もう一度押すと削除', ms = 3500) {
+    btn.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (btn.dataset.armed) { clearTimeout(+btn.dataset.armed); delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; onConfirm(); return; }
+      btn.dataset.label = btn.innerHTML;
+      btn.classList.add('armed'); btn.textContent = label;
+      btn.dataset.armed = String(setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; } delete btn.dataset.armed; }, ms));
+    });
+  }
+  async function copyText(text, okMsg = 'コピーしました') {
+    try { await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (er) { ok = false; }
+      ta.remove();
+      toast(ok ? okMsg : 'コピーできませんでした。文字を選んでコピーしてください');
+      return ok;
+    }
+  }
+  /* タブの切り替え（ボタンに data-tab、中身に data-panel） */
+  function tabs(nav, onChange) {
+    const btns = $$('[data-tab]', nav);
+    const show = id => {
+      btns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+      $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== id);
+      if (onChange) onChange(id);
+    };
+    btns.forEach(b => { b.setAttribute('role', 'tab'); b.onclick = () => { show(b.dataset.tab); window.scrollTo({ top: 0 }); }; });
+    return show;
+  }
+  /* 見出しの高さに合わせてタブの止まる位置を決める */
+  function fitTop() {
+    const t = $('.gky-top');
+    if (!t) return;
+    const set = () => document.documentElement.style.setProperty('--top-h', t.offsetHeight + 'px');
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(t);
+  }
+
+  /* ---------- ほかのツールへのリンク ---------- */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  const ARTIFACT_URLS = {
+    gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
+    tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
+    gakkigime: 'https://claude.ai/artifact/8tfAUVsrJtAaa3R7vySdoT', hannyu: 'https://claude.ai/artifact/3fyJu1o9RddSKB9eM7QpQD', gassou: 'https://claude.ai/artifact/C1MVhJa5BJVGh3w3uDav7G',
+    gyakusan: 'https://claude.ai/artifact/5LtSnDWu6cr6KMkYzkigmc', stagemane: 'https://claude.ai/artifact/4YA7JtN5SSCkT3TUS1Sfkm',
+  };
+  const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
+  function linkTo(slug) {
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
+    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (/\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1') return '../' + slug + '/';
+    return PAGES_BASE + slug + '/';
+  }
+
+  /* ---------- 印刷とPDF ---------- */
+  /* 使い方：
+       const d = GKY.doc({ title:'香盤表', sub:'定期演奏会', orient:'landscape', foot:'団体名', file:'香盤表' });
+       d.block('<h3>…</h3><p>…</p>');            ページに入りきらなければ次のページへ
+       d.block('<h3>見出し</h3>', { keep:true });  次の中身と同じページに置く（見出しだけ前のページに残らない）
+       d.table({ cols:[{h:'名前', w:'20%'}], rows:[['山田']] });   行がはみ出たら見出しをつけて次のページへ
+       d.page();                                  ここでページを変える
+       d.show();                                  プレビューを開く（印刷・PDF保存のボタンつき） */
+  const H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  const loadScript = src => new Promise((res, rej) => { if (document.querySelector('script[src="' + src + '"]')) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { s.remove(); rej(new Error('load')); }; document.head.appendChild(s); });
+  function doc({ title = '', sub = '', orient = 'portrait', foot = '', file = '' } = {}) {
+    const pv = h(`<div class="gky-pv" role="dialog" aria-modal="true" aria-label="${esc(title)}の印刷"><header><h2>${esc(title)}<span class="msg" style="margin-left:10px"></span></h2>
+      <div class="btnrow">${IN_VIEWER ? '' : '<button class="btn primary" data-act="print">印刷する</button>'}<button class="btn${IN_VIEWER ? ' primary' : ''}" data-act="pdf">PDFで保存</button><button class="btn" data-act="close">閉じる</button></div></header>
+      <div class="stage"><div class="scaler"></div></div></div>`);
+    const scaler = $('.scaler', pv);
+    // ページの高さを測りながら分けるので、はじめから画面に入れておく（見えないように）
+    pv.style.visibility = 'hidden';
+    document.body.appendChild(pv);
+    const pages = [];
+    let cur = null, body = null;
+    const W = orient === 'landscape' ? 1123 : 794;
+    function newPage() {
+      cur = h(`<div class="gky-page${orient === 'landscape' ? ' landscape' : ''}"><div class="pg-head"><div class="pg-title">${esc(title)}</div><div class="pg-sub">${esc(sub)}</div></div><div class="pg-body"></div><div class="pg-foot"><span>${esc(foot)}</span><span class="pg-no"></span></div></div>`);
+      body = $('.pg-body', cur);
+      scaler.appendChild(cur); pages.push(cur);
+      return cur;
+    }
+    // 最後の中身の下の端が、ページの書ける所の下の端（少しゆとりを残す）を越えたら「はみ出し」
+    const over = () => { const last = body.lastElementChild; if (!last) return false; const br = body.getBoundingClientRect(), lr = last.getBoundingClientRect(); return lr.bottom > br.bottom - 4 * (br.height / body.clientHeight || 1); };
+    /* el を次のページへ移す。すぐ前に「次といっしょに」の見出しがあれば、それもいっしょに */
+    function carry(el) {
+      const prev = el.previousElementSibling;
+      const keep = prev && prev.dataset.keep && prev.previousElementSibling ? prev : null;
+      el.remove(); if (keep) keep.remove();
+      newPage(); if (keep) body.appendChild(keep); body.appendChild(el);
+    }
+    const api = {
+      page() { if (!cur || body.childElementCount) newPage(); return api; },
+      block(html, { keep = false } = {}) {
+        if (!cur) newPage();
+        const el = typeof html === 'string' ? h('<div>' + html + '</div>') : html;
+        if (keep) el.dataset.keep = '1';
+        body.appendChild(el);
+        if (over() && body.childElementCount > 1) carry(el);
+        return api;
+      },
+      table({ cols, rows, cls = '', caption = '' }) {
+        if (!cur) newPage();
+        const colg = '<colgroup>' + cols.map(c => `<col${c.w ? ` style="width:${c.w}"` : ''}>`).join('') + '</colgroup>';
+        const head = '<thead><tr>' + cols.map(c => `<th class="${c.cls || ''}">${c.h}</th>`).join('') + '</tr></thead>';
+        const mk = () => { const wrap = h(`<div>${caption ? `<h4>${caption}</h4>` : ''}<table class="${cls}">${colg}${head}<tbody></tbody></table></div>`); body.appendChild(wrap); return $('tbody', wrap); };
+        let tb = mk();
+        // 見出しの行と最初の1行が入らなければ、表ごと次のページへ
+        const probe = document.createElement('tr'); probe.innerHTML = '<td>&nbsp;</td>'; tb.appendChild(probe);
+        if (over() && body.childElementCount > 1) carry(tb.closest('div'));
+        probe.remove();
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          if (r && r.cls) tr.className = r.cls;
+          const cells = Array.isArray(r) ? r : r.cells;
+          tr.innerHTML = cells.map((c, i) => `<td class="${(cols[i] && cols[i].cls) || ''}"${c && c.span ? ` colspan="${c.span}"` : ''}>${c && typeof c === 'object' ? c.html : (c ?? '')}</td>`).join('');
+          tb.appendChild(tr);
+          if (over() && tb.children.length > 1) { tr.remove(); newPage(); tb = mk(); tb.appendChild(tr); }
+        });
+        return api;
+      },
+      async show() {
+        try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* なくても続ける */ }
+        pv.style.visibility = '';
+        pages.forEach((p, i) => { $('.pg-no', p).textContent = pages.length > 1 ? (i + 1) + ' / ' + pages.length : ''; });
+        const stage = $('.stage', pv);
+        const fit = () => { const s = Math.min(1, (stage.clientWidth - 32) / W); scaler.style.transform = `scale(${s})`; scaler.style.width = W + 'px'; scaler.style.height = s < 1 ? (scaler.scrollHeight * s) + 'px' : ''; };
+        fit(); window.addEventListener('resize', fit);
+        $('.msg', pv).textContent = pages.length + 'ページ';
+        const close = () => { window.removeEventListener('resize', fit); document.removeEventListener('keydown', onKey); pv.remove(); };
+        const onKey = e => { if (e.key === 'Escape') close(); };
+        document.addEventListener('keydown', onKey);
+        $('[data-act="close"]', pv).onclick = close;
+        const pb = $('[data-act="print"]', pv);
+        if (pb) pb.onclick = () => api.print();
+        $('[data-act="pdf"]', pv).onclick = () => api.pdf();
+        return api;
+      },
+      print() {
+        let root = $('#gky-print-root');
+        if (!root) { root = document.createElement('div'); root.id = 'gky-print-root'; document.body.appendChild(root); }
+        root.innerHTML = '';
+        pages.forEach(p => root.appendChild(p.cloneNode(true)));
+        let st = $('#gky-page-style');
+        if (!st) { st = document.createElement('style'); st.id = 'gky-page-style'; document.head.appendChild(st); }
+        st.textContent = `@page{size:A4 ${orient};margin:0}`;
+        document.body.classList.add('gky-printing');
+        const done = () => { document.body.classList.remove('gky-printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        setTimeout(() => { window.print(); setTimeout(done, 1500); }, 60);
+      },
+      async pdf() {
+        const btn = $('[data-act="pdf"]', pv);
+        btn.disabled = true; const old = btn.textContent; btn.textContent = 'PDFを作っています…';
+        try {
+          await loadScript(H2C); await loadScript(JSPDF);
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: orient, compress: true });
+          const holder = h('<div style="position:fixed;left:-20000px;top:0;"></div>');
+          document.body.appendChild(holder);
+          for (let i = 0; i < pages.length; i++) {
+            const c = pages[i].cloneNode(true); c.style.boxShadow = 'none'; holder.appendChild(c);
+            const canvas = await window.html2canvas(c, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            c.remove();
+            if (i) pdf.addPage('a4', orient);
+            const [pw, ph] = orient === 'landscape' ? [297, 210] : [210, 297];
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
+          }
+          holder.remove();
+          await saveFile(safeName(file || title) + '.pdf', pdf.output('blob'), 'application/pdf');
+        } catch (e) {
+          toast(IN_VIEWER ? 'PDFを作れませんでした。少し待ってからもう一度押してください' : 'PDFを作れませんでした。ネットにつながっているか確かめてください（「印刷する」からPDFに保存することもできます）');
+        } finally { btn.disabled = false; btn.textContent = old; }
+      },
+      get pages() { return pages; },
+    };
+    return api;
+  }
+
+  /* 印刷用の文字（BIZ UDPゴシック）を先に読んでおく。ページの分け方が読み込みの前後で変わらないように */
+  try { if (document.fonts && document.fonts.load) ['400', '700'].forEach(w => document.fonts.load(w + ' 10pt "BIZ UDPGothic"').catch(() => {})); } catch (e) { /* なくても動く */ }
+
+  /* ---------- このツールについて ---------- */
+  function about({ name, what, version, changelog = [], feedback = '' }) {
+    const log = changelog.map(c => `<li><b class="mono">v${esc(c.v)}</b> <span class="muted mono">${esc(c.d)}</span><ul>${c.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`).join('');
+    sheet({ title: name + 'について', content: `<p style="margin:0 0 10px">${what}</p>
+      <ul style="margin:0 0 12px;padding-left:1.2em;font-size:13px">
+        <li>入力した内容は、この端末のブラウザの中だけに保存されます。どこのサーバーにも送られません。AIも使っていません。</li>
+        <li>ブラウザの履歴やサイトのデータを消すと、保存した内容も消えます。ときどき「ファイルに保存」でバックアップしてください。</li>
+        <li>同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、楽屋に入れた部員・曲・楽器のデータを共有します。</li>
+      </ul>
+      <p class="muted" style="font-size:12px;margin:0 0 6px">版 <span class="mono">${esc(version)}</span>（共通部品 v${VERSION}）${feedback ? `　<a href="${esc(feedback)}" target="_blank" rel="noopener">ご意見・ご要望</a>` : ''}　<a href="${esc(linkTo('gakuya'))}" target="_blank" rel="noopener">楽屋（ツールの一覧）</a></p>
+      <details><summary style="cursor:pointer;font-size:13px">更新の記録</summary><ul style="font-size:12.5px;padding-left:1.2em">${log}</ul></details>` });
+  }
+
+  /* ---------- ホーム画面に追加したとき・ネットがないときに開けるようにする ---------- */
+  function offline() {
+    if (IN_VIEWER || TEST || !('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* なくても動く */ }));
+  }
+
+  return {
+    VERSION, IN_VIEWER, TEST, $, $$, esc, uid, clone, norm, key, clamp, debounce, h, pad, clock, dur, parseDur, ymd, parseYmd, jpDate, mdDate, addDays, daysBetween, fiscalYear, stamp, WD,
+    store, SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, GRADES, yearsLeft, nextGrade,
+    ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
+    identify, APP_NAMES, stagemane, bamiri,
+    saveFile, saveJSON, openFile, openJSON, csv, parseCSV,
+    toast, sheet, arm, copyText, tabs, fitTop, linkTo, ARTIFACT_URLS, doc, about, offline, loadScript,
+  };
+})();
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここまで ==== */
+</script>
+<script>
+/* ==== 搬入出リスト本体 ==== */
+(() => {
+'use strict';
+const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
+const APP_VERSION = '1', APP_DATE = '2026-10-04';
+const CHANGELOG = [
+  { v: '1', d: '2026-10-04', items: ['はじめての版：運ぶものの一覧（よく運ぶもの・楽器台帳・バミリの配置図から）、車の割り当て、積む順、行き帰り4段階のチェック、照合、積み込み表の印刷'] },
+];
+const FEEDBACK_URL = '';   // ご意見フォームのURLを入れると、画面左上の名前を押して出る「〇〇について」に「ご意見・ご要望」のリンクが出ます
+const KEY = 'hannyu.v1';
+const PHASES = [['load1', '行き：積む', '学校で積み込み'], ['unload1', '行き：降ろす', '会場で降ろす'], ['load2', '帰り：積む', '会場で積み込み'], ['unload2', '帰り：降ろす', '学校で降ろす']];
+const CATS = { big: '大きいもの', perc: '打楽器', wind: '管楽器', stand: '譜面台・スタンド', music: '楽譜', small: '小物', other: 'その他' };
+const SIZE = { big: 0, perc: 1, wind: 1, stand: 2, other: 2, music: 3, small: 3 };   // 積む順の決まり（小さい数から積む）
+
+/* よく運ぶもの */
+const PRESETS = [
+  { g: '打楽器', items: [['ティンパニ 32インチ', 'big'], ['ティンパニ 29インチ', 'big'], ['ティンパニ 26インチ', 'big'], ['ティンパニ 23インチ', 'big'], ['バスドラム（スタンドつき）', 'big'], ['マリンバ（分解）', 'big'], ['シロフォン', 'big'], ['ヴィブラフォン', 'big'], ['チャイム', 'big'], ['スネアドラム', 'perc'], ['スネアのスタンド', 'stand'], ['クラッシュシンバル（ケース）', 'perc'], ['サスペンデッドシンバル', 'perc'], ['シンバルスタンド', 'stand'], ['タムタム（スタンドつき）', 'big'], ['グロッケン', 'perc'], ['ドラムセット', 'big'], ['小物の箱（トライアングル・タンバリンなど）', 'small'], ['マレットケース', 'small'], ['小物台', 'stand']] },
+  { g: '大きい管楽器・弦', items: [['テューバ', 'wind'], ['ユーフォニアム', 'wind'], ['バリトンサックス', 'wind'], ['バスクラリネット', 'wind'], ['弦バス（コントラバス）', 'big'], ['ホルン', 'wind']] },
+  { g: '舞台で使うもの', items: [['譜面台', 'stand', 40], ['指揮台', 'big'], ['指揮者用の譜面台', 'stand'], ['楽譜の箱', 'music'], ['延長コード', 'small', 3], ['ガムテープ・バミリテープ', 'small'], ['救急箱', 'small'], ['予備のリード・オイル', 'small'], ['チューナー・メトロノーム', 'small'], ['楽器ケースを置く場所の札', 'small']] },
+];
+
+/* ---------- データの形 ----------
+  S = { v:1, current, order:[id], trips:{ id: 本番 } }
+  本番 = { id, title, date, from, to, sample, vehicles:[{ id, name, driver, note }], items:[{ id, name, qty, cat, vehicle, who, first, back, ord, note }],
+          checks:{ 品物id:{ load1, unload1, load2, unload2 } }, phase }                                                          */
+const newItem = (o = {}) => Object.assign({ id: uid('t'), name: '', qty: 1, cat: 'other', vehicle: '', who: '', first: false, back: true, ord: 0, note: '' }, o);
+const newTrip = (o = {}) => Object.assign({ id: uid('r'), title: '新しい本番', date: '', from: '学校', to: '会場', sample: false, vehicles: [{ id: uid('v'), name: 'トラック', driver: '', note: '' }], items: [], checks: {}, phase: 'load1' }, o);
+function sampleTrip() {
+  const v1 = { id: uid('v'), name: 'トラック（楽器店）', driver: '（例）〇〇楽器さん', note: '2トン・ほろ付き' }, v2 = { id: uid('v'), name: '保護者の車A', driver: '（例）森さん', note: 'ワゴン' }, v3 = { id: uid('v'), name: '保護者の車B', driver: '（例）山口さん', note: '' };
+  const I = (name, cat, v, who, o = {}) => newItem(Object.assign({ name, cat, vehicle: v.id, who }, o));
+  const items = [
+    I('ティンパニ 29インチ', 'big', v1, '森・山口'), I('ティンパニ 26インチ', 'big', v1, '森・山口'), I('マリンバ（分解）', 'big', v1, '打楽器全員'), I('バスドラム（スタンドつき）', 'big', v1, '吉田'), I('チャイム', 'big', v1, '渡辺'),
+    I('指揮台', 'big', v1, '2年男子'), I('譜面台', 'stand', v1, '1年全員', { qty: 35 }), I('テューバ', 'wind', v1, '村上'), I('ユーフォニアム', 'wind', v1, '松本・三浦', { qty: 2 }), I('バリトンサックス', 'wind', v1, '高田'),
+    I('スネアドラム', 'perc', v2, '山口'), I('スネアのスタンド', 'stand', v2, '山口'), I('クラッシュシンバル（ケース）', 'perc', v2, '吉田'), I('グロッケン', 'perc', v2, '渡辺'),
+    I('小物の箱（トライアングル・タンバリンなど）', 'small', v2, '渡辺', { first: true }), I('マレットケース', 'small', v2, '森', { first: true }),
+    I('楽譜の箱', 'music', v3, '各パートリーダー', { first: true }), I('延長コード', 'small', v3, '副部長', { qty: 3 }), I('ガムテープ・バミリテープ', 'small', v3, '部長', { first: true }), I('救急箱', 'small', v3, '保健係'), I('予備のリード・オイル', 'small', v3, '楽器係', { back: true }),
+  ];
+  const t = newTrip({ title: '（例）第12回 定期演奏会', date: GKY.addDays(GKY.ymd(), 70), from: '学校（音楽室）', to: '（例）〇〇市民会館 搬入口', sample: true, vehicles: [v1, v2, v3], items });
+  autoOrder(t);
+  // 行きの積み込みは、ほとんど終わっている例
+  t.items.slice(0, 12).forEach(i => t.checks[i.id] = { load1: true });
+  return t;
+}
+/* 決まりで積む順を決める：大きいもの → ふつう → 小さいもの → 早く使うもの */
+function autoOrder(t, vid = null) {
+  t.vehicles.forEach(v => {
+    if (vid && v.id !== vid) return;
+    const xs = t.items.filter(i => i.vehicle === v.id).sort((a, b) => (a.first - b.first) || (SIZE[a.cat] - SIZE[b.cat]) || a.name.localeCompare(b.name, 'ja'));
+    xs.forEach((i, k) => i.ord = k + 1);
+  });
+}
+function normalizeTrip(t) {
+  t = Object.assign(newTrip(), t && typeof t === 'object' ? t : {});
+  if (typeof t.id !== 'string' || !t.id) t.id = uid('r');
+  ['title', 'date', 'from', 'to'].forEach(k => t[k] = String(t[k] ?? ''));
+  t.vehicles = (Array.isArray(t.vehicles) ? t.vehicles : []).filter(Boolean).map(v => ({ id: v.id || uid('v'), name: String(v.name || '車'), driver: String(v.driver || ''), note: String(v.note || '') }));
+  const vids = new Set(t.vehicles.map(v => v.id));
+  t.items = (Array.isArray(t.items) ? t.items : []).filter(Boolean).map(i => { const x = newItem(i); x.id = x.id || uid('t'); x.name = String(x.name || ''); x.qty = Math.max(1, Math.round(+x.qty || 1)); if (!CATS[x.cat]) x.cat = 'other'; if (!vids.has(x.vehicle)) x.vehicle = ''; x.first = !!x.first; x.back = x.back !== false; x.ord = +x.ord || 0; return x; });
+  t.checks = t.checks && typeof t.checks === 'object' ? t.checks : {};
+  if (!PHASES.some(p => p[0] === t.phase)) t.phase = 'load1';
+  return t;
+}
+function load() {
+  const s = GKY.store.get(KEY);
+  if (s && s.trips && Object.keys(s.trips).length) {
+    const out = { v: 1, current: s.current, order: [], trips: {} };
+    (Array.isArray(s.order) ? s.order : Object.keys(s.trips)).forEach(id => { if (s.trips[id] && !out.trips[id]) { const t = normalizeTrip(s.trips[id]); out.trips[t.id] = t; out.order.push(t.id); } });
+    if (out.order.length) { if (!out.trips[out.current]) out.current = out.order[0]; return out; }
+  }
+  const t = sampleTrip(); return { v: 1, current: t.id, order: [t.id], trips: { [t.id]: t } };
+}
+
+/* ---------- 状態 ---------- */
+let S = load();
+const T = () => S.trips[S.current];
+const persist = GKY.debounce(() => { if (!GKY.store.set(KEY, S)) toast('ブラウザに保存できませんでした'); }, 200);
+let past = [], future = [];
+function edit(fn, rerender = true) { past.push(JSON.stringify(T())); if (past.length > 80) past.shift(); future = []; fn(T()); persist(); if (rerender) renderAll(); else updHist(); }
+function undo() { if (!past.length) return; future.push(JSON.stringify(T())); S.trips[S.current] = JSON.parse(past.pop()); persist(); renderAll(); toast('元に戻しました'); }
+function redo() { if (!future.length) return; past.push(JSON.stringify(T())); S.trips[S.current] = JSON.parse(future.pop()); persist(); renderAll(); toast('やり直しました'); }
+function updHist() { $('#btnUndo').disabled = !past.length; $('#btnRedo').disabled = !future.length; }
+const vname = (t, id) => (t.vehicles.find(v => v.id === id) || {}).name || '（車が未定）';
+const inPhase = (t, ph) => t.items.filter(i => ph.startsWith('load2') || ph.startsWith('unload2') ? i.back : true);
+const done = (t, i, ph) => !!(t.checks[i.id] && t.checks[i.id][ph]);
+/* 段階ごとの並び：積むときは積む順、降ろすときは逆の順 */
+const phaseSort = (t, ph) => (a, b) => (vname(t, a.vehicle)).localeCompare(vname(t, b.vehicle), 'ja') || (ph.startsWith('load') ? a.ord - b.ord : b.ord - a.ord);
+
+/* ---------- 画面 ---------- */
+let tab = 'check', ckCar = '', ordCar = '';
+const showTab = GKY.tabs($('#tabs'), id => { tab = id; renderTab(); });
+function renderAll() {
+  $('#trSel').innerHTML = S.order.map(id => `<option value="${esc(id)}"${id === S.current ? ' selected' : ''}>${esc(S.trips[id].title)}</option>`).join('');
+  const t = T();
+  $('#sampleBar').innerHTML = t.sample ? `<div class="intro"><span class="sample-flag">例</span><p>いまは使い方を見るための<b>例の本番</b>です。自分の本番は「本番の設定」から新しく作るか、このまま書きかえてください。</p><button class="btn sm" id="sbNew">自分の本番を作る</button></div>` : '';
+  const sb = $('#sbNew'); if (sb) sb.onclick = newTripFlow;
+  updHist(); renderTab();
+}
+function renderTab() { ({ check: renderCheck, items: renderItems, cars: renderCars, out: renderOut })[tab](); }
+
+/* --- チェック --- */
+function renderCheck() {
+  const t = T();
+  $('#phases').innerHTML = PHASES.map(([k, l, d]) => { const xs = inPhase(t, k), n = xs.filter(i => done(t, i, k)).length; return `<button data-ph="${k}" aria-pressed="${t.phase === k}"><b>${l}</b><span>${n} / ${xs.length}</span></button>`; }).join('');
+  $$('#phases [data-ph]').forEach(b => b.onclick = () => edit(tt => { tt.phase = b.dataset.ph; }));
+  $('#ckCar').innerHTML = `<option value="">全部の車</option>` + t.vehicles.map(v => `<option value="${esc(v.id)}"${ckCar === v.id ? ' selected' : ''}>${esc(v.name)}</option>`).join('');
+  const ph = t.phase;
+  let xs = inPhase(t, ph).filter(i => !ckCar || i.vehicle === ckCar).sort(phaseSort(t, ph));
+  const all = xs.length, n = xs.filter(i => done(t, i, ph)).length;
+  $('#progBar').style.width = (all ? n / all * 100 : 0) + '%';
+  if ($('#ckLeft').checked) xs = xs.filter(i => !done(t, i, ph));
+  let lastV = null;
+  $('#ckList').innerHTML = xs.length ? xs.map(i => { const head = i.vehicle !== lastV ? `<div class="vh"><span class="tape">${esc(vname(t, i.vehicle))}</span><span class="muted" style="font-size:12px;font-weight:400">${ph.startsWith('load') ? '上から順に積む' : '上から順に降ろす'}</span></div>` : ''; lastV = i.vehicle; return head + `<div class="crow${done(t, i, ph) ? ' on' : ''}" data-id="${esc(i.id)}" role="checkbox" aria-checked="${done(t, i, ph)}" tabindex="0"><span class="box"></span><div style="min-width:0"><div class="t1">${esc(i.name)}</div><div class="t2">${esc(i.who ? '担当 ' + i.who : '担当未定')}${i.first ? '　早く使う' : ''}${i.note ? '　' + esc(i.note) : ''}</div></div><span class="qty">×${i.qty}</span></div>`; }).join('')
+    : `<div class="empty"><b>${all ? 'この段階は全部すみました' : 'この段階の品物はありません'}</b>${all ? 'おつかれさまでした。' : ''}</div>`;
+  $$('#ckList .crow').forEach(r => { const tog = () => { const id = r.dataset.id; edit(tt => { tt.checks[id] = Object.assign({}, tt.checks[id], { [ph]: !done(tt, { id }, ph) }); }, false); renderCheck(); if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) { /* 振動なし */ } }; r.onclick = tog; r.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tog(); } }; });
+}
+$('#ckCar').onchange = e => { ckCar = e.target.value; renderCheck(); };
+$('#ckLeft').onchange = renderCheck;
+GKY.arm($('#ckReset'), () => { edit(t => { Object.values(t.checks).forEach(c => { c[t.phase] = false; }); }); toast('この段階のチェックを外しました', '元に戻す', undo); }, 'もう一度押すと外します');
+
+/* --- 運ぶもの --- */
+function renderItems() {
+  const t = T();
+  const noCar = t.items.filter(i => !i.vehicle).length, noWho = t.items.filter(i => !i.who).length;
+  $('#itSums').innerHTML = `<span class="sum">品物 <b>${t.items.length}</b>（数 ${t.items.reduce((s, i) => s + i.qty, 0)}）</span>${t.vehicles.map(v => `<span class="sum">${esc(v.name)} <b>${t.items.filter(i => i.vehicle === v.id).length}</b></span>`).join('')}<span class="sum ${noCar ? 'warn' : 'ok'}">車が未定 <b>${noCar}</b></span><span class="sum ${noWho ? 'warn' : ''}">担当が未定 <b>${noWho}</b></span>`;
+  $('#itTable').innerHTML = t.items.length ? `<thead><tr><th>品物</th><th>数</th><th>種類</th><th>車</th><th>担当</th><th>早く使う</th><th>帰りも</th><th>メモ</th><th></th></tr></thead><tbody>${t.items.slice().sort((a, b) => (SIZE[a.cat] - SIZE[b.cat]) || a.name.localeCompare(b.name, 'ja')).map(i => `<tr data-id="${esc(i.id)}">
+    <td><input type="text" data-k="name" value="${esc(i.name)}" style="min-width:11em" aria-label="品物"></td>
+    <td><input type="number" min="1" data-k="qty" value="${i.qty}" aria-label="数"></td>
+    <td><select data-k="cat" aria-label="種類">${Object.entries(CATS).map(([k, v]) => `<option value="${k}"${i.cat === k ? ' selected' : ''}>${v}</option>`).join('')}</select></td>
+    <td><select data-k="vehicle" aria-label="車" class="${i.vehicle ? '' : 'bad'}"><option value="">（未定）</option>${t.vehicles.map(v => `<option value="${esc(v.id)}"${i.vehicle === v.id ? ' selected' : ''}>${esc(v.name)}</option>`).join('')}</select></td>
+    <td><input type="text" data-k="who" value="${esc(i.who)}" style="min-width:7em" aria-label="担当" list="whoList"></td>
+    <td style="text-align:center"><input type="checkbox" data-k="first" ${i.first ? 'checked' : ''} aria-label="早く使う" style="width:18px;height:18px;accent-color:var(--tape)"></td>
+    <td style="text-align:center"><input type="checkbox" data-k="back" ${i.back ? 'checked' : ''} aria-label="帰りも運ぶ" style="width:18px;height:18px;accent-color:var(--tape)"></td>
+    <td><input type="text" data-k="note" value="${esc(i.note)}" style="min-width:8em" aria-label="メモ"></td>
+    <td><button class="ibtn del" data-del aria-label="消す">×</button></td></tr>`).join('')}</tbody>` : '<tbody><tr><td><div class="empty" style="border:0"><b>まだありません</b>「よく運ぶものから選ぶ」が便利です。</div></td></tr></tbody>';
+  const names = GKY.org().members.filter(m => m.active).map(m => m.name);
+  $('#itTable').insertAdjacentHTML('beforeend', `<datalist id="whoList">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>`);
+  $$('#itTable tr[data-id]').forEach(tr => {
+    const id = tr.dataset.id, X = tt => tt.items.find(i => i.id === id);
+    $$('[data-k]', tr).forEach(inp => inp.onchange = () => edit(tt => { const k = inp.dataset.k, x = X(tt); const v = inp.type === 'checkbox' ? inp.checked : k === 'qty' ? Math.max(1, Math.round(+inp.value || 1)) : inp.value.trim(); x[k] = v; if (k === 'vehicle') x.ord = Math.max(0, ...tt.items.filter(i => i.vehicle === v && i.id !== x.id).map(i => i.ord)) + 1; }, ['vehicle', 'cat'].includes(inp.dataset.k)));
+    $('[data-del]', tr).onclick = () => { edit(tt => { tt.items = tt.items.filter(i => i.id !== id); delete tt.checks[id]; }); toast('消しました', '元に戻す', undo); };
+  });
+}
+function addItems(list) { edit(t => { const v = t.vehicles[0] ? t.vehicles[0].id : ''; list.forEach(x => t.items.push(newItem(Object.assign({ vehicle: v }, x)))); autoOrder(t); }); toast(`${list.length}つ足しました`); }
+$('#itAdd').onclick = () => { addItems([{ name: '新しい品物' }]); };
+$('#itPreset').onclick = () => {
+  const have = new Set(T().items.map(i => i.name));
+  sheet({ title: 'よく運ぶものから選ぶ', wide: true, content: `<div class="presets">${PRESETS.map((g, gi) => `<div><h4>${esc(g.g)}</h4><div class="row">${g.items.map((x, k) => `<label><input type="checkbox" value="${gi}:${k}" ${have.has(x[0]) ? 'disabled' : ''}>${esc(x[0])}${x[2] ? ' ×' + x[2] : ''}${have.has(x[0]) ? '（あり）' : ''}</label>`).join('')}</div></div>`).join('')}</div>`,
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => { const list = $$('input:checked', body).map(i => { const [gi, k] = i.value.split(':').map(Number); const x = PRESETS[gi].items[k]; return { name: x[0], cat: x[1], qty: x[2] || 1 }; }); if (!list.length) return false; addItems(list); } }] });
+};
+$('#itGakki').onclick = () => {
+  const o = GKY.org();
+  if (!o.instruments.length) { toast(GKY.IN_VIEWER ? 'ここでは楽屋のデータを読めません。公開ページで開いてください' : '楽屋に楽器がありません。楽器台帳で「楽屋に反映」してください'); return; }
+  const have = new Set(T().items.map(i => i.name));
+  const big = new Set(['Tuba', 'Euph', 'B.Sax', 'B.Cl', 'St.B', 'Timp', 'Mar', 'Xylo', 'Vib', 'Chime', 'B.D.', 'Drs', 'Tam-t', 'Hn']);
+  sheet({ title: '楽器台帳から選ぶ', content: `<p class="lead">ふだん本人が持って行く小さな楽器は、選ばなくてだいじょうぶです。</p><div class="presets"><div class="row">${o.instruments.map((x, k) => { const nm = `${x.no} ${x.name}`.trim(); return `<label><input type="checkbox" value="${k}" ${have.has(nm) ? 'disabled' : ''} ${big.has(x.part) && !have.has(nm) ? 'checked' : ''}>${esc(nm)}</label>`; }).join('')}</div></div>`,
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => { const list = $$('input:checked', body).map(i => { const x = o.instruments[+i.value]; const perc = GKY.familyOf(x.part) === 'Perc'; return { name: `${x.no} ${x.name}`.trim(), cat: ['Timp', 'Mar', 'Xylo', 'Vib', 'Chime', 'B.D.', 'Drs', 'Tam-t', 'St.B'].includes(x.part) ? 'big' : perc ? 'perc' : 'wind' }; }); if (!list.length) return false; addItems(list); } }] });
+};
+$('#itBamiri').onclick = async () => {
+  let bm = null;
+  if (!GKY.IN_VIEWER && GKY.store.get('bamiri.current')) bm = await new Promise(res => sheet({ title: 'バミリの配置図から', content: '<p>バミリで開いている配置図を使いますか？ ファイルを選ぶこともできます。</p>', actions: [{ label: 'ファイルを選ぶ', onClick: () => res('file') }, { label: '開いている配置図', primary: true, onClick: () => res(GKY.bamiri(GKY.store.get('bamiri.current'))) }], onClose: () => res(null) }));
+  if (!bm || bm === 'file') { const f = await GKY.openJSON(); if (!f) return; if (f.kind !== 'bamiri') { toast('バミリで保存した配置図のファイルを選んでください'); return; } bm = GKY.bamiri(f.data); }
+  // 奏者の椅子以外（打楽器・ピアノ・アンプ・指揮台・平台など）を運ぶものにする
+  const skip = new Set(['player', 'standing', 'text', 'arrow', 'line', 'stand', 'mic']);
+  const cnt = {}; bm.items.filter(i => !skip.has(i.t) && i.label).forEach(i => { const nm = i.t === 'riser' ? '平台（' + i.label + '）' : i.t === 'conductor' ? '指揮台' : (GKY.partName(GKY.baseOf(i.label)) !== GKY.baseOf(i.label) ? GKY.partName(GKY.baseOf(i.label)) : i.label); const cat = ['riser', 'piano', 'drums', 'conductor', 'mallet', 'bd'].includes(i.t) ? 'big' : i.t === 'circle' ? 'perc' : 'other'; const k = nm + '|' + cat; cnt[k] = (cnt[k] || 0) + 1; });
+  const stands = bm.items.filter(i => i.t === 'player').length;
+  const list = Object.entries(cnt).map(([k, n]) => { const [name, cat] = k.split('|'); return { name, cat, qty: n }; });
+  if (stands) list.push({ name: '譜面台', cat: 'stand', qty: stands });
+  const have = new Set(T().items.map(i => i.name));
+  const add = list.filter(x => !have.has(x.name) && !/^平台/.test(x.name));
+  if (!add.length) { toast('足すものが見つかりませんでした'); return; }
+  sheet({ title: `「${bm.title || '配置図'}」から足す`, content: `<div class="presets"><div class="row">${add.map((x, k) => `<label><input type="checkbox" value="${k}" checked>${esc(x.name)} ×${x.qty}</label>`).join('')}</div></div><p class="note">平台はホールのものを使うことが多いので、ここには出していません。</p>`,
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => { const l = $$('input:checked', body).map(i => add[+i.value]); if (!l.length) return false; addItems(l); } }] });
+};
+
+/* --- 車と積む順 --- */
+function renderCars() {
+  const t = T();
+  $('#carList').innerHTML = t.vehicles.map(v => `<div class="item" data-id="${esc(v.id)}"><div class="main" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px"><input type="text" data-k="name" value="${esc(v.name)}" aria-label="車の名前"><input type="text" data-k="driver" value="${esc(v.driver)}" placeholder="運転する人" aria-label="運転する人"><input type="text" data-k="note" value="${esc(v.note)}" placeholder="メモ（大きさなど）" aria-label="メモ"></div><span class="chip">${t.items.filter(i => i.vehicle === v.id).length}</span><button class="ibtn del" data-del aria-label="車を消す">×</button></div>`).join('') || '<p class="muted">車がありません。</p>';
+  $$('#carList .item').forEach(r => { const id = r.dataset.id; $$('[data-k]', r).forEach(i => i.onchange = () => edit(tt => { tt.vehicles.find(v => v.id === id)[i.dataset.k] = i.value.trim(); }, i.dataset.k === 'name')); GKY.arm($('[data-del]', r), () => { edit(tt => { tt.vehicles = tt.vehicles.filter(v => v.id !== id); tt.items.forEach(i => { if (i.vehicle === id) i.vehicle = ''; }); }); toast('車を消しました（その車の品物は「未定」になりました）', '元に戻す', undo); }, '消す？'); });
+  if (!t.vehicles.some(v => v.id === ordCar)) ordCar = t.vehicles[0] ? t.vehicles[0].id : '';
+  $('#ordCar').innerHTML = t.vehicles.map(v => `<option value="${esc(v.id)}"${v.id === ordCar ? ' selected' : ''}>${esc(v.name)}</option>`).join('');
+  const xs = t.items.filter(i => i.vehicle === ordCar).sort((a, b) => a.ord - b.ord);
+  $('#ordList').innerHTML = xs.length ? xs.map((i, k) => `<div class="item" data-id="${esc(i.id)}"><span class="n">${k + 1}</span><div class="main"><div class="t1">${esc(i.name)}${i.qty > 1 ? ' ×' + i.qty : ''}</div><div class="t2">${esc(CATS[i.cat])}${i.first ? '　早く使う' : ''}${i.who ? '　' + esc(i.who) : ''}</div></div><button class="ibtn" data-up aria-label="上へ" ${k ? '' : 'disabled'}>↑</button><button class="ibtn" data-down aria-label="下へ" ${k < xs.length - 1 ? '' : 'disabled'}>↓</button></div>`).join('') : '<p class="muted">この車に積むものはまだありません。</p>';
+  $$('#ordList .item').forEach(r => { const id = r.dataset.id; const mv = d => edit(tt => { const ys = tt.items.filter(i => i.vehicle === ordCar).sort((a, b) => a.ord - b.ord); const k = ys.findIndex(i => i.id === id), j = k + d; if (j < 0 || j >= ys.length) return; [ys[k], ys[j]] = [ys[j], ys[k]]; ys.forEach((i, n) => i.ord = n + 1); }); $('[data-up]', r).onclick = () => mv(-1); $('[data-down]', r).onclick = () => mv(1); });
+}
+$('#ordCar').onchange = e => { ordCar = e.target.value; renderCars(); };
+$('#ordAuto').onclick = () => { edit(t => autoOrder(t, ordCar)); toast('決まりで並べ直しました'); };
+$('#carAdd').onclick = () => edit(t => t.vehicles.push({ id: uid('v'), name: '車' + (t.vehicles.length + 1), driver: '', note: '' }));
+
+/* --- 照合・印刷 --- */
+function renderOut() {
+  const t = T();
+  const went = t.items.filter(i => done(t, i, 'load1'));
+  const notArrived = went.filter(i => !done(t, i, 'unload1'));
+  const notBack = t.items.filter(i => i.back && (done(t, i, 'unload1') || done(t, i, 'load1')) && !done(t, i, 'load2'));
+  const notHome = t.items.filter(i => i.back && done(t, i, 'load2') && !done(t, i, 'unload2'));
+  const block = (title, xs, lv, emptyMsg) => `<h3 style="font-size:13px;margin:10px 0 6px">${title}　<span class="chip ${xs.length ? lv : 'ok'}">${xs.length}</span></h3>${xs.length ? `<div class="issues">${xs.map(i => `<div class="issue ${lv}"><span class="dot ${lv}"></span><div class="main"><div>${esc(i.name)} ×${i.qty}</div><div class="sub">${esc(vname(t, i.vehicle))}${i.who ? '　担当 ' + esc(i.who) : ''}</div></div></div>`).join('')}</div>` : `<p class="muted" style="font-size:12.5px;margin:0">${emptyMsg}</p>`}`;
+  $('#cmp').innerHTML = `<p class="lead">チェックの記録を見比べて、なくしもの・積み忘れを見つけます。</p>` +
+    block('学校で積んだのに、会場で降ろしていないもの', notArrived, 'warn', 'ありません') +
+    block('行きで運んだのに、帰りに積んでいないもの（積み忘れ？）', notBack, 'bad', 'ありません') +
+    block('帰りに積んだのに、学校で降ろしていないもの', notHome, 'warn', 'ありません');
+}
+const sub = t => [t.title, t.date && GKY.jpDate(t.date), t.from && t.to && t.from + ' ⇄ ' + t.to].filter(Boolean).join('　');
+$('#prCars').onclick = () => {
+  const t = T();
+  if (!t.items.length) { toast('品物がありません'); return; }
+  const d = GKY.doc({ title: '積み込み表', sub: sub(t), foot: GKY.org().org.name, file: '積み込み表_' + t.title });
+  const groups = t.vehicles.map(v => ({ v, xs: t.items.filter(i => i.vehicle === v.id) })).concat([{ v: { name: '車が未定', driver: '', note: '' }, xs: t.items.filter(i => !i.vehicle) }]).filter(g => g.xs.length);
+  groups.forEach((g, gi) => {
+    if (gi) d.page();
+    d.block(`<h3>${esc(g.v.name)}　<span class="muted" style="font-weight:400;font-size:9pt">${esc([g.v.driver && '運転 ' + g.v.driver, g.v.note].filter(Boolean).join('　'))}</span></h3>`, { keep: true });
+    d.table({ cols: [{ h: '積む順', w: '8%', cls: 'c' }, { h: '品物', w: '30%' }, { h: '数', w: '6%', cls: 'c' }, { h: '担当', w: '18%' }, { h: '行き積む', w: '9.5%', cls: 'c' }, { h: '会場で降ろす', w: '9.5%', cls: 'c' }, { h: '帰り積む', w: '9.5%', cls: 'c' }, { h: '学校で降ろす', w: '9.5%', cls: 'c' }],
+      rows: g.xs.sort((a, b) => a.ord - b.ord).map((i, k) => [String(k + 1), esc(i.name) + (i.first ? '<br><span class="muted" style="font-size:8pt">早く使う</span>' : ''), String(i.qty), esc(i.who), '□', '□', i.back ? '□' : '—', i.back ? '□' : '—']) });
+  });
+  d.show();
+};
+$('#prAll').onclick = () => {
+  const t = T();
+  const d = GKY.doc({ title: '運ぶものの一覧', sub: sub(t), foot: GKY.org().org.name, file: '運ぶもの_' + t.title });
+  Object.entries(CATS).forEach(([k, nm]) => { const xs = t.items.filter(i => i.cat === k); if (!xs.length) return; d.block(`<h3>${esc(nm)}</h3>`, { keep: true }); d.table({ cols: [{ h: '品物', w: '40%' }, { h: '数', w: '8%', cls: 'c' }, { h: '車', w: '24%' }, { h: '担当', w: '28%' }], rows: xs.map(i => [esc(i.name), String(i.qty), esc(vname(t, i.vehicle)), esc(i.who)]) }); });
+  d.show();
+};
+$('#cpWho').onclick = () => { const t = T(); const by = {}; t.items.forEach(i => { const w = i.who || '担当未定'; (by[w] = by[w] || []).push(`${i.name}${i.qty > 1 ? '×' + i.qty : ''}（${vname(t, i.vehicle)}）`); }); GKY.copyText([`【${t.title} 運搬の担当】`, ...Object.entries(by).map(([w, xs]) => `■${w}：${xs.join('、')}`)].join('\n'), '担当の一覧をコピーしました'); };
+$('#csvOut').onclick = () => { const t = T(); GKY.saveFile(`搬入出_${t.title}.csv`, GKY.csv([['車', '積む順', '品物', '数', '種類', '担当', '早く使う', '帰りも', ...PHASES.map(p => p[1]), 'メモ'], ...t.items.slice().sort(phaseSort(t, 'load1')).map(i => [vname(t, i.vehicle), i.ord, i.name, i.qty, CATS[i.cat], i.who, i.first ? '○' : '', i.back ? '○' : '', ...PHASES.map(p => done(t, i, p[0]) ? '✓' : ''), i.note])]), 'text/csv'); };
+$('#jsonOut').onclick = () => { const t = T(); GKY.saveJSON(`搬入出_${t.title}_${GKY.stamp()}.json`, { app: 'hannyu', format: 1, exportedAt: new Date().toISOString(), trip: Object.assign(clone(t), { checks: {} }) }); };
+$('#jsonIn').onclick = async () => { const f = await GKY.openJSON(); if (!f) return; if (f.kind !== 'hannyu' || !f.data.trip) { toast('搬入出リストで保存したファイルを選んでください'); return; } const t = normalizeTrip(f.data.trip); if (S.trips[t.id]) t.id = uid('r'); S.trips[t.id] = t; S.order.unshift(t.id); S.current = t.id; past = []; future = []; persist(); renderAll(); toast(`「${t.title}」を読み込みました`); };
+
+/* --- 本番の設定 --- */
+function newTripFlow() {
+  sheet({ title: '新しい本番', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="nT" placeholder="例：吹奏楽コンクール 地区大会"></label><label class="fld"><span>日付</span><input type="date" id="nD"></label></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="nCopy" checked> 今の本番の品物・車・担当を引きつぐ（チェックは空）</label>`,
+    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => { const cur = T(); const t = newTrip({ title: norm($('#nT', body).value) || '新しい本番', date: $('#nD', body).value }); if ($('#nCopy', body).checked) { t.vehicles = clone(cur.vehicles); t.items = clone(cur.items).map(i => Object.assign(i, { id: uid('t') })); t.from = cur.from; t.to = ''; } S.trips[t.id] = t; S.order.unshift(t.id); S.current = t.id; past = []; future = []; persist(); renderAll(); showTab('items'); toast(`「${t.title}」を作りました`); } }] });
+}
+$('#btnTrip').onclick = () => {
+  const t = T();
+  const sh = sheet({ title: '本番の設定', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="tT" value="${esc(t.title)}"></label><label class="fld"><span>日付</span><input type="date" id="tD" value="${esc(t.date)}"></label><label class="fld"><span>出発</span><input type="text" id="tF" value="${esc(t.from)}"></label><label class="fld"><span>行き先</span><input type="text" id="tTo" value="${esc(t.to)}"></label></div><div class="btnrow" style="margin-top:14px"><button class="btn" id="tNew">新しい本番を作る</button><button class="btn danger" id="tDel">この本番を消す</button></div>`,
+    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => edit(tt => { tt.title = norm($('#tT', body).value) || '無題'; tt.date = $('#tD', body).value; tt.from = norm($('#tF', body).value); tt.to = norm($('#tTo', body).value); tt.sample = false; }) }] });
+  $('#tNew', sh.body).onclick = () => { sh.close(); newTripFlow(); };
+  GKY.arm($('#tDel', sh.body), () => { const gone = clone(t), pos = S.order.indexOf(t.id); delete S.trips[t.id]; S.order = S.order.filter(x => x !== t.id); if (!S.order.length) { const n = newTrip(); S.trips[n.id] = n; S.order.push(n.id); } S.current = S.order[Math.min(pos, S.order.length - 1)]; past = []; future = []; persist(); sh.close(); renderAll(); toast(`「${gone.title}」を消しました`, '元に戻す', () => { S.trips[gone.id] = gone; S.order.splice(pos, 0, gone.id); S.current = gone.id; persist(); renderAll(); }); }, 'もう一度押すと消します');
+};
+$('#trSel').onchange = e => { S.current = e.target.value; past = []; future = []; ckCar = ''; persist(); renderAll(); };
+
+/* ---------- はじまり ---------- */
+$('#btnUndo').onclick = undo; $('#btnRedo').onclick = redo;
+$('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: '搬入出リスト', what: '演奏会やコンクールの楽器運搬のためのツールです。運ぶものの一覧、車の割り当て、積む順を決め、当日は「行き：積む／降ろす」「帰り：積む／降ろす」の4つの段階をスマホでチェックします。行きと帰りを見比べて、積み忘れを見つけます。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
+$('#homeLink').href = GKY.linkTo('gakuya');
+document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return; e.preventDefault(); if (e.shiftKey) redo(); else undo(); });
+GKY.fitTop(); GKY.offline();
+showTab('check');
+renderAll();
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, T, autoOrder, normalizeTrip, renderAll };
+})();
+</script>
+</body>
+</html>

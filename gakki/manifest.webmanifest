@@ -1,0 +1,31 @@
+{
+  "name": "楽器台帳",
+  "short_name": "楽器台帳",
+  "description": "楽器・備品の台帳。状態、修理・点検・貸し出しの記録、借りた時点の写真、QRコードのラベル、リードなど消耗品の在庫",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEFEC",
+  "theme_color": "#ECEFEC",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
