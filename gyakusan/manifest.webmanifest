@@ -1,0 +1,31 @@
+{
+  "name": "本番逆算スケジュール",
+  "short_name": "本番逆算",
+  "description": "演奏会・コンクールの日付から、会場予約・チラシ・プログラム・運搬などの準備の締め切りを逆算して並べる",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEFEC",
+  "theme_color": "#ECEFEC",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

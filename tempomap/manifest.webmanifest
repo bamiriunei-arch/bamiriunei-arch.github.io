@@ -1,0 +1,31 @@
+{
+  "name": "テンポマップ",
+  "short_name": "テンポ",
+  "description": "区間ごとの小節数・拍子・テンポから演奏時間を計算し、コンクールなどのカット案を比べる。テンポの変化どおりに鳴る練習用クリックつき",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEFEC",
+  "theme_color": "#ECEFEC",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

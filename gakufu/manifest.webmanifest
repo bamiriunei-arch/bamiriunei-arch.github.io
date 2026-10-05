@@ -1,0 +1,31 @@
+{
+  "name": "楽譜ライブラリ",
+  "short_name": "楽譜",
+  "description": "吹奏楽の団体が持っている楽譜の台帳。パート譜の欠け、レンタルの返却期限、演奏した記録、今の部員でできる曲がわかる",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ECEFEC",
+  "theme_color": "#ECEFEC",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

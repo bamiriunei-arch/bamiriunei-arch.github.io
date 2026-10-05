@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="区間ごとの小節数・拍子・テンポから演奏時間を計算し、コンクールなどのカット案を比べる。テンポの変化どおりに鳴る練習用クリックつき">
+<meta name="theme-color" content="#ECEFEC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="テンポ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316191C'/%3E%3Crect x='6' y='13' width='20' height='7' rx='1' fill='%232B9457' transform='rotate(-10 16 16)'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>テンポマップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* ==== 楽屋シリーズ 共通部品（見た目） ここから ==== */
+/* 全ツールで同じ内容です。変えるときは全ツールそろえて変えてください。
+   レイアウト：舞台床のような落ち着いた灰緑の作業面に、ツールごとの色のバミリテープを1色だけ使う */
+:root{
+  --bg:#ECEFEC; --surface:#FFFFFF; --surface-2:#F4F6F4; --surface-3:#E6EAE7;
+  --ink:#1B211F; --muted:#5C6662; --line:#D4D9D6; --line-strong:#B5BDB8;
+  --ok:#2B7A4B; --ok-soft:#E2F3E8; --warn:#9A5B00; --warn-soft:#FFF1D0; --bad:#B3261E; --bad-soft:#FBE3E0;
+  --focus:#2F6FD0; --shadow:0 1px 2px rgba(18,24,22,.07),0 8px 22px rgba(18,24,22,.09);
+  --tape:#D73A44; --tape-ink:#FFFFFF;
+  --tape-soft:color-mix(in srgb,var(--tape) 13%,var(--surface));
+  --tape-line:color-mix(in srgb,var(--tape) 45%,var(--line));
+  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-rule:#9A9A9A; --paper-mute:#5E5E5E; --paper-head:#EFEFEF; --paper-mark:#FFE58A;
+  --f-ui:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --f-doc:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+    --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+    --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+    --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+  --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+  --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+  --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-ui); font-size:14px; line-height:1.6; -webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+a{color:inherit}
+h1,h2,h3,h4{text-wrap:balance; margin:0}
+.mono,.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+/* ---- 骨組み ---- */
+.gky-app{min-height:100%; display:flex; flex-direction:column}
+.gky-top{position:sticky; top:env(safe-area-inset-top,0px); z-index:30; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
+  padding-block:10px; padding-inline:16px; background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-brand{display:flex; align-items:center; gap:10px; min-width:0; text-decoration:none}
+.gky-tape{flex:none; display:inline-block; width:26px; height:10px; background:var(--tape); transform:rotate(-8deg); border-radius:1px;
+  clip-path:polygon(2px 0,100% 0,calc(100% - 2px) 50%,100% 100%,0 100%,2px 50%,0 0)}
+.gky-brand b{font-size:19px; font-weight:700; letter-spacing:.06em; white-space:nowrap}
+.gky-brand small{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gky-top-actions{margin-left:auto; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+@media (max-width:600px){ .gky-top-actions{width:100%; margin-left:0} .gky-top-actions>select{flex:1 1 150px; min-width:0} }
+.gky-home{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px 3px 8px; white-space:nowrap}
+.gky-home:hover{color:var(--ink); border-color:var(--line-strong)}
+.gky-home i{display:inline-block; width:12px; height:5px; background:var(--muted); transform:rotate(-8deg)}
+.gky-tabs{position:sticky; top:calc(env(safe-area-inset-top,0px) + var(--top-h,57px)); z-index:20; display:flex; gap:2px; padding-inline:12px; background:var(--surface); border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+.gky-tabs::-webkit-scrollbar{display:none}
+.gky-tabs button{position:relative; border:0; background:transparent; padding:11px 12px 10px; cursor:pointer; white-space:nowrap; color:var(--muted); font-weight:500; font-size:14px}
+.gky-tabs button[aria-selected="true"]{color:var(--ink); font-weight:700}
+.gky-tabs button[aria-selected="true"]::after{content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:3px; background:var(--tape); border-radius:2px 2px 0 0}
+.gky-tabs .count{display:inline-grid; place-items:center; min-width:19px; height:19px; padding:0 5px; margin-left:5px; border-radius:10px; background:var(--warn-soft); color:var(--warn); font-size:11px; font-weight:700; font-family:var(--f-mono)}
+.gky-tabs .count:empty{display:none}
+.gky-tabs .count.ok{background:var(--ok-soft); color:var(--ok)}
+.gky-main{flex:1; width:100%; max-width:1180px; margin:0 auto; padding-block:16px 64px; padding-inline:16px}
+.gky-main.wide{max-width:none}
+.gky-cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px}
+@media (max-width:860px){.gky-cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- 部品 ---- */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 12px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; white-space:nowrap; text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--tape); border-color:var(--tape); color:var(--tape-ink); font-weight:700}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent; background:transparent}
+.btn.ghost:hover{background:var(--surface-2); border-color:var(--line)}
+.btn.danger{color:var(--bad)}
+.btn.armed{background:var(--bad); border-color:var(--bad); color:#fff}
+.btn.sm{min-height:28px; padding:0 9px; font-size:12px}
+.btn.lg{min-height:44px; padding:0 16px; font-size:15px}
+.btn:disabled{opacity:.45; cursor:default}
+.btn svg,.ibtn svg{width:16px; height:16px; flex:none}
+.ibtn{width:32px; height:32px; display:inline-grid; place-items:center; border-radius:6px; cursor:pointer; border:1px solid transparent; background:transparent; color:var(--muted); padding:0}
+.ibtn:hover{background:var(--surface-2); border-color:var(--line); color:var(--ink)}
+.ibtn.del:hover{color:var(--bad)}
+.btnrow{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+input[type="text"],input[type="search"],input[type="number"],input[type="date"],input[type="time"],input[type="url"],input[type="tel"],select,textarea{
+  border:1px solid var(--line-strong); border-radius:6px; background:var(--surface); padding:6px 9px; min-height:34px; width:100%; min-width:0}
+select{width:auto; max-width:100%}
+textarea{resize:vertical; line-height:1.65; min-height:64px}
+input[type="number"]{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+input::placeholder,textarea::placeholder{color:color-mix(in srgb,var(--muted) 72%,transparent)}
+input.bad,select.bad{border-color:var(--bad); background:var(--bad-soft)}
+label.chk{display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-size:13px}
+label.chk input{width:16px; height:16px; accent-color:var(--tape); flex:none}
+.fld{display:flex; flex-direction:column; gap:3px; min-width:0}
+.fld>span{font-size:12px; color:var(--muted); font-weight:500}
+.fld .hint{font-size:11.5px; color:var(--muted)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px 12px}
+.grid .wide{grid-column:1/-1}
+
+.sec{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px 16px; margin-bottom:14px; min-width:0}
+.sec>h2,.sec>h3{font-size:15px; font-weight:700; margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px}
+.sec>h2 small,.sec>h3 small{font-weight:400; color:var(--muted); font-size:12px}
+.sec .note{font-size:12px; color:var(--muted); margin:8px 0 0}
+.lead{font-size:13px; color:var(--muted); margin:0 0 12px; max-width:68ch}
+.intro{display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:14px; border-radius:var(--r); background:var(--surface); border:1px dashed var(--line-strong); font-size:13px}
+.intro p{margin:0; flex:1; min-width:0}
+.sample-flag{display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:4px; background:var(--warn-soft); color:var(--warn); font-size:12px; font-weight:700; white-space:nowrap}
+
+/* テープ形のラベル */
+.tape{--tc:var(--tape); --ti:var(--tape-ink); display:inline-flex; align-items:center; height:22px; padding:0 10px; flex:none;
+  background:var(--tc); color:var(--ti); font-size:12px; font-weight:700; letter-spacing:.06em; line-height:1; white-space:nowrap;
+  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 22%,calc(100% - 2px) 45%,100% 70%,calc(100% - 3px) 100%,3px 100%,0 78%,2px 52%,0 26%)}
+.chip{display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; font-size:12px; background:var(--surface-2); color:var(--muted); border:1px solid var(--line); white-space:nowrap}
+.chip.ok{background:var(--ok-soft); color:var(--ok); border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+.chip.warn{background:var(--warn-soft); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 35%,var(--line))}
+.chip.bad{background:var(--bad-soft); color:var(--bad); border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
+.chip.tp{background:var(--tape-soft); color:var(--ink); border-color:var(--tape-line)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--tape); color:var(--tape-ink); border-color:var(--tape)}
+.dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--line-strong); flex:none}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+
+/* 集計の小さな札 */
+.sums{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+.sum{display:inline-flex; align-items:baseline; gap:6px; padding:6px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:12px; color:var(--muted)}
+.sum b{font-family:var(--f-mono); font-size:15px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.sum.warn{border-color:color-mix(in srgb,var(--warn) 55%,var(--line)); background:var(--warn-soft)} .sum.warn b{color:var(--warn)}
+.sum.bad{border-color:color-mix(in srgb,var(--bad) 55%,var(--line)); background:var(--bad-soft)} .sum.bad b{color:var(--bad)}
+.sum.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line)); background:var(--ok-soft)} .sum.ok b{color:var(--ok)}
+
+/* 表 */
+.tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
+table.tbl{border-collapse:collapse; width:100%; font-size:13px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:middle}
+.tbl thead th{position:sticky; top:0; z-index:1; background:var(--surface-2); font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl td.num,.tbl th.num{text-align:right; font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.tbl tr.sel td{background:var(--tape-soft)}
+.tbl input,.tbl select{min-height:30px; padding:3px 6px}
+
+/* 一覧 */
+.list{display:flex; flex-direction:column; gap:8px}
+.item{display:flex; align-items:center; gap:10px; padding:9px 10px 9px 12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); min-width:0}
+.item.on{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape)}
+.item .main{flex:1; min-width:0}
+.item .t1{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.item .t2{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+button.item{width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit}
+button.item:hover{border-color:var(--line-strong)}
+.empty{padding:28px 16px; text-align:center; color:var(--muted); font-size:13px; border:1px dashed var(--line-strong); border-radius:var(--r); background:var(--surface)}
+.empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px}
+
+/* 確認の一覧 */
+.issues{display:flex; flex-direction:column; gap:6px}
+.issue{display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:13px}
+.issue .dot{margin-top:7px}
+.issue.bad{border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.issue.warn{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+.issue .main{flex:1; min-width:0}
+.issue .sub{font-size:12px; color:var(--muted)}
+
+/* シート（重ねて出す画面） */
+.gky-veil{position:fixed; inset:0; z-index:80; background:rgba(10,14,12,.45); display:flex; align-items:flex-end; justify-content:center; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px)); padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.gky-veil{align-items:center}}
+.gky-sheet{width:min(640px,100%); max-height:100%; display:flex; flex-direction:column; background:var(--surface); border-radius:12px; box-shadow:var(--shadow); border:1px solid var(--line)}
+.gky-sheet.wide{width:min(980px,100%)}
+.gky-sheet>header{display:flex; align-items:center; gap:10px; padding:12px 12px 10px 16px; border-bottom:1px solid var(--line)}
+.gky-sheet>header h2{flex:1; font-size:16px}
+.gky-sheet>.body{padding:14px 16px; overflow:auto; min-height:0}
+.gky-sheet>footer{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; padding:10px 16px 14px; border-top:1px solid var(--line)}
+.gky-sheet>footer .left{margin-right:auto}
+
+.gky-toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); z-index:100; max-width:min(560px,calc(100% - 32px));
+  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:var(--ink); color:var(--bg); font-size:13px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s}
+.gky-toast.on{opacity:1; transform:translateX(-50%); pointer-events:auto}
+.gky-toast button{border:0; background:transparent; color:inherit; font-weight:700; text-decoration:underline; cursor:pointer; padding:0}
+@media (prefers-reduced-motion:reduce){.gky-toast{transition:none}}
+
+/* 印刷・PDFのプレビュー */
+.gky-pv{position:fixed; inset:0; z-index:90; display:flex; flex-direction:column; background:var(--surface-3)}
+.gky-pv>header{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-block:10px; padding-inline:16px; padding-top:calc(10px + env(safe-area-inset-top,0px)); background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-pv>header h2{font-size:15px; flex:1; min-width:10em}
+.gky-pv .stage{flex:1; overflow:auto; padding:18px 16px 60px}
+.gky-pv .scaler{transform-origin:top left; display:flex; flex-direction:column; gap:18px}
+.gky-pv .msg{font-size:12px; color:var(--muted)}
+
+/* 紙（印刷物）はテーマに関係なく白い紙に黒い字 */
+.gky-page{position:relative; width:794px; height:1123px; background:var(--paper); color:var(--paper-ink); box-shadow:0 2px 10px rgba(0,0,0,.18);
+  font-family:var(--f-doc); font-size:10pt; line-height:1.5; display:flex; flex-direction:column; padding:42px 44px 30px; overflow:hidden}
+.gky-page.landscape{width:1123px; height:794px}
+.gky-page .pg-head{display:flex; align-items:flex-end; gap:12px; border-bottom:1.5px solid var(--paper-line); padding-bottom:6px; margin-bottom:10px}
+.gky-page .pg-title{font-size:15pt; font-weight:700; letter-spacing:.04em}
+.gky-page .pg-sub{font-size:9.5pt; color:var(--paper-mute); flex:1; text-align:right}
+.gky-page .pg-body{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:8px}
+.gky-page .pg-foot{display:flex; justify-content:space-between; font-size:8pt; color:var(--paper-mute); margin-top:8px}
+.gky-page h3{font-size:11.5pt; margin:4px 0 0; padding-left:7px; border-left:3px solid var(--paper-line)}
+.gky-page h4{font-size:10pt; margin:2px 0 0}
+.gky-page p{margin:0}
+.gky-page .muted{color:var(--paper-mute)}
+.gky-page table{border-collapse:collapse; width:100%; font-size:9pt; table-layout:fixed}
+.gky-page th,.gky-page td{border:0.75px solid var(--paper-line); padding:3px 5px; vertical-align:top; overflow-wrap:anywhere}
+.gky-page th{background:var(--paper-head); font-weight:700; text-align:left}
+.gky-page td.num,.gky-page th.num{text-align:right; font-variant-numeric:tabular-nums}
+.gky-page td.c,.gky-page th.c{text-align:center}
+.gky-page .mark{background:var(--paper-mark)}
+.gky-page .box{border:0.75px solid var(--paper-line); padding:6px 8px}
+#gky-print-root{display:none}
+@media print{
+  body.gky-printing>*:not(#gky-print-root){display:none!important}
+  body.gky-printing{background:#fff!important}
+  body.gky-printing #gky-print-root{display:block}
+  #gky-print-root .gky-page{box-shadow:none; margin:0; break-after:page; page-break-after:always}
+  #gky-print-root .gky-page:last-child{break-after:auto; page-break-after:auto}
+}
+/* ==== 楽屋シリーズ 共通部品（見た目） ここまで ==== */
+
+/* ==== テンポマップだけの見た目 ==== */
+/* レイアウト：上に時間の帯（区間の長さどおりの棒）、下に区間のカード。クリックは大きな数字 */
+:root{ --tape:#2B9457; --tape-ink:#FFFFFF; --cut:#9AA39F; }
+.timebar{position:relative; display:flex; height:46px; border-radius:6px; overflow:hidden; border:1px solid var(--line); background:var(--surface); margin:4px 0 6px}
+.timebar .seg{position:relative; min-width:2px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--tape-ink); background:var(--tape); border-right:1px solid var(--surface); overflow:hidden; white-space:nowrap}
+.timebar .seg:nth-child(even){background:color-mix(in srgb,var(--tape) 78%,var(--ink))}
+.timebar .seg.cut{background:repeating-linear-gradient(45deg,var(--surface-2) 0 6px,var(--surface-3) 6px 12px); color:var(--muted); text-decoration:line-through}
+.timebar .limit{position:absolute; top:0; bottom:0; width:2px; background:var(--bad); z-index:2}
+.timebar .limit.r::after{left:auto; right:4px}
+.timebar .limit::after{content:attr(data-l); position:absolute; top:2px; left:4px; white-space:nowrap; font-size:10px; color:var(--bad); font-family:var(--f-mono); background:var(--surface); padding:0 3px; border-radius:2px}
+.scale{display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:11px; color:var(--muted); margin-bottom:12px}
+.secs{display:flex; flex-direction:column; gap:8px}
+.scard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); min-width:0}
+.scard.cut{opacity:.6}
+.scard.cut .shead .nm{text-decoration:line-through}
+.shead{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:8px 10px 6px 12px}
+.shead .nm{font-weight:700; font-size:15px; min-width:2em}
+.shead .bars{font-family:var(--f-mono); font-size:12px; color:var(--muted)}
+.shead .sp{flex:1}
+.shead .t{font-family:var(--f-mono); font-variant-numeric:tabular-nums; font-size:15px; font-weight:600}
+.shead .cum{font-family:var(--f-mono); font-size:12px; color:var(--muted); min-width:4.5em; text-align:right}
+.sbody{display:grid; grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); gap:8px 10px; padding:4px 12px 12px; border-top:1px dashed var(--line)}
+.sbody .fld input,.sbody .fld select{min-height:32px; padding:4px 7px}
+.sbody .fld.note{grid-column:span 2}
+@media (max-width:420px){ .sbody .fld.note{grid-column:1/-1} }
+.plans{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px}
+.plan{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:12px 14px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.plan.on{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape)}
+.plan h3{font-size:15px; display:flex; align-items:center; gap:8px}
+.plan h3 input{font-weight:700; min-height:30px}
+.plan .big{font-family:var(--f-mono); font-size:28px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1.1}
+.plan .diff{font-family:var(--f-mono); font-size:13px}
+.plan .diff.over{color:var(--bad); font-weight:700} .plan .diff.ok{color:var(--ok)}
+.plan .cuts{display:flex; flex-wrap:wrap; gap:4px}
+.plan .row{display:flex; justify-content:space-between; gap:8px; font-size:12.5px; color:var(--muted)}
+.plan .row b{color:var(--ink); font-family:var(--f-mono); font-weight:600}
+.player{display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:16px}
+@media (max-width:860px){ .player{grid-template-columns:minmax(0,1fr)} }
+.dial{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center}
+.dial .bar{font-family:var(--f-mono); font-size:clamp(56px,13vw,112px); font-weight:600; line-height:1; font-variant-numeric:tabular-nums}
+.dial .lab{font-size:12px; color:var(--muted)}
+.dial .reh{display:flex; gap:10px; align-items:center; font-size:15px}
+.beats{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:26px}
+.beats i{width:22px; height:22px; border-radius:50%; background:var(--surface-3); border:1px solid var(--line-strong)}
+.beats i.acc{width:26px; height:26px}
+.beats i.on{background:var(--tape); border-color:var(--tape)}
+.dial .tempo{font-family:var(--f-mono); font-size:20px}
+.ctrls{display:flex; flex-direction:column; gap:12px}
+.ctrls .fld input[type=range]{width:100%; accent-color:var(--tape)}
+.share{font-family:var(--f-mono); font-size:12px; word-break:break-all; min-height:90px}
+</style>
+</head>
+<body>
+<div class="gky-app">
+  <header class="gky-top">
+    <a class="gky-brand" href="#" id="brand" title="テンポマップについて"><span class="gky-tape"></span><b>テンポマップ</b><small>演奏時間・カット・クリック</small></a>
+    <div class="gky-top-actions">
+      <select id="mapSel" aria-label="曲を選ぶ"></select>
+      <button class="btn sm" id="btnMap">曲の設定</button>
+      <button class="ibtn" id="btnUndo" title="元に戻す（Ctrl+Z）" aria-label="元に戻す"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3.5L2.5 6.5l3 3"/><path d="M2.5 6.5h7a4 4 0 010 8h-3"/></svg></button>
+      <button class="ibtn" id="btnRedo" title="やり直す（Ctrl+Shift+Z）" aria-label="やり直す"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3.5l3 3-3 3"/><path d="M13.5 6.5h-7a4 4 0 000 8h3"/></svg></button>
+      <a class="gky-home" id="homeLink" href="#" target="_blank" rel="noopener"><i></i>楽屋</a>
+    </div>
+  </header>
+  <nav class="gky-tabs" id="tabs" role="tablist">
+    <button data-tab="map">区間</button>
+    <button data-tab="plans">カット案</button>
+    <button data-tab="click">クリック</button>
+    <button data-tab="share">共有・書き出し</button>
+  </nav>
+  <main class="gky-main">
+    <div id="sampleBar"></div>
+    <div class="sums" id="topSums"></div>
+    <div id="barWrap"></div>
+
+    <section data-panel="map" hidden>
+      <p class="lead">練習番号ごとに、小節数・拍子・テンポを入れると時間が出ます。rit.・accel. は「終わりのテンポ」に、フェルマータやG.P.でのびる分は「ゆとり秒」に入れてください。チェックを外した区間は、いま選んでいるカット案で切る所です。</p>
+      <div class="secs" id="secList"></div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn primary" id="btnAddSec">＋ 区間を足す</button>
+        <button class="btn" id="btnAddMany">まとめて足す</button>
+      </div>
+    </section>
+
+    <section data-panel="plans" hidden>
+      <p class="lead">カット案ごとの合計です。制限時間は「曲の設定」で入れられます。同じ枠で計るほかの曲（課題曲など）がある場合は、その時間も足して比べます。本番やリハーサルで実際に計った時間を入れると、計算とのずれ（伸び縮み）をほかの案にも当てて目安を出します。</p>
+      <div class="plans" id="planList"></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn" id="btnAddPlan">＋ カット案を足す</button></div>
+    </section>
+
+    <section data-panel="click" hidden>
+      <div class="player">
+        <div class="dial" aria-live="off">
+          <div class="lab">小節</div>
+          <div class="bar" id="pBar">1</div>
+          <div class="reh"><span class="tape" id="pReh">—</span><span class="tempo" id="pTempo">♩=—</span><span class="mono muted" id="pMeter"></span></div>
+          <div class="beats" id="pBeats"></div>
+          <div class="mono muted" id="pTime">0:00 / 0:00</div>
+          <div class="btnrow"><button class="btn primary lg" id="pPlay">▶ 鳴らす</button><button class="btn lg" id="pStop">■ 止める</button></div>
+        </div>
+        <div class="ctrls">
+          <div class="sec" style="margin:0">
+            <h2>鳴らし方</h2>
+            <div class="grid">
+              <label class="fld"><span>はじめる小節</span><input type="number" id="pFrom" min="1" step="1" value="1"></label>
+              <label class="fld"><span>カット案</span><select id="pPlan"></select></label>
+              <label class="fld wide"><span>速さ <b class="mono" id="pSpeedV">100%</b></span><input type="range" id="pSpeed" min="50" max="120" step="5" value="100"></label>
+              <label class="chk"><input type="checkbox" id="pCount" checked> 1小節前からカウント</label>
+              <label class="chk"><input type="checkbox" id="pSub"> 裏拍も鳴らす</label>
+              <label class="chk"><input type="checkbox" id="pLoop"> くり返す（はじめる小節の区間だけ）</label>
+              <label class="fld wide"><span>音の大きさ</span><input type="range" id="pVol" min="0" max="100" step="5" value="80"></label>
+            </div>
+            <p class="note">小節の頭は高い音、拍子のまとまり（2+2+3 など）の頭は中くらいの音で鳴ります。止めるときはスペースキーでも止まります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="share" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>共有コード</h2>
+            <p class="lead">この曲のテンポマップを、文字のかたまり（コード）にします。コピーしてLINEなどで送り、受け取った人は「コードから読み込む」に貼るだけで同じテンポマップを開けます。合奏ノートでも、小節の目印を作るのに使えます。</p>
+            <textarea class="share" id="shCode" readonly aria-label="共有コード"></textarea>
+            <div class="btnrow" style="margin-top:8px"><button class="btn primary" id="shCopy">コードをコピー</button><button class="btn" id="shLink" hidden>開くリンクをコピー</button></div>
+          </div>
+          <div class="sec">
+            <h2>コードから読み込む</h2>
+            <textarea class="share" id="inCode" placeholder="ここに共有コードを貼る" aria-label="読み込むコード"></textarea>
+            <div class="btnrow" style="margin-top:8px"><button class="btn" id="inBtn">読み込む</button></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>印刷・書き出し</h2>
+            <div class="list">
+              <button class="item" id="prMap"><div class="main"><div class="t1">テンポマップを印刷・PDF</div><div class="t2">区間ごとの小節・拍子・テンポ・時間と、カット案の比較。A4縦</div></div></button>
+            </div>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="btn" id="csvOut">CSVで保存</button>
+              <button class="btn" id="jsonOut">全部の曲をファイルに保存</button>
+              <button class="btn" id="jsonIn">ファイルから読み込む</button>
+            </div>
+          </div>
+          <div class="sec">
+            <h2>ステマネ・楽譜ライブラリへ</h2>
+            <p class="lead">いま選んでいるカット案の演奏時間を、ステマネや楽譜ライブラリの「演奏時間」に入れるときは、下の時間をコピーして貼ってください。</p>
+            <div class="btnrow"><span class="sum" id="durNow"></span><button class="btn" id="durCopy">時間をコピー</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここから ==== */
+/* 全ツールで同じ内容です。変えるときは全ツールそろえて変え、GKY.VERSION を上げてください。
+   ・楽屋データ（部員・曲・楽器）の読み書き      GKY.org / GKY.saveOrg
+   ・ファイルの保存と読み込み                    GKY.saveFile / GKY.openFile
+   ・CSV（Excelで開ける形）                      GKY.csv / GKY.parseCSV
+   ・パートの名前のそろえ方                      GKY.PARTS / GKY.partOf / GKY.baseOf
+   ・ほかのツールのファイルの見分け              GKY.identify / GKY.stagemane / GKY.bamiri
+   ・印刷とPDF                                   GKY.doc
+   ・小さな画面部品                              GKY.toast / GKY.sheet / GKY.arm               */
+const GKY = (() => {
+  const VERSION = '1';
+  /* Claudeの画面の中で開いているか（そのときはファイル保存の方法と印刷のしかたが変わる） */
+  const IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function');
+  const TEST = /[?&]test\b/.test(location.search);
+
+  /* ---------- 小物 ---------- */
+  const $ = (q, el = document) => el.querySelector(q);
+  const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = (p = 'x') => p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const norm = s => String(s ?? '').normalize('NFKC').trim();
+  /* 曲名などを見比べるための形（空白・記号・大文字小文字の違いをなくす） */
+  const key = s => norm(s).toLowerCase().replace(/[\s・･「」『』（）()［］\[\]〈〉《》“”"'’‘、。,.:：;；!！?？~〜ー－―‐\-_/／]+/g, '');
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  /* 少し待ってからまとめて実行する。ページを閉じる・ほかのアプリに切りかえるときは、待っている分をすぐ実行する（保存のもれを防ぐ） */
+  const pendings = new Set();
+  const debounce = (fn, ms = 400) => {
+    let t = 0, args = [];
+    const f = (...a) => { args = a; clearTimeout(t); pendings.add(f); t = setTimeout(() => { pendings.delete(f); fn(...args); }, ms); };
+    f.flush = () => { if (!pendings.has(f)) return; clearTimeout(t); pendings.delete(f); fn(...args); };
+    return f;
+  };
+  const flushAll = () => [...pendings].forEach(f => f.flush());
+  window.addEventListener('pagehide', flushAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushAll(); });
+  const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+  /* ---------- 時間と日付 ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  /* 秒 → 8:43 */
+  const clock = s => { if (s == null || !isFinite(s)) return '—'; s = Math.round(s); const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s % 60; return (neg ? '−' : '') + (m >= 60 ? Math.floor(m / 60) + ':' + pad(m % 60) : m) + ':' + pad(r); };
+  /* 秒 → 8'43" （吹奏楽の資料でよく使う書き方） */
+  const dur = s => { if (s == null || !isFinite(s)) return ''; s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return m + "'" + pad(r) + '"'; };
+  /* 8:43 / 8'43" / 8分43秒 / 523 → 秒。読めないときは null */
+  function parseDur(v) {
+    const t = norm(v).replace(/\s/g, '');
+    if (!t) return null;
+    let m;
+    if ((m = t.match(/^(\d+):(\d{1,2}):(\d{1,2})$/))) return +m[1] * 3600 + +m[2] * 60 + +m[3];
+    if ((m = t.match(/^(\d+)[:'′分](\d{1,2})(?:["″秒]|'')?$/))) return +m[1] * 60 + +m[2];
+    if ((m = t.match(/^(\d+)[分'′]$/))) return +m[1] * 60;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)秒?$/))) return Math.round(+m[1]);
+    return null;
+  }
+  const ymd = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parseYmd = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const WD = ['日', '月', '火', '水', '木', '金', '土'];
+  const jpDate = (s, withWeek = true) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日' + (withWeek ? '（' + WD[d.getDay()] + '）' : ''); };
+  const mdDate = (s) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）'; };
+  const addDays = (s, n) => { const d = parseYmd(s); if (!d) return ''; d.setDate(d.getDate() + n); return ymd(d); };
+  const daysBetween = (a, b) => { const x = parseYmd(a), y = parseYmd(b); if (!x || !y) return null; return Math.round((y - x) / 86400000); };
+  /* 4月はじまりの年度 */
+  const fiscalYear = (d = new Date()) => d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const stamp = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
+
+  /* ---------- ブラウザへの保存（この端末の中だけ） ---------- */
+  const store = {
+    get(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } },
+    keys() { try { return Object.keys(localStorage); } catch (e) { return []; } },
+    raw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    setRaw(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  };
+
+  /* ---------- パート ---------- */
+  /* バミリの奏者ラベルと同じ書き方にそろえています */
+  const SECTIONS = { ww: '木管', br: '金管', str: '弦', perc: '打楽器', key: '鍵盤・ハープ', etc: 'その他' };
+  const PARTS = [
+    ['Pic', 'ピッコロ', 'ww'], ['Fl', 'フルート', 'ww'], ['Ob', 'オーボエ', 'ww'], ['E.H.', 'イングリッシュホルン', 'ww'], ['Fg', 'ファゴット', 'ww'],
+    ['E♭Cl', 'E♭クラリネット', 'ww'], ['Cl', 'クラリネット', 'ww'], ['A.Cl', 'アルトクラリネット', 'ww'], ['B.Cl', 'バスクラリネット', 'ww'],
+    ['S.Sax', 'ソプラノサックス', 'ww'], ['A.Sax', 'アルトサックス', 'ww'], ['T.Sax', 'テナーサックス', 'ww'], ['B.Sax', 'バリトンサックス', 'ww'],
+    ['Tp', 'トランペット', 'br'], ['Cor', 'コルネット', 'br'], ['Hn', 'ホルン', 'br'], ['Tb', 'トロンボーン', 'br'], ['B.Tb', 'バストロンボーン', 'br'],
+    ['Euph', 'ユーフォニアム', 'br'], ['Tuba', 'テューバ', 'br'],
+    ['St.B', '弦バス', 'str'], ['Perc', '打楽器', 'perc'], ['Pf', 'ピアノ', 'key'], ['Hp', 'ハープ', 'key'],
+  ];
+  /* 打楽器の中の楽器（コウバンなどの「受け持ち」で使う） */
+  const PERC = [
+    ['Timp', 'ティンパニ'], ['S.D.', 'スネアドラム'], ['B.D.', 'バスドラム'], ['Cym', 'クラッシュシンバル'], ['Sus.Cym', 'サスペンデッドシンバル'],
+    ['Tam-t', 'タムタム'], ['Drs', 'ドラムセット'], ['Mar', 'マリンバ'], ['Xylo', 'シロフォン'], ['Vib', 'ヴィブラフォン'], ['Glk', 'グロッケン'],
+    ['Chime', 'チャイム'], ['Tamb', 'タンバリン'], ['Tri', 'トライアングル'], ['W.B.', 'ウッドブロック'], ['Toms', 'タムタム（太鼓）'],
+    ['Cong', 'コンガ'], ['Bongo', 'ボンゴ'], ['Timb', 'ティンバレス'], ['Perc', '打楽器（小物）'],
+  ];
+  const PART_CODES = new Set(PARTS.map(p => p[0]));
+  const PERC_CODES = new Set(PERC.map(p => p[0]));
+  /* よく使う呼び方 → 記号 */
+  const ALIAS = {
+    'ぴっころ': 'Pic', 'ピッコロ': 'Pic', 'picc': 'Pic', 'pic': 'Pic', 'ピッコ': 'Pic',
+    'ふるーと': 'Fl', 'フルート': 'Fl', 'fl': 'Fl', 'flute': 'Fl',
+    'おーぼえ': 'Ob', 'オーボエ': 'Ob', 'ob': 'Ob', 'eh': 'E.H.', 'e.h.': 'E.H.', 'イングリッシュホルン': 'E.H.', 'コールアングレ': 'E.H.',
+    'ふぁごっと': 'Fg', 'ファゴット': 'Fg', 'バスーン': 'Fg', 'fg': 'Fg', 'bsn': 'Fg',
+    'クラ': 'Cl', 'クラリネット': 'Cl', 'くら': 'Cl', 'cl': 'Cl', 'b♭cl': 'Cl', 'bbcl': 'Cl', 'エスクラ': 'E♭Cl', 'e♭cl': 'E♭Cl', 'ebcl': 'E♭Cl',
+    'アルトクラ': 'A.Cl', 'アルトクラリネット': 'A.Cl', 'a.cl': 'A.Cl', 'acl': 'A.Cl',
+    'バスクラ': 'B.Cl', 'バスクラリネット': 'B.Cl', 'b.cl': 'B.Cl', 'bcl': 'B.Cl',
+    'ソプラノサックス': 'S.Sax', 'ソプラノ': 'S.Sax', 'ss': 'S.Sax', 's.sax': 'S.Sax', 'ssax': 'S.Sax',
+    'アルトサックス': 'A.Sax', 'アルト': 'A.Sax', 'as': 'A.Sax', 'a.sax': 'A.Sax', 'asax': 'A.Sax',
+    'テナーサックス': 'T.Sax', 'テナー': 'T.Sax', 'ts': 'T.Sax', 't.sax': 'T.Sax', 'tsax': 'T.Sax',
+    'バリトンサックス': 'B.Sax', 'バリトン': 'B.Sax', 'バリサク': 'B.Sax', 'bs': 'B.Sax', 'b.sax': 'B.Sax', 'bsax': 'B.Sax',
+    'トランペット': 'Tp', 'ラッパ': 'Tp', 'tp': 'Tp', 'trp': 'Tp', 'tpt': 'Tp', 'コルネット': 'Cor', 'cor': 'Cor', 'crt': 'Cor',
+    'ホルン': 'Hn', 'hn': 'Hn', 'hr': 'Hn', 'horn': 'Hn',
+    'トロンボーン': 'Tb', 'ボーン': 'Tb', 'tb': 'Tb', 'trb': 'Tb', 'バストロンボーン': 'B.Tb', 'バストロ': 'B.Tb', 'b.tb': 'B.Tb', 'btb': 'B.Tb',
+    'ユーフォニアム': 'Euph', 'ユーフォ': 'Euph', 'euph': 'Euph', 'eup': 'Euph', 'eu': 'Euph', 'ユーフォニウム': 'Euph',
+    'テューバ': 'Tuba', 'チューバ': 'Tuba', 'tuba': 'Tuba', 'tu': 'Tuba',
+    '弦バス': 'St.B', 'げんばす': 'St.B', 'コントラバス': 'St.B', 'st.b': 'St.B', 'stb': 'St.B', 'cb': 'St.B', 'ベース': 'St.B',
+    '打楽器': 'Perc', 'パーカッション': 'Perc', 'perc': 'Perc', 'per': 'Perc', 'だがっき': 'Perc',
+    'ピアノ': 'Pf', 'pf': 'Pf', 'pno': 'Pf', 'ハープ': 'Hp', 'hp': 'Hp', 'harp': 'Hp',
+    'ティンパニ': 'Timp', 'timp': 'Timp', 'tim': 'Timp', 'スネア': 'S.D.', 'スネアドラム': 'S.D.', '小太鼓': 'S.D.', 'sd': 'S.D.', 's.d.': 'S.D.', 'sn': 'S.D.',
+    'バスドラム': 'B.D.', 'バスドラ': 'B.D.', '大太鼓': 'B.D.', 'bd': 'B.D.', 'b.d.': 'B.D.', 'シンバル': 'Cym', 'cym': 'Cym', 'cymb': 'Cym',
+    'サスペンデッドシンバル': 'Sus.Cym', 'サスシン': 'Sus.Cym', 'sus.cym': 'Sus.Cym', 'タムタム': 'Tam-t', 'ドラ': 'Tam-t', 'ドラムセット': 'Drs', 'ドラム': 'Drs', 'drs': 'Drs', 'dr': 'Drs',
+    'マリンバ': 'Mar', 'mar': 'Mar', 'mrb': 'Mar', 'シロフォン': 'Xylo', '木琴': 'Xylo', 'xylo': 'Xylo', 'xyl': 'Xylo',
+    'ヴィブラフォン': 'Vib', 'ビブラフォン': 'Vib', '鉄琴': 'Glk', 'vib': 'Vib', 'グロッケン': 'Glk', 'glk': 'Glk', 'glock': 'Glk',
+    'チャイム': 'Chime', 'chime': 'Chime', 'chimes': 'Chime', 'タンバリン': 'Tamb', 'tamb': 'Tamb', 'トライアングル': 'Tri', 'tri': 'Tri',
+    'ウッドブロック': 'W.B.', 'wb': 'W.B.', 'w.b.': 'W.B.', 'コンガ': 'Cong', 'ボンゴ': 'Bongo', 'ティンバレス': 'Timb',
+  };
+  /* 入力された名前を記号にそろえる（わからなければそのまま） */
+  function partOf(v) {
+    const t = norm(v);
+    if (!t) return '';
+    if (PART_CODES.has(t) || PERC_CODES.has(t)) return t;
+    const k = t.toLowerCase().replace(/\s/g, '');
+    if (ALIAS[k]) return ALIAS[k];
+    if (ALIAS[t]) return ALIAS[t];
+    for (const p of PARTS) if (p[0].toLowerCase() === k || p[1] === t) return p[0];
+    for (const p of PERC) if (p[0].toLowerCase() === k || p[1] === t) return p[0];
+    return t;
+  }
+  /* 「Cl1」「1st Cl」「Tp 2」→ 楽器の記号（Cl, Tp）。打楽器の中の楽器はそのまま */
+  function baseOf(label) {
+    let t = norm(label).replace(/\s+/g, ' ');
+    t = t.replace(/^(?:\d+(?:st|nd|rd|th)|[1-9]番?)\s*/i, '').replace(/\s*(?:\d+(?:st|nd|rd|th)?|[ⅠⅡⅢⅣ]|[1-9]番)$/i, '').trim();
+    return partOf(t) || t;
+  }
+  /* その受け持ちに入れる楽器の仲間（打楽器はまとめて Perc） */
+  const familyOf = label => { const b = baseOf(label); return PERC_CODES.has(b) ? 'Perc' : b; };
+  const partName = code => { const p = PARTS.find(x => x[0] === code) || PERC.find(x => x[0] === code); return p ? p[1] : code; };
+  const sectionOf = code => { const f = familyOf(code); const p = PARTS.find(x => x[0] === f); return p ? p[2] : 'etc'; };
+  const partOrder = code => { const f = familyOf(code); const i = PARTS.findIndex(x => x[0] === f); const j = PERC.findIndex(x => x[0] === baseOf(code)); return (i < 0 ? 900 : i * 10) + (j < 0 ? 0 : j / 100); };
+  const GRADES = ['小4', '小5', '小6', '中1', '中2', '中3', '高1', '高2', '高3', '大学', '一般'];
+  /* その学年が「あと何年でいなくなるか」（中3・高3は今年度で終わり＝0）。わからなければ null */
+  function yearsLeft(grade) {
+    const g = norm(grade);
+    let m;
+    if ((m = g.match(/^小([1-6])$/))) return 6 - +m[1] + 3; // 中学まで続けると考える
+    if ((m = g.match(/^中([1-3])$/))) return 3 - +m[1];
+    if ((m = g.match(/^高([1-3])$/))) return 3 - +m[1];
+    return null;
+  }
+  const nextGrade = g => { const t = norm(g); let m; if ((m = t.match(/^(小|中|高)([1-6])$/))) { const n = +m[2] + 1; const max = m[1] === '小' ? 6 : 3; if (n <= max) return m[1] + n; return m[1] === '小' ? '中1' : m[1] === '中' ? '' : ''; } return t; };
+
+  /* ---------- 楽屋データ（全ツールで共通の 部員・曲・楽器） ---------- */
+  /* 同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、この端末のブラウザの中でこのデータを共有します */
+  const ORG_KEY = 'gakuya.org';
+  const normMember = m => ({
+    id: typeof m.id === 'string' && m.id ? m.id : uid('m'), name: norm(m.name), kana: norm(m.kana), grade: norm(m.grade),
+    part: partOf(m.part), subs: (Array.isArray(m.subs) ? m.subs : String(m.subs || '').split(/[、,\/／・\s]+/)).map(partOf).filter(Boolean),
+    note: String(m.note ?? ''), active: m.active !== false,
+  });
+  const normSong = s => ({
+    id: typeof s.id === 'string' && s.id ? s.id : uid('s'), title: norm(s.title), kana: norm(s.kana), composer: norm(s.composer), arranger: norm(s.arranger),
+    publisher: norm(s.publisher), dur: s.dur == null || s.dur === '' || !isFinite(+s.dur) ? null : Math.round(+s.dur),
+    parts: (Array.isArray(s.parts) ? s.parts : []).map(x => norm(x)).filter(Boolean),
+  });
+  const normInst = i => ({ id: typeof i.id === 'string' && i.id ? i.id : uid('g'), no: norm(i.no), name: norm(i.name), part: partOf(i.part), owner: norm(i.owner), state: norm(i.state) });
+  function normOrg(o) {
+    o = o && typeof o === 'object' ? o : {};
+    const u = o.updated && typeof o.updated === 'object' ? o.updated : {};
+    return {
+      app: 'gakuya', format: 1,
+      org: { name: norm(o.org && o.org.name), year: (o.org && +o.org.year) || null },
+      members: (Array.isArray(o.members) ? o.members : []).filter(m => m && (m.name || m.id)).map(normMember),
+      songs: (Array.isArray(o.songs) ? o.songs : []).filter(s => s && s.title).map(normSong),
+      instruments: (Array.isArray(o.instruments) ? o.instruments : []).filter(i => i && (i.name || i.no)).map(normInst),
+      updated: { org: +u.org || 0, members: +u.members || 0, songs: +u.songs || 0, instruments: +u.instruments || 0 },
+    };
+  }
+  /* いまの楽屋データ（なければ空） */
+  const org = () => normOrg(store.get(ORG_KEY));
+  const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length); };
+  /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
+  function saveOrg(section, value) {
+    const cur = org();
+    if (section === 'org') cur.org = Object.assign(cur.org, value);
+    else if (section === 'members') cur.members = value.map(normMember);
+    else if (section === 'songs') cur.songs = value.map(normSong);
+    else if (section === 'instruments') cur.instruments = value.map(normInst);
+    else if (section === 'all') { const n = normOrg(value); Object.assign(cur, { org: n.org, members: n.members, songs: n.songs, instruments: n.instruments }); }
+    const now = Date.now();
+    if (section === 'all') Object.keys(cur.updated).forEach(k => cur.updated[k] = now); else cur.updated[section] = now;
+    return store.set(ORG_KEY, cur);
+  }
+  /* 別のタブで楽屋データが変わったら知らせる */
+  function onOrgChange(fn) { window.addEventListener('storage', e => { if (e.key === ORG_KEY) fn(org()); }); }
+  const orgFile = o => ({ app: 'gakuya', format: 1, exportedAt: new Date().toISOString(), ...normOrg(o) });
+
+  /* ---------- ほかのツールのファイルを見分ける ---------- */
+  function identify(o) {
+    if (!o || typeof o !== 'object') return null;
+    if (o.app === 'gakuya') return 'gakuya';
+    if (o.app === 'stagemane' || Array.isArray(o.concerts) || (o.info && Array.isArray(o.program))) return 'stagemane';
+    if (Array.isArray(o.items) && o.W && o.D) return 'bamiri';
+    if (Array.isArray(o.performers) && Array.isArray(o.sets)) return 'drillboard';
+    if (typeof o.app === 'string') return o.app;
+    return null;
+  }
+  const APP_NAMES = { gakuya: '楽屋', stagemane: 'ステマネ', bamiri: 'バミリ', drillboard: 'ドリルボード', kouban: 'コウバン', gakufu: '楽譜ライブラリ', tempomap: 'テンポマップ', shikomi: '仕込み図', gakki: '楽器台帳', gakkigime: '楽器決め・編成計画', hannyu: '搬入出リスト', gassou: '合奏ノート', gyakusan: '本番逆算スケジュール' };
+  /* ステマネのファイル → 演奏会の一覧（曲は出てくる順） */
+  function stagemane(o) {
+    const list = o && o.concert ? [o.concert] : Array.isArray(o && o.concerts) ? o.concerts : (o && o.info && Array.isArray(o.program) ? [o] : []);
+    return list.filter(c => c && typeof c === 'object').map(c => {
+      const info = c.info || {};
+      let part = '';
+      const pieces = [];
+      (Array.isArray(c.program) ? c.program : []).forEach(it => {
+        if (!it || typeof it !== 'object') return;
+        if (it.type === 'part') part = norm(it.name);
+        if (it.type === 'piece' && norm(it.title)) {
+          pieces.push({ id: String(it.id || uid('p')), title: norm(it.title), composer: norm(it.composer), arranger: norm(it.arranger), conductor: norm(it.conductor),
+            dur: it.dur != null && isFinite(+it.dur) ? Math.round(+it.dur) : null, encore: norm(it.encore), part, contOf: it.contOf || '',
+            medley: (Array.isArray(it.parts) ? it.parts : []).map(p => norm(p && p.title)).filter(Boolean) });
+        }
+      });
+      return { title: norm(info.title), org: norm(info.org), date: String(info.date || ''), venue: norm(info.venue), start: String(info.start || ''), open: String(info.open || ''), end: String(info.end || ''), pieces, program: Array.isArray(c.program) ? c.program : [] };
+    });
+  }
+  /* バミリのファイル → 奏者・打楽器などの置き場所 */
+  function bamiri(o) {
+    if (!o || !Array.isArray(o.items)) return null;
+    return { title: norm(o.title), W: +o.W || 1400, D: +o.D || 900, items: o.items.filter(i => i && typeof i === 'object'), raw: o };
+  }
+
+  /* ---------- ファイルの保存 ---------- */
+  const safeName = n => String(n || 'file').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
+  async function saveFile(name, data, mime = 'application/octet-stream') {
+    name = safeName(name);
+    if (IN_VIEWER) {
+      let dl = null;
+      try { dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+      if (!dl) { toast('この画面ではファイルを保存できません。公開ページ（GitHub Pages）で開くと保存できます'); return false; }
+      try {
+        const r = await dl.save({ filename: name, data });
+        if (r && r.status === 'saved') toast('保存しました：' + name);
+        return true;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'declined') toast('保存をとりやめました');
+        else if (c === 'rate_limited') toast('保存の確認がもう開いています。先にそちらを済ませてください');
+        else if (c === 'rejected_extension' || c === 'extension_not_enabled') toast('この形式のファイルはここでは保存できません');
+        else toast('保存できませんでした（' + (c || 'わからないエラー') + '）');
+        return false;
+      }
+    }
+    const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    toast('保存しました：' + name);
+    return true;
+  }
+  const saveJSON = (name, obj) => saveFile(name, JSON.stringify(obj, null, 1), 'application/json');
+  /* ファイルを選んでもらう。as: 'text' | 'dataurl' | 'buffer' | 'file' */
+  function openFile({ accept = '', as = 'text', multiple = false } = {}) {
+    return new Promise(resolve => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = accept; inp.multiple = multiple; inp.hidden = true;
+      document.body.appendChild(inp);
+      const done = v => { inp.remove(); resolve(v); };
+      inp.addEventListener('cancel', () => done(null));
+      inp.addEventListener('change', async () => {
+        const files = Array.from(inp.files || []);
+        if (!files.length) return done(null);
+        const read = f => new Promise((res, rej) => {
+          if (as === 'file') return res({ name: f.name, size: f.size, type: f.type, file: f });
+          const r = new FileReader();
+          r.onload = () => res({ name: f.name, size: f.size, type: f.type, data: r.result, file: f });
+          r.onerror = () => rej(r.error);
+          if (as === 'dataurl') r.readAsDataURL(f); else if (as === 'buffer') r.readAsArrayBuffer(f); else r.readAsText(f, 'utf-8');
+        });
+        try { const out = await Promise.all(files.map(read)); done(multiple ? out : out[0]); }
+        catch (e) { toast('ファイルを読み込めませんでした'); done(null); }
+      });
+      inp.click();
+    });
+  }
+  /* JSONのファイルを選んで、中身と種類を返す */
+  async function openJSON() {
+    const f = await openFile({ accept: '.json,.txt,application/json,text/plain' });
+    if (!f) return null;
+    try {
+      const o = JSON.parse(String(f.data).replace(/^﻿/, ''));
+      return { name: f.name, data: o, kind: identify(o) };
+    } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
+  }
+
+  /* ---------- CSV（Excelでそのまま開ける形） ---------- */
+  const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  function parseCSV(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    const sep = (text.split('\n')[0].match(/\t/g) || []).length > (text.split('\n')[0].match(/,/g) || []).length ? '\t' : ',';
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+      if (c === '"') q = true;
+      else if (c === sep) { row.push(cell); cell = ''; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (c !== '\r') cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => String(x).trim() !== ''));
+  }
+
+  /* ---------- 画面の小物 ---------- */
+  let toastTimer = 0;
+  function toast(msg, actionLabel, action, ms = 3200) {
+    let el = $('#gkyToast');
+    if (!el) { el = document.createElement('div'); el.id = 'gkyToast'; el.className = 'gky-toast'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+    el.innerHTML = '';
+    const s = document.createElement('span'); s.textContent = msg; el.appendChild(s);
+    if (actionLabel && action) { const b = document.createElement('button'); b.textContent = actionLabel; b.onclick = () => { el.classList.remove('on'); action(); }; el.appendChild(b); }
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), actionLabel ? Math.max(ms, 6000) : ms);
+  }
+  /* 重ねて出す画面。content は要素かHTML。戻り値の close() で閉じる */
+  function sheet({ title, content, actions = [], wide = false, onClose } = {}) {
+    const veil = document.createElement('div');
+    veil.className = 'gky-veil';
+    veil.innerHTML = `<div class="gky-sheet${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><h2>${esc(title)}</h2><button class="ibtn" data-close aria-label="閉じる"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></header><div class="body"></div>${actions.length ? '<footer></footer>' : ''}</div>`;
+    const body = $('.body', veil);
+    if (typeof content === 'string') body.innerHTML = content; else if (content) body.appendChild(content);
+    const foot = $('footer', veil);
+    const prevFocus = document.activeElement;
+    const close = () => { veil.remove(); document.removeEventListener('keydown', onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); if (onClose) onClose(); };
+    actions.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (a.primary ? ' primary' : '') + (a.danger ? ' danger' : '') + (a.left ? ' left' : '');
+      b.textContent = a.label;
+      b.onclick = async () => { const r = a.onClick ? await a.onClick(body, close) : undefined; if (r !== false && !a.keep) close(); };
+      foot.appendChild(b);
+    });
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    veil.addEventListener('click', e => { if (e.target === veil) close(); });
+    $('[data-close]', veil).onclick = close;
+    document.body.appendChild(veil);
+    const first = $('input,select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
+    setTimeout(() => first && first.focus(), 30);
+    return { el: veil, body, close };
+  }
+  /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
+  function arm(btn, onConfirm, label = 'もう一度押すと削除', ms = 3500) {
+    btn.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (btn.dataset.armed) { clearTimeout(+btn.dataset.armed); delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; onConfirm(); return; }
+      btn.dataset.label = btn.innerHTML;
+      btn.classList.add('armed'); btn.textContent = label;
+      btn.dataset.armed = String(setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; } delete btn.dataset.armed; }, ms));
+    });
+  }
+  async function copyText(text, okMsg = 'コピーしました') {
+    try { await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (er) { ok = false; }
+      ta.remove();
+      toast(ok ? okMsg : 'コピーできませんでした。文字を選んでコピーしてください');
+      return ok;
+    }
+  }
+  /* タブの切り替え（ボタンに data-tab、中身に data-panel） */
+  function tabs(nav, onChange) {
+    const btns = $$('[data-tab]', nav);
+    const show = id => {
+      btns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+      $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== id);
+      if (onChange) onChange(id);
+    };
+    btns.forEach(b => { b.setAttribute('role', 'tab'); b.onclick = () => { show(b.dataset.tab); window.scrollTo({ top: 0 }); }; });
+    return show;
+  }
+  /* 見出しの高さに合わせてタブの止まる位置を決める */
+  function fitTop() {
+    const t = $('.gky-top');
+    if (!t) return;
+    const set = () => document.documentElement.style.setProperty('--top-h', t.offsetHeight + 'px');
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(t);
+  }
+
+  /* ---------- ほかのツールへのリンク ---------- */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  const ARTIFACT_URLS = {
+    gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
+    tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
+    gakkigime: 'https://claude.ai/artifact/8tfAUVsrJtAaa3R7vySdoT', hannyu: 'https://claude.ai/artifact/3fyJu1o9RddSKB9eM7QpQD', gassou: 'https://claude.ai/artifact/C1MVhJa5BJVGh3w3uDav7G',
+    gyakusan: 'https://claude.ai/artifact/5LtSnDWu6cr6KMkYzkigmc', stagemane: 'https://claude.ai/artifact/4YA7JtN5SSCkT3TUS1Sfkm',
+  };
+  const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
+  function linkTo(slug) {
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
+    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (/\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1') return '../' + slug + '/';
+    return PAGES_BASE + slug + '/';
+  }
+
+  /* ---------- 印刷とPDF ---------- */
+  /* 使い方：
+       const d = GKY.doc({ title:'香盤表', sub:'定期演奏会', orient:'landscape', foot:'団体名', file:'香盤表' });
+       d.block('<h3>…</h3><p>…</p>');            ページに入りきらなければ次のページへ
+       d.block('<h3>見出し</h3>', { keep:true });  次の中身と同じページに置く（見出しだけ前のページに残らない）
+       d.table({ cols:[{h:'名前', w:'20%'}], rows:[['山田']] });   行がはみ出たら見出しをつけて次のページへ
+       d.page();                                  ここでページを変える
+       d.show();                                  プレビューを開く（印刷・PDF保存のボタンつき） */
+  const H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  const loadScript = src => new Promise((res, rej) => { if (document.querySelector('script[src="' + src + '"]')) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { s.remove(); rej(new Error('load')); }; document.head.appendChild(s); });
+  function doc({ title = '', sub = '', orient = 'portrait', foot = '', file = '' } = {}) {
+    const pv = h(`<div class="gky-pv" role="dialog" aria-modal="true" aria-label="${esc(title)}の印刷"><header><h2>${esc(title)}<span class="msg" style="margin-left:10px"></span></h2>
+      <div class="btnrow">${IN_VIEWER ? '' : '<button class="btn primary" data-act="print">印刷する</button>'}<button class="btn${IN_VIEWER ? ' primary' : ''}" data-act="pdf">PDFで保存</button><button class="btn" data-act="close">閉じる</button></div></header>
+      <div class="stage"><div class="scaler"></div></div></div>`);
+    const scaler = $('.scaler', pv);
+    // ページの高さを測りながら分けるので、はじめから画面に入れておく（見えないように）
+    pv.style.visibility = 'hidden';
+    document.body.appendChild(pv);
+    const pages = [];
+    let cur = null, body = null;
+    const W = orient === 'landscape' ? 1123 : 794;
+    function newPage() {
+      cur = h(`<div class="gky-page${orient === 'landscape' ? ' landscape' : ''}"><div class="pg-head"><div class="pg-title">${esc(title)}</div><div class="pg-sub">${esc(sub)}</div></div><div class="pg-body"></div><div class="pg-foot"><span>${esc(foot)}</span><span class="pg-no"></span></div></div>`);
+      body = $('.pg-body', cur);
+      scaler.appendChild(cur); pages.push(cur);
+      return cur;
+    }
+    // 最後の中身の下の端が、ページの書ける所の下の端（少しゆとりを残す）を越えたら「はみ出し」
+    const over = () => { const last = body.lastElementChild; if (!last) return false; const br = body.getBoundingClientRect(), lr = last.getBoundingClientRect(); return lr.bottom > br.bottom - 4 * (br.height / body.clientHeight || 1); };
+    /* el を次のページへ移す。すぐ前に「次といっしょに」の見出しがあれば、それもいっしょに */
+    function carry(el) {
+      const prev = el.previousElementSibling;
+      const keep = prev && prev.dataset.keep && prev.previousElementSibling ? prev : null;
+      el.remove(); if (keep) keep.remove();
+      newPage(); if (keep) body.appendChild(keep); body.appendChild(el);
+    }
+    const api = {
+      page() { if (!cur || body.childElementCount) newPage(); return api; },
+      block(html, { keep = false } = {}) {
+        if (!cur) newPage();
+        const el = typeof html === 'string' ? h('<div>' + html + '</div>') : html;
+        if (keep) el.dataset.keep = '1';
+        body.appendChild(el);
+        if (over() && body.childElementCount > 1) carry(el);
+        return api;
+      },
+      table({ cols, rows, cls = '', caption = '' }) {
+        if (!cur) newPage();
+        const colg = '<colgroup>' + cols.map(c => `<col${c.w ? ` style="width:${c.w}"` : ''}>`).join('') + '</colgroup>';
+        const head = '<thead><tr>' + cols.map(c => `<th class="${c.cls || ''}">${c.h}</th>`).join('') + '</tr></thead>';
+        const mk = () => { const wrap = h(`<div>${caption ? `<h4>${caption}</h4>` : ''}<table class="${cls}">${colg}${head}<tbody></tbody></table></div>`); body.appendChild(wrap); return $('tbody', wrap); };
+        let tb = mk();
+        // 見出しの行と最初の1行が入らなければ、表ごと次のページへ
+        const probe = document.createElement('tr'); probe.innerHTML = '<td>&nbsp;</td>'; tb.appendChild(probe);
+        if (over() && body.childElementCount > 1) carry(tb.closest('div'));
+        probe.remove();
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          if (r && r.cls) tr.className = r.cls;
+          const cells = Array.isArray(r) ? r : r.cells;
+          tr.innerHTML = cells.map((c, i) => `<td class="${(cols[i] && cols[i].cls) || ''}"${c && c.span ? ` colspan="${c.span}"` : ''}>${c && typeof c === 'object' ? c.html : (c ?? '')}</td>`).join('');
+          tb.appendChild(tr);
+          if (over() && tb.children.length > 1) { tr.remove(); newPage(); tb = mk(); tb.appendChild(tr); }
+        });
+        return api;
+      },
+      async show() {
+        try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* なくても続ける */ }
+        pv.style.visibility = '';
+        pages.forEach((p, i) => { $('.pg-no', p).textContent = pages.length > 1 ? (i + 1) + ' / ' + pages.length : ''; });
+        const stage = $('.stage', pv);
+        const fit = () => { const s = Math.min(1, (stage.clientWidth - 32) / W); scaler.style.transform = `scale(${s})`; scaler.style.width = W + 'px'; scaler.style.height = s < 1 ? (scaler.scrollHeight * s) + 'px' : ''; };
+        fit(); window.addEventListener('resize', fit);
+        $('.msg', pv).textContent = pages.length + 'ページ';
+        const close = () => { window.removeEventListener('resize', fit); document.removeEventListener('keydown', onKey); pv.remove(); };
+        const onKey = e => { if (e.key === 'Escape') close(); };
+        document.addEventListener('keydown', onKey);
+        $('[data-act="close"]', pv).onclick = close;
+        const pb = $('[data-act="print"]', pv);
+        if (pb) pb.onclick = () => api.print();
+        $('[data-act="pdf"]', pv).onclick = () => api.pdf();
+        return api;
+      },
+      print() {
+        let root = $('#gky-print-root');
+        if (!root) { root = document.createElement('div'); root.id = 'gky-print-root'; document.body.appendChild(root); }
+        root.innerHTML = '';
+        pages.forEach(p => root.appendChild(p.cloneNode(true)));
+        let st = $('#gky-page-style');
+        if (!st) { st = document.createElement('style'); st.id = 'gky-page-style'; document.head.appendChild(st); }
+        st.textContent = `@page{size:A4 ${orient};margin:0}`;
+        document.body.classList.add('gky-printing');
+        const done = () => { document.body.classList.remove('gky-printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        setTimeout(() => { window.print(); setTimeout(done, 1500); }, 60);
+      },
+      async pdf() {
+        const btn = $('[data-act="pdf"]', pv);
+        btn.disabled = true; const old = btn.textContent; btn.textContent = 'PDFを作っています…';
+        try {
+          await loadScript(H2C); await loadScript(JSPDF);
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: orient, compress: true });
+          const holder = h('<div style="position:fixed;left:-20000px;top:0;"></div>');
+          document.body.appendChild(holder);
+          for (let i = 0; i < pages.length; i++) {
+            const c = pages[i].cloneNode(true); c.style.boxShadow = 'none'; holder.appendChild(c);
+            const canvas = await window.html2canvas(c, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            c.remove();
+            if (i) pdf.addPage('a4', orient);
+            const [pw, ph] = orient === 'landscape' ? [297, 210] : [210, 297];
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
+          }
+          holder.remove();
+          await saveFile(safeName(file || title) + '.pdf', pdf.output('blob'), 'application/pdf');
+        } catch (e) {
+          toast(IN_VIEWER ? 'PDFを作れませんでした。少し待ってからもう一度押してください' : 'PDFを作れませんでした。ネットにつながっているか確かめてください（「印刷する」からPDFに保存することもできます）');
+        } finally { btn.disabled = false; btn.textContent = old; }
+      },
+      get pages() { return pages; },
+    };
+    return api;
+  }
+
+  /* 印刷用の文字（BIZ UDPゴシック）を先に読んでおく。ページの分け方が読み込みの前後で変わらないように */
+  try { if (document.fonts && document.fonts.load) ['400', '700'].forEach(w => document.fonts.load(w + ' 10pt "BIZ UDPGothic"').catch(() => {})); } catch (e) { /* なくても動く */ }
+
+  /* ---------- このツールについて ---------- */
+  function about({ name, what, version, changelog = [], feedback = '' }) {
+    const log = changelog.map(c => `<li><b class="mono">v${esc(c.v)}</b> <span class="muted mono">${esc(c.d)}</span><ul>${c.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`).join('');
+    sheet({ title: name + 'について', content: `<p style="margin:0 0 10px">${what}</p>
+      <ul style="margin:0 0 12px;padding-left:1.2em;font-size:13px">
+        <li>入力した内容は、この端末のブラウザの中だけに保存されます。どこのサーバーにも送られません。AIも使っていません。</li>
+        <li>ブラウザの履歴やサイトのデータを消すと、保存した内容も消えます。ときどき「ファイルに保存」でバックアップしてください。</li>
+        <li>同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、楽屋に入れた部員・曲・楽器のデータを共有します。</li>
+      </ul>
+      <p class="muted" style="font-size:12px;margin:0 0 6px">版 <span class="mono">${esc(version)}</span>（共通部品 v${VERSION}）${feedback ? `　<a href="${esc(feedback)}" target="_blank" rel="noopener">ご意見・ご要望</a>` : ''}　<a href="${esc(linkTo('gakuya'))}" target="_blank" rel="noopener">楽屋（ツールの一覧）</a></p>
+      <details><summary style="cursor:pointer;font-size:13px">更新の記録</summary><ul style="font-size:12.5px;padding-left:1.2em">${log}</ul></details>` });
+  }
+
+  /* ---------- ホーム画面に追加したとき・ネットがないときに開けるようにする ---------- */
+  function offline() {
+    if (IN_VIEWER || TEST || !('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* なくても動く */ }));
+  }
+
+  return {
+    VERSION, IN_VIEWER, TEST, $, $$, esc, uid, clone, norm, key, clamp, debounce, h, pad, clock, dur, parseDur, ymd, parseYmd, jpDate, mdDate, addDays, daysBetween, fiscalYear, stamp, WD,
+    store, SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, GRADES, yearsLeft, nextGrade,
+    ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
+    identify, APP_NAMES, stagemane, bamiri,
+    saveFile, saveJSON, openFile, openJSON, csv, parseCSV,
+    toast, sheet, arm, copyText, tabs, fitTop, linkTo, ARTIFACT_URLS, doc, about, offline, loadScript,
+  };
+})();
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここまで ==== */
+</script>
+<script>
+/* ==== テンポマップ本体 ==== */
+(() => {
+'use strict';
+const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
+const APP_VERSION = '1', APP_DATE = '2026-10-04';
+const CHANGELOG = [
+  { v: '1', d: '2026-10-04', items: ['はじめての版：区間ごとの時間計算（rit.・accel.・ゆとり秒）、時間の帯、カット案の比較と制限時間、実測による補正、テンポの変化どおりに鳴る練習用クリック、共有コード、印刷・CSV'] },
+];
+const FEEDBACK_URL = '';   // ご意見フォームのURLを入れると、画面左上の名前を押して出る「〇〇について」に「ご意見・ご要望」のリンクが出ます
+const KEY = 'tempomap.v1';
+const UNITS = { '2': ['二分音符', 1 / 2, '𝅗𝅥'], '4': ['四分音符', 1 / 4, '♩'], '8': ['八分音符', 1 / 8, '♪'], '2.': ['付点二分', 3 / 4, '𝅗𝅥.'], '4.': ['付点四分', 3 / 8, '♩.'], '8.': ['付点八分', 3 / 16, '♪.'] };
+
+/* ---------- データの形 ----------
+  S = { v:1, current, order:[id], maps:{ id: 曲 } }
+  曲 = { id, title, composer, limit(秒), others:[{ id, name, sec }], start(はじめの小節番号), sample,
+         sections:[{ id, name, bars, meter:'4/4', unit:'4', bpm, bpmEnd, extra(秒), group:'2+2+3', note }],
+         plans:[{ id, name, cut:[区間id], measured(秒) }], plan(いまの案id) }                       */
+const newSec = (o = {}) => Object.assign({ id: uid('c'), name: '', bars: 8, meter: '4/4', unit: '4', bpm: 120, bpmEnd: null, extra: 0, group: '', note: '' }, o);
+const newPlan = (o = {}) => Object.assign({ id: uid('p'), name: 'カットなし', cut: [], measured: null }, o);
+function newMap(o = {}) { const p = newPlan(); return Object.assign({ id: uid('m'), title: '新しい曲', composer: '', limit: null, others: [], start: 1, sample: false, sections: [newSec({ name: 'A' })], plans: [p], plan: p.id }, o); }
+function sampleMap() {
+  const sec = [
+    newSec({ name: 'Intro', bars: 16, meter: '4/4', unit: '4', bpm: 60, note: 'Andante' }),
+    newSec({ name: 'A', bars: 48, meter: '4/4', unit: '4', bpm: 144, note: 'Allegro' }),
+    newSec({ name: 'B', bars: 48, meter: '6/8', unit: '4.', bpm: 96, note: '6/8 付点四分で2つ振り' }),
+    newSec({ name: 'C', bars: 40, meter: '4/4', unit: '4', bpm: 80, bpmEnd: 66, extra: 4, note: 'ソロ。最後 rit. とフェルマータ' }),
+    newSec({ name: 'D', bars: 32, meter: '7/8', unit: '8', bpm: 336, group: '2+2+3', note: '7/8（2+2+3）' }),
+    newSec({ name: 'E', bars: 32, meter: '4/4', unit: '4', bpm: 144, bpmEnd: 160, note: 'accel.' }),
+    newSec({ name: 'Coda', bars: 24, meter: '4/4', unit: '4', bpm: 160, extra: 3, note: '最後の音をのばす' }),
+  ];
+  const p1 = newPlan({ name: 'カットなし' });
+  const p2 = newPlan({ name: 'カット案A（Bを切る）', cut: [sec[2].id], measured: null });
+  const p3 = newPlan({ name: 'カット案B（BとDを切る）', cut: [sec[2].id, sec[4].id] });
+  return newMap({ title: '（例）自由曲', composer: '', limit: 720, others: [{ id: uid('o'), name: '課題曲', sec: 260 }], start: 1, sample: true, sections: sec, plans: [p1, p2, p3], plan: p2.id });
+}
+function normalizeMap(m) {
+  m = Object.assign(newMap(), m && typeof m === 'object' ? m : {});
+  if (typeof m.id !== 'string' || !m.id) m.id = uid('m');
+  m.title = String(m.title || '無題'); m.composer = String(m.composer || '');
+  m.limit = m.limit == null || m.limit === '' || !isFinite(+m.limit) ? null : Math.max(0, Math.round(+m.limit));
+  m.start = Math.max(0, Math.round(+m.start || 1));
+  m.others = (Array.isArray(m.others) ? m.others : []).filter(o => o).map(o => ({ id: o.id || uid('o'), name: String(o.name || ''), sec: Math.max(0, Math.round(+o.sec || 0)) }));
+  m.sections = (Array.isArray(m.sections) ? m.sections : []).filter(x => x).map(x => {
+    const s = newSec(x);
+    if (typeof s.id !== 'string' || !s.id) s.id = uid('c');
+    s.name = String(s.name || ''); s.bars = Math.max(0, Math.round(+s.bars || 0));
+    s.meter = /^\d{1,2}\/(1|2|4|8|16|32)$/.test(String(s.meter)) ? String(s.meter) : '4/4';
+    s.unit = UNITS[s.unit] ? String(s.unit) : '4';
+    s.bpm = Math.min(600, Math.max(10, +s.bpm || 120));
+    s.bpmEnd = s.bpmEnd == null || s.bpmEnd === '' || !isFinite(+s.bpmEnd) ? null : Math.min(600, Math.max(10, +s.bpmEnd));
+    s.extra = Math.max(0, +s.extra || 0); s.group = String(s.group || '').replace(/[^\d+]/g, ''); s.note = String(s.note || '');
+    return s;
+  });
+  const ids = new Set(m.sections.map(s => s.id));
+  m.plans = (Array.isArray(m.plans) && m.plans.length ? m.plans : [newPlan()]).map(p => ({ id: p.id || uid('p'), name: String(p.name || 'カット案'), cut: (Array.isArray(p.cut) ? p.cut : []).filter(id => ids.has(id)), measured: p.measured == null || !isFinite(+p.measured) ? null : Math.round(+p.measured) }));
+  if (!m.plans.some(p => p.id === m.plan)) m.plan = m.plans[0].id;
+  return m;
+}
+function load() {
+  const s = GKY.store.get(KEY);
+  if (s && s.maps && Object.keys(s.maps).length) {
+    const out = { v: 1, current: s.current, order: [], maps: {} };
+    (Array.isArray(s.order) ? s.order : Object.keys(s.maps)).forEach(id => { if (s.maps[id] && !out.maps[id]) { const m = normalizeMap(s.maps[id]); out.maps[m.id] = m; out.order.push(m.id); } });
+    if (out.order.length) { if (!out.maps[out.current]) out.current = out.order[0]; return out; }
+  }
+  const m = sampleMap(); return { v: 1, current: m.id, order: [m.id], maps: { [m.id]: m } };
+}
+
+/* ---------- 計算 ---------- */
+const meterOf = s => { const [a, b] = s.meter.split('/').map(Number); return { a, b }; };
+/* 1小節に「拍の単位」がいくつ入るか（6/8を付点四分で数えると2、7/8を四分で数えると3.5） */
+const beatsPerBar = s => { const { a, b } = meterOf(s); return (a / b) / UNITS[s.unit][1]; };
+/* 区間の時間（秒）。テンポが変わるときは、拍ごとにまっすぐ変わるとして計算 */
+function secTime(s) {
+  const B = s.bars * beatsPerBar(s), a = s.bpm, e = s.bpmEnd || s.bpm;
+  const t = Math.abs(e - a) < 1e-9 ? 60 * B / a : 60 * B * Math.log(e / a) / (e - a);
+  return t + (s.extra || 0);
+}
+const planOf = (m, id) => m.plans.find(p => p.id === (id || m.plan)) || m.plans[0];
+function totals(m, planId) {
+  const p = planOf(m, planId), cut = new Set(p.cut);
+  let music = 0, all = 0;
+  m.sections.forEach(s => { const t = secTime(s); all += t; if (!cut.has(s.id)) music += t; });
+  const others = m.others.reduce((t, o) => t + (o.sec || 0), 0);
+  return { music, all, others, sum: music + others, plan: p };
+}
+/* 実測のずれ（実測 ÷ 計算）。いちばん新しく入れた案のものを使う */
+function ratioOf(m) {
+  const withM = m.plans.filter(p => p.measured);
+  if (!withM.length) return null;
+  const p = withM[withM.length - 1];
+  const t = totals(m, p.id).music;
+  return t > 0 ? { r: p.measured / t, from: p } : null;
+}
+/* 小節番号の割り当て（カットした区間も番号は数える＝楽譜どおり） */
+function barStarts(m) { let b = m.start; return m.sections.map(s => { const st = b; b += s.bars; return st; }); }
+
+/* ---------- 状態 ---------- */
+let S = load();
+const M = () => S.maps[S.current];
+const persist = GKY.debounce(() => { if (!GKY.store.set(KEY, S)) toast('ブラウザに保存できませんでした。「共有・書き出し」からファイルに保存してください'); }, 250);
+let past = [], future = [];
+function edit(fn, rerender = true) { past.push(JSON.stringify(M())); if (past.length > 80) past.shift(); future = []; fn(M()); persist(); if (rerender) renderAll(); else { renderTop(); updHist(); } }
+function undo() { if (!past.length) return; future.push(JSON.stringify(M())); S.maps[S.current] = JSON.parse(past.pop()); persist(); renderAll(); toast('元に戻しました'); }
+function redo() { if (!future.length) return; past.push(JSON.stringify(M())); S.maps[S.current] = JSON.parse(future.pop()); persist(); renderAll(); toast('やり直しました'); }
+function updHist() { $('#btnUndo').disabled = !past.length; $('#btnRedo').disabled = !future.length; }
+
+/* ---------- 画面 ---------- */
+let tab = 'map';
+const showTab = GKY.tabs($('#tabs'), id => { tab = id; renderTab(); });
+function renderAll() {
+  $('#mapSel').innerHTML = S.order.map(id => `<option value="${esc(id)}"${id === S.current ? ' selected' : ''}>${esc(S.maps[id].title)}</option>`).join('');
+  const m = M();
+  $('#sampleBar').innerHTML = m.sample ? `<div class="intro"><span class="sample-flag">例</span><p>いまは使い方を見るための<b>例の曲</b>です。自分の曲は「曲の設定」から新しく作るか、このまま書きかえてください。</p><button class="btn sm" id="sbNew">自分の曲を作る</button></div>` : '';
+  const sb = $('#sbNew'); if (sb) sb.onclick = () => newMapFlow();
+  renderTop(); updHist(); renderTab();
+}
+function renderTop() {
+  const m = M(), t = totals(m), r = ratioOf(m);
+  const over = m.limit != null ? t.sum - m.limit : null;
+  $('#topSums').innerHTML = `<span class="sum">${esc(t.plan.name)} <b>${GKY.clock(t.music)}</b></span>` +
+    (m.others.length ? `<span class="sum">ほかの曲もあわせて <b>${GKY.clock(t.sum)}</b></span>` : '') +
+    (m.limit != null ? `<span class="sum ${over > 0 ? 'bad' : 'ok'}">制限 ${GKY.clock(m.limit)} まで <b>${over > 0 ? GKY.clock(over) + ' オーバー' : 'あと ' + GKY.clock(-over)}</b></span>` : '') +
+    (r ? `<span class="sum warn">実測のずれ <b>×${r.r.toFixed(3)}</b>（${esc(r.from.name)}）→ 目安 <b>${GKY.clock(t.music * r.r)}</b></span>` : '') +
+    `<span class="sum">小節 <b>${m.sections.reduce((n, s) => n + s.bars, 0)}</b></span>`;
+  // 時間の帯：全部の区間を、時間の長さどおりの幅で並べる。切る区間は斜線
+  const p = planOf(m), cut = new Set(p.cut);
+  const full = m.sections.reduce((n, s) => n + secTime(s), 0) || 1;
+  const lim = m.limit != null ? m.limit - t.others : null;
+  // 制限の線：切らない区間の時間を左から足していき、制限（ほかの曲の分を引いた残り）に届く所に置く。切る区間は幅だけ持って時間は進まない
+  let limX = null;
+  if (lim != null && lim > 0) {
+    let x = 0, mus = 0;
+    for (const s of m.sections) { const w = secTime(s); if (!cut.has(s.id) && mus + w >= lim) { limX = x + (lim - mus); break; } x += w; if (!cut.has(s.id)) mus += w; }
+    if (limX == null) limX = full + (lim - mus);
+  }
+  const scaleMax = Math.max(full, limX || 0);
+  $('#barWrap').innerHTML = m.sections.length ? `<div class="timebar" aria-label="時間の帯">${m.sections.map(s => `<div class="seg${cut.has(s.id) ? ' cut' : ''}" style="flex:${secTime(s).toFixed(2)} 0 0" title="${esc(s.name)} ${GKY.clock(secTime(s))}">${esc(s.name)}</div>`).join('')}<div class="seg" style="flex:${Math.max(0, scaleMax - full).toFixed(2)} 0 0;background:transparent;border:0"></div>${limX != null ? `<div class="limit${limX / scaleMax > 0.6 ? ' r' : ''}" style="left:calc(${(limX / scaleMax * 100).toFixed(2)}% - 1px)" data-l="ここで制限${m.others.length ? '（ほかの曲の分を引いた残り ' + GKY.clock(lim) + '）' : ''}"></div>` : ''}</div><div class="scale"><span>はじめ</span><span>${esc(p.name)}の帯（斜線は切る区間）</span><span>おわり</span></div>` : '';
+}
+function renderTab() { if (tab === 'map') renderMap(); else if (tab === 'plans') renderPlans(); else if (tab === 'click') renderClick(); else if (tab === 'share') renderShare(); }
+
+/* --- 区間 --- */
+function renderMap() {
+  const m = M(), p = planOf(m), cut = new Set(p.cut), starts = barStarts(m);
+  let cum = 0;
+  $('#secList').innerHTML = m.sections.length ? m.sections.map((s, i) => {
+    const t = secTime(s); if (!cut.has(s.id)) cum += t;
+    return `<div class="scard${cut.has(s.id) ? ' cut' : ''}" data-id="${esc(s.id)}">
+      <div class="shead"><label class="chk" title="${esc(p.name)}で演奏する"><input type="checkbox" data-play ${cut.has(s.id) ? '' : 'checked'}><span class="sr">演奏する</span></label>
+        <input type="text" data-k="name" value="${esc(s.name)}" aria-label="練習番号" style="width:5.5em;font-weight:700" placeholder="A">
+        <span class="bars">${s.bars ? starts[i] + '〜' + (starts[i] + s.bars - 1) + '小節' : '0小節'}</span>
+        <span class="sp"></span><span class="t">${GKY.clock(t)}</span><span class="cum" title="切らない区間の累計">${cut.has(s.id) ? '（切る）' : '計 ' + GKY.clock(cum)}</span>
+        <button class="ibtn" data-up aria-label="上へ" ${i ? '' : 'disabled'}>↑</button><button class="ibtn" data-down aria-label="下へ" ${i < m.sections.length - 1 ? '' : 'disabled'}>↓</button><button class="ibtn" data-more aria-label="ほかの操作">…</button></div>
+      <div class="sbody">
+        <label class="fld"><span>小節数</span><input type="number" min="0" step="1" data-k="bars" value="${s.bars}"></label>
+        <label class="fld"><span>拍子</span><input type="text" data-k="meter" value="${esc(s.meter)}" list="meters" inputmode="numeric"></label>
+        <label class="fld"><span>拍の単位</span><select data-k="unit">${Object.entries(UNITS).map(([k, v]) => `<option value="${k}"${s.unit === k ? ' selected' : ''}>${v[2]} ${v[0]}</option>`).join('')}</select></label>
+        <label class="fld"><span>テンポ（${UNITS[s.unit][2]}=）</span><input type="number" min="10" max="600" step="1" data-k="bpm" value="${s.bpm}"></label>
+        <label class="fld"><span>終わりのテンポ</span><input type="number" min="10" max="600" step="1" data-k="bpmEnd" value="${s.bpmEnd ?? ''}" placeholder="同じ"></label>
+        <label class="fld"><span>ゆとり秒</span><input type="number" min="0" step="0.5" data-k="extra" value="${s.extra || ''}" placeholder="0"></label>
+        ${/^(5|7|10|11|13|15)$/.test(String(meterOf(s).a)) || s.group ? `<label class="fld"><span>まとまり</span><input type="text" data-k="group" value="${esc(s.group)}" placeholder="2+2+3"></label>` : ''}
+        <label class="fld note"><span>メモ</span><input type="text" data-k="note" value="${esc(s.note)}" placeholder="例：Allegro、ソロ"></label>
+      </div></div>`;
+  }).join('') : `<div class="empty"><b>区間がまだありません</b>「＋ 区間を足す」から、練習番号ごとに入れてください。</div>`;
+  $('#secList').insertAdjacentHTML('beforeend', '<datalist id="meters">' + ['2/4', '3/4', '4/4', '2/2', '3/8', '6/8', '9/8', '12/8', '5/4', '5/8', '7/8', '7/4'].map(x => `<option value="${x}">`).join('') + '</datalist>');
+  $$('#secList .scard').forEach(card => {
+    const id = card.dataset.id;
+    const S1 = mm => mm.sections.find(x => x.id === id);
+    $('[data-play]', card).onchange = e => edit(mm => { const p2 = planOf(mm); p2.cut = e.target.checked ? p2.cut.filter(x => x !== id) : p2.cut.concat(id); });
+    $$('[data-k]', card).forEach(inp => inp.onchange = () => {
+      const k = inp.dataset.k; let v = inp.value;
+      if (k === 'meter') { v = norm(v).replace(/[／]/g, '/'); if (!/^\d{1,2}\/(1|2|4|8|16|32)$/.test(v)) { inp.classList.add('bad'); toast('拍子は「4/4」「6/8」のように入れてください'); return; } }
+      if (['bars', 'bpm', 'extra'].includes(k)) { v = +v; if (!isFinite(v) || v < 0) { inp.classList.add('bad'); return; } }
+      if (k === 'bpm' && v < 10) { inp.classList.add('bad'); toast('テンポは10以上にしてください'); return; }
+      if (k === 'bpmEnd') v = v === '' ? null : Math.max(10, +v);
+      if (k === 'bars') v = Math.round(v);
+      edit(mm => {
+        const s = S1(mm);
+        // 拍子を変えたら、よく使う拍の単位に合わせる（6/8なら付点四分、7/8なら八分）
+        if (k === 'meter' && v !== s.meter) { const [a, b] = v.split('/').map(Number); s.unit = b === 8 ? (a % 3 === 0 ? '4.' : '8') : b === 2 ? '2' : b === 16 ? '8' : '4'; }
+        s[k] = v;
+      });
+    });
+    $('[data-up]', card).onclick = () => edit(mm => { const i = mm.sections.findIndex(x => x.id === id); if (i > 0) [mm.sections[i - 1], mm.sections[i]] = [mm.sections[i], mm.sections[i - 1]]; });
+    $('[data-down]', card).onclick = () => edit(mm => { const i = mm.sections.findIndex(x => x.id === id); if (i < mm.sections.length - 1) [mm.sections[i + 1], mm.sections[i]] = [mm.sections[i], mm.sections[i + 1]]; });
+    $('[data-more]', card).onclick = () => secMenu(id);
+  });
+}
+function secMenu(id) {
+  const m = M(), s = m.sections.find(x => x.id === id);
+  const sh = sheet({ title: `区間「${s.name || '名前なし'}」`, content: `<div class="list">
+    <button class="item" data-a="split"><div class="main"><div class="t1">2つに分ける</div><div class="t2">途中でテンポや拍子が変わるとき</div></div></button>
+    <button class="item" data-a="dup"><div class="main"><div class="t1">複製する</div><div class="t2">すぐ下に同じ区間を足します</div></div></button>
+    <button class="item" data-a="click"><div class="main"><div class="t1">ここからクリックを鳴らす</div></div></button>
+    <button class="item" data-a="del"><div class="main"><div class="t1" style="color:var(--bad)">この区間を消す</div></div></button></div>`, actions: [{ label: '閉じる' }] });
+  $$('[data-a]', sh.body).forEach(b => b.onclick = () => {
+    const a = b.dataset.a; sh.close();
+    if (a === 'dup') edit(mm => { const i = mm.sections.findIndex(x => x.id === id); mm.sections.splice(i + 1, 0, newSec(Object.assign(clone(mm.sections[i]), { id: uid('c'), name: mm.sections[i].name + "'" }))); });
+    if (a === 'split') edit(mm => { const i = mm.sections.findIndex(x => x.id === id), x = mm.sections[i]; const h = Math.max(1, Math.floor(x.bars / 2)); const y = newSec(Object.assign(clone(x), { id: uid('c'), name: x.name + '2', bars: x.bars - h, extra: x.extra })); x.bars = h; x.extra = 0; if (x.bpmEnd) { y.bpm = Math.round((x.bpm + x.bpmEnd) / 2); x.bpmEnd = y.bpm; } mm.sections.splice(i + 1, 0, y); });
+    if (a === 'del') { edit(mm => { mm.sections = mm.sections.filter(x => x.id !== id); mm.plans.forEach(p => p.cut = p.cut.filter(x => x !== id)); }); toast(`区間「${s.name}」を消しました`, '元に戻す', undo); }
+    if (a === 'click') { const i = m.sections.findIndex(x => x.id === id); $('#pFrom').value = barStarts(m)[i]; showTab('click'); }
+  });
+}
+$('#btnAddSec').onclick = () => edit(mm => { const last = mm.sections[mm.sections.length - 1]; const nm = last && /^[A-Y]$/.test(last.name) ? String.fromCharCode(last.name.charCodeAt(0) + 1) : ''; mm.sections.push(newSec(last ? { name: nm, meter: last.meter, unit: last.unit, bpm: last.bpmEnd || last.bpm, bars: 8 } : { name: 'A' })); });
+$('#btnAddMany').onclick = () => {
+  sheet({ title: 'まとめて足す', content: `<p class="lead">1行に1区間、「練習番号 小節数 拍子 テンポ」の順に、空白で区切って書きます。テンポの「→」のあとは終わりのテンポです。</p><textarea id="manyIn" style="min-height:180px;font-family:var(--f-mono)" placeholder="A 16 4/4 120&#10;B 24 6/8 96&#10;C 12 4/4 88→72"></textarea>`,
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => {
+      const rows = $('#manyIn', body).value.split('\n').map(l => norm(l)).filter(Boolean);
+      const add = [], bad = [];
+      rows.forEach(l => { const m2 = l.match(/^(\S+)\s+(\d+)\s+(\d{1,2}\/\d{1,2})\s+(\d+(?:\.\d+)?)(?:\s*(?:→|->|-)\s*(\d+(?:\.\d+)?))?/); if (!m2) { bad.push(l); return; } const [a, b] = m2[3].split('/').map(Number); add.push(newSec({ name: m2[1], bars: +m2[2], meter: m2[3], unit: b === 8 ? (a % 3 === 0 ? '4.' : '8') : b === 2 ? '2' : '4', bpm: +m2[4], bpmEnd: m2[5] ? +m2[5] : null })); });
+      if (!add.length) { toast('読める行がありませんでした。「A 16 4/4 120」のように書いてください'); return false; }
+      edit(mm => mm.sections.push(...add));
+      toast(`${add.length}区間を足しました${bad.length ? `（読めなかった行：${bad.length}）` : ''}`);
+    } }] });
+};
+
+/* --- カット案 --- */
+function renderPlans() {
+  const m = M(), r = ratioOf(m);
+  $('#planList').innerHTML = m.plans.map(p => {
+    const t = totals(m, p.id), over = m.limit != null ? t.sum - m.limit : null;
+    const est = r ? t.music * r.r : null, estOver = m.limit != null && est != null ? est + t.others - m.limit : null;
+    return `<div class="plan${p.id === m.plan ? ' on' : ''}" data-id="${esc(p.id)}">
+      <h3><input type="text" data-name value="${esc(p.name)}" aria-label="カット案の名前"></h3>
+      <div class="big">${GKY.clock(t.music)}</div>
+      ${m.others.length ? `<div class="row"><span>ほかの曲（${esc(m.others.map(o => o.name).join('・'))}）をあわせて</span><b>${GKY.clock(t.sum)}</b></div>` : ''}
+      ${over != null ? `<div class="diff ${over > 0 ? 'over' : 'ok'}">${over > 0 ? '制限を ' + GKY.clock(over) + ' オーバー' : '制限まで あと ' + GKY.clock(-over)}</div>` : '<div class="diff muted">制限時間は未入力</div>'}
+      <div class="row"><span>切る区間</span><span class="cuts">${p.cut.length ? p.cut.map(id => { const s = m.sections.find(x => x.id === id); return s ? `<span class="tape">${esc(s.name || '?')}</span>` : ''; }).join('') : 'なし'}</span></div>
+      <div class="row"><span>切る長さ</span><b>${GKY.clock(t.all - t.music)}</b></div>
+      <label class="fld"><span>実際に計った時間（分:秒）</span><input type="text" data-meas value="${p.measured ? GKY.clock(p.measured) : ''}" placeholder="例：11:42" inputmode="numeric"></label>
+      ${est != null && !p.measured ? `<div class="row"><span>実測のずれを当てた目安</span><b>${GKY.clock(est)}${estOver != null ? `（${estOver > 0 ? GKY.clock(estOver) + ' オーバー' : 'あと ' + GKY.clock(-estOver)}）` : ''}</b></div>` : ''}
+      <div class="btnrow"><button class="btn sm ${p.id === m.plan ? 'primary' : ''}" data-use>${p.id === m.plan ? '選んでいる案' : 'この案にする'}</button><button class="btn sm" data-copy>複製</button>${m.plans.length > 1 ? '<button class="btn sm danger" data-del>消す</button>' : ''}</div>
+    </div>`;
+  }).join('');
+  $$('#planList .plan').forEach(card => {
+    const id = card.dataset.id;
+    const P1 = mm => mm.plans.find(x => x.id === id);
+    $('[data-name]', card).onchange = e => edit(mm => { P1(mm).name = norm(e.target.value) || 'カット案'; });
+    $('[data-meas]', card).onchange = e => { const v = e.target.value.trim(); const d = GKY.parseDur(v); if (v && d == null) { e.target.classList.add('bad'); toast('「11:42」のように入れてください'); return; } edit(mm => { P1(mm).measured = d; }); };
+    $('[data-use]', card).onclick = () => edit(mm => { mm.plan = id; });
+    $('[data-copy]', card).onclick = () => edit(mm => { const p = P1(mm); const n = newPlan({ name: p.name + '（複製）', cut: p.cut.slice() }); mm.plans.push(n); mm.plan = n.id; });
+    const del = $('[data-del]', card); if (del) GKY.arm(del, () => edit(mm => { mm.plans = mm.plans.filter(x => x.id !== id); if (mm.plan === id) mm.plan = mm.plans[0].id; }), 'もう一度押す');
+  });
+}
+$('#btnAddPlan').onclick = () => { edit(mm => { const n = newPlan({ name: 'カット案' + String.fromCharCode(64 + mm.plans.length), cut: planOf(mm).cut.slice() }); mm.plans.push(n); mm.plan = n.id; }); toast('今の案を写して、新しい案を作りました。「区間」でチェックを外すと切る所になります'); };
+
+/* --- 曲の設定 --- */
+function mapSheet() {
+  const m = M();
+  const sh = sheet({ title: '曲の設定', content: `<div class="grid">
+      <label class="fld wide"><span>曲名</span><input type="text" id="mTitle" value="${esc(m.title)}"></label>
+      <label class="fld"><span>作曲・編曲</span><input type="text" id="mComp" value="${esc(m.composer)}"></label>
+      <label class="fld"><span>はじめの小節番号</span><input type="number" id="mStart" min="0" step="1" value="${m.start}"></label>
+      <label class="fld"><span>制限時間（分:秒）</span><input type="text" id="mLimit" value="${m.limit != null ? GKY.clock(m.limit) : ''}" placeholder="例：12:00"></label>
+    </div>
+    <h3 style="font-size:13px;margin:14px 0 4px">同じ枠で計るほかの曲（例：課題曲）</h3>
+    <div id="othersBox">${m.others.map(o => `<div class="btnrow" style="margin-bottom:6px" data-o="${esc(o.id)}"><input type="text" value="${esc(o.name)}" data-on style="flex:1 1 140px;width:auto" aria-label="曲名"><input type="text" value="${GKY.clock(o.sec)}" data-os style="width:6em" aria-label="時間" inputmode="numeric"><button class="ibtn del" data-od aria-label="消す">×</button></div>`).join('')}</div>
+    <button class="btn sm" id="oAdd">＋ ほかの曲を足す</button>
+    <h3 style="font-size:13px;margin:16px 0 6px">ほかの曲</h3>
+    <div class="btnrow"><button class="btn" id="mNew">新しい曲を作る</button><button class="btn" id="mDup">この曲を複製</button><button class="btn danger" id="mDel">この曲を消す</button></div>`,
+    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => {
+      const lim = $('#mLimit', body).value.trim(), ld = GKY.parseDur(lim);
+      if (lim && ld == null) { toast('制限時間は「12:00」のように入れてください'); return false; }
+      const others = $$('[data-o]', body).map(r => ({ id: r.dataset.o, name: norm($('[data-on]', r).value), sec: GKY.parseDur($('[data-os]', r).value) || 0 }));
+      edit(mm => { mm.title = norm($('#mTitle', body).value) || '無題'; mm.composer = norm($('#mComp', body).value); mm.start = Math.max(0, Math.round(+$('#mStart', body).value || 1)); mm.limit = ld; mm.others = others; mm.sample = false; });
+    } }] });
+  const addRow = () => $('#othersBox', sh.body).insertAdjacentHTML('beforeend', `<div class="btnrow" style="margin-bottom:6px" data-o="${uid('o')}"><input type="text" placeholder="例：課題曲" data-on style="flex:1 1 140px;width:auto" aria-label="曲名"><input type="text" placeholder="3:45" data-os style="width:6em" aria-label="時間" inputmode="numeric"><button class="ibtn del" data-od aria-label="消す">×</button></div>`);
+  $('#oAdd', sh.body).onclick = addRow;
+  sh.body.addEventListener('click', e => { const b = e.target.closest('[data-od]'); if (b) b.closest('[data-o]').remove(); });
+  $('#mNew', sh.body).onclick = () => { sh.close(); newMapFlow(); };
+  $('#mDup', sh.body).onclick = () => { const n = normalizeMap(Object.assign(clone(m), { id: uid('m'), title: m.title + '（複製）', sample: false })); S.maps[n.id] = n; S.order.unshift(n.id); S.current = n.id; past = []; future = []; persist(); sh.close(); renderAll(); toast('複製しました'); };
+  GKY.arm($('#mDel', sh.body), () => {
+    const gone = clone(m), pos = S.order.indexOf(m.id);
+    delete S.maps[m.id]; S.order = S.order.filter(x => x !== m.id);
+    if (!S.order.length) { const n = newMap(); S.maps[n.id] = n; S.order.push(n.id); }
+    S.current = S.order[Math.min(pos, S.order.length - 1)]; past = []; future = []; persist(); sh.close(); renderAll();
+    toast(`「${gone.title}」を消しました`, '元に戻す', () => { S.maps[gone.id] = gone; S.order.splice(pos, 0, gone.id); S.current = gone.id; persist(); renderAll(); });
+  }, 'もう一度押すと消します');
+}
+function newMapFlow() {
+  const o = GKY.org();
+  const songs = o.songs || [];
+  const sh = sheet({ title: '新しい曲', content: `<label class="fld"><span>曲名</span><input type="text" id="nTitle" placeholder="例：自由曲"></label>${songs.length ? `<p class="note">楽屋の曲から選ぶこともできます：</p><div class="list" style="max-height:240px;overflow:auto">${songs.map((s, i) => `<button class="item" data-s="${i}"><div class="main"><div class="t1">${esc(s.title)}</div><div class="t2">${esc(s.composer)}</div></div></button>`).join('')}</div>` : ''}`,
+    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => { make(norm($('#nTitle', body).value) || '新しい曲', ''); } }] });
+  const make = (title, comp) => { const n = newMap({ title, composer: comp }); S.maps[n.id] = n; S.order.unshift(n.id); S.current = n.id; past = []; future = []; persist(); renderAll(); showTab('map'); toast(`「${title}」を作りました`); };
+  $$('[data-s]', sh.body).forEach(b => b.onclick = () => { const s = songs[+b.dataset.s]; sh.close(); make(s.title, [s.composer, s.arranger && s.arranger + ' 編曲'].filter(Boolean).join('／')); });
+}
+$('#btnMap').onclick = mapSheet;
+$('#mapSel').onchange = e => { stop(); S.current = e.target.value; past = []; future = []; persist(); renderAll(); };
+
+/* --- クリック --- */
+let ac = null, timer = 0, queue = [], playing = false, wake = null, raf = 0, startAt = 0, totalLen = 0;
+function renderClick() {
+  const m = M();
+  $('#pPlan').innerHTML = m.plans.map(p => `<option value="${esc(p.id)}"${p.id === m.plan ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  const st = barStarts(m), last = m.sections.length ? st[st.length - 1] + m.sections[m.sections.length - 1].bars - 1 : 1;
+  $('#pFrom').min = m.start; $('#pFrom').max = last;
+  if (!playing) { totalLen = buildClicks(m, $('#pPlan').value, Math.max(m.start, +$('#pFrom').value || m.start), +$('#pSpeed').value, false, null).len; showBeat(null); }
+}
+/* 鳴らす拍の一覧を作る。{ t:はじまりからの秒, bar, beat, beats, level:2(小節の頭)/1(まとまりの頭)/0, sec, tempo } */
+function buildClicks(m, planId, fromBar, speed, sub, onlySection) {
+  const p = planOf(m, planId), cut = new Set(p.cut), st = barStarts(m);
+  const out = []; let t = 0;
+  m.sections.forEach((s, i) => {
+    if (cut.has(s.id) || !s.bars) return;
+    if (onlySection && s.id !== onlySection) return;
+    const { a, b } = meterOf(s);
+    const bpb = beatsPerBar(s);
+    // 1小節を何回鳴らすか：拍の単位で割り切れればその数、割り切れなければ分母の音符で数える（7/8を四分で数えるときなど）
+    const whole = Math.abs(bpb - Math.round(bpb)) < 1e-6;
+    const n = whole ? Math.round(bpb) : a;
+    const clickLen = whole ? UNITS[s.unit][1] : 1 / b;          // 1回の長さ（全音符を1として）
+    const groups = s.group ? s.group.split('+').map(Number).filter(x => x > 0) : null;
+    const heads = new Set([0]); if (groups && groups.reduce((x, y) => x + y, 0) === n) { let k = 0; groups.forEach(g => { heads.add(k); k += g; }); }
+    const B = s.bars * bpb, e = s.bpmEnd || s.bpm;
+    for (let bar = 0; bar < s.bars; bar++) {
+      const barNo = st[i] + bar;
+      for (let k = 0; k < n; k++) {
+        const pos = (bar * n + k) * clickLen / UNITS[s.unit][1];          // 区間の頭から何拍目（拍の単位で）
+        const tempo = s.bpm + (e - s.bpm) * Math.min(1, (pos + 0.5 * clickLen / UNITS[s.unit][1]) / Math.max(B, 1e-9));
+        const len = 60 / tempo * (clickLen / UNITS[s.unit][1]) * (100 / speed);
+        if (barNo >= fromBar) {
+          out.push({ t, bar: barNo, beat: k, beats: n, level: k === 0 ? 2 : heads.has(k) ? 1 : 0, sec: s.name, tempo: Math.round(tempo), unit: UNITS[s.unit][2], meter: s.meter });
+          if (sub) { const parts = whole && s.unit.endsWith('.') ? 3 : 2; for (let j = 1; j < parts; j++) out.push({ t: t + len * j / parts, sub: true, bar: barNo, beat: k, beats: n, level: -1, sec: s.name, tempo: Math.round(tempo), unit: UNITS[s.unit][2], meter: s.meter }); }
+          t += len;
+        }
+      }
+      if (bar === s.bars - 1 && s.extra && barNo >= fromBar) t += s.extra * (100 / speed);
+    }
+  });
+  return { list: out, len: t };
+}
+function clickSound(time, level, vol) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square';
+  o.frequency.value = level === 2 ? 1760 : level === 1 ? 1320 : level === 0 ? 1000 : 760;
+  const v = (level === -1 ? 0.25 : level === 2 ? 0.9 : level === 1 ? 0.65 : 0.5) * vol;
+  g.gain.setValueAtTime(0.0001, time); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v * 0.35), time + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.045);
+  o.connect(g).connect(ac.destination); o.start(time); o.stop(time + 0.06);
+}
+async function play() {
+  const m = M();
+  if (!m.sections.some(s => s.bars)) { toast('区間を入れると鳴らせます'); return; }
+  stop();
+  const from = Math.max(m.start, Math.round(+$('#pFrom').value || m.start));
+  const speed = +$('#pSpeed').value, sub = $('#pSub').checked;
+  const planId = $('#pPlan').value;
+  const st = barStarts(m);
+  let only = null;
+  if ($('#pLoop').checked) { const i = m.sections.findIndex((s, k) => from >= st[k] && from < st[k] + s.bars); if (i >= 0) only = m.sections[i].id; }
+  const built = buildClicks(m, planId, from, speed, sub, only);
+  if (!built.list.length) { toast('その小節から鳴らす所がありません（切っている区間かもしれません）'); return; }
+  let list = built.list;
+  // カウント：はじめの小節と同じ拍で1小節
+  if ($('#pCount').checked) {
+    const f = list.filter(x => !x.sub && x.bar === list[0].bar);
+    const n = f.length, len = n > 1 ? f[1].t - f[0].t : 0.5;
+    const ci = []; for (let k = 0; k < n; k++) ci.push({ t: k * len, bar: '—', beat: k, beats: n, level: k === 0 ? 2 : 0, sec: 'カウント', tempo: f[0].tempo, unit: f[0].unit, meter: f[0].meter, count: true });
+    list = ci.concat(list.map(x => Object.assign({}, x, { t: x.t + n * len })));
+    built.len += n * len;
+  }
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); await ac.resume(); } catch (e) { toast('この端末では音を鳴らせませんでした'); return; }
+  queue = list; totalLen = built.len; startAt = ac.currentTime + 0.12; playing = true;
+  let idx = 0;
+  const firstReal = queue.findIndex(x => !x.count), offReal = queue[firstReal].t;
+  const vol = () => (+$('#pVol').value) / 100;
+  const tick = () => {
+    while (idx < queue.length && startAt + queue[idx].t < ac.currentTime + 0.15) { clickSound(startAt + queue[idx].t, queue[idx].level, vol()); idx++; }
+    if (idx >= queue.length && ac.currentTime > startAt + totalLen + 0.2) {
+      // くり返すときは、カウントなしで区間の頭から
+      if ($('#pLoop').checked && playing) { startAt = ac.currentTime + 0.05 - offReal; idx = firstReal; return; }
+      stop(); toast('最後まで鳴らしました');
+    }
+  };
+  timer = setInterval(tick, 25); tick();
+  const draw = () => { if (!playing) return; const now = ac.currentTime - startAt; let cur = null; for (let i = 0; i < queue.length; i++) { if (queue[i].t <= now && !queue[i].sub) cur = queue[i]; if (queue[i].t > now) break; } showBeat(cur, now); raf = requestAnimationFrame(draw); };
+  raf = requestAnimationFrame(draw);
+  $('#pPlay').disabled = true;
+  try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
+}
+function stop() {
+  playing = false; clearInterval(timer); cancelAnimationFrame(raf); queue = [];
+  if (wake) { wake.release().catch(() => {}); wake = null; }
+  const b = $('#pPlay'); if (b) b.disabled = false;
+  showBeat(null);
+}
+function showBeat(cur, now) {
+  if (!cur) { $('#pBar').textContent = $('#pFrom').value || '1'; $('#pReh').textContent = '—'; $('#pTempo').textContent = '♩=—'; $('#pMeter').textContent = ''; $('#pBeats').innerHTML = ''; $('#pTime').textContent = '0:00 / ' + GKY.clock(totalLen || 0); return; }
+  $('#pBar').textContent = cur.bar;
+  $('#pReh').textContent = cur.sec || '—';
+  $('#pTempo').textContent = cur.unit + '=' + cur.tempo;
+  $('#pMeter').textContent = cur.meter;
+  if ($('#pBeats').childElementCount !== cur.beats) $('#pBeats').innerHTML = Array.from({ length: cur.beats }, (_, k) => `<i class="${k === 0 ? 'acc' : ''}"></i>`).join('');
+  $$('#pBeats i').forEach((el, k) => el.classList.toggle('on', k === cur.beat));
+  $('#pTime').textContent = GKY.clock(Math.max(0, now)) + ' / ' + GKY.clock(totalLen);
+}
+$('#pPlay').onclick = play; $('#pStop').onclick = stop;
+$('#pSpeed').oninput = e => { $('#pSpeedV').textContent = e.target.value + '%'; if (!playing) renderClick(); };
+['pFrom', 'pPlan'].forEach(id => $('#' + id).addEventListener('change', () => { if (!playing) renderClick(); }));
+document.addEventListener('keydown', e => { if (e.code === 'Space' && tab === 'click' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); if (playing) stop(); else play(); } });
+
+/* --- 共有・書き出し --- */
+/* 共有コード：曲の中身を短い文字にする（圧縮できる端末では圧縮） */
+const pack = m => ({ v: 1, t: m.title, c: m.composer, l: m.limit, st: m.start, o: m.others.map(o => [o.name, o.sec]), s: m.sections.map(s => [s.name, s.bars, s.meter, s.unit, s.bpm, s.bpmEnd, s.extra, s.group, s.note]), p: m.plans.map(p => [p.name, p.cut.map(id => m.sections.findIndex(s => s.id === id)), p.measured]), pi: m.plans.findIndex(p => p.id === m.plan) });
+function unpack(o) {
+  const secs = (o.s || []).map(a => newSec({ name: a[0], bars: a[1], meter: a[2], unit: a[3], bpm: a[4], bpmEnd: a[5], extra: a[6], group: a[7], note: a[8] }));
+  const plans = (o.p || []).map(a => newPlan({ name: a[0], cut: (a[1] || []).map(i => secs[i] && secs[i].id).filter(Boolean), measured: a[2] }));
+  return normalizeMap({ title: o.t, composer: o.c, limit: o.l, start: o.st, others: (o.o || []).map(a => ({ name: a[0], sec: a[1] })), sections: secs, plans, plan: plans[o.pi] ? plans[o.pi].id : null });
+}
+const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64 = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+async function encode(m) {
+  const bytes = new TextEncoder().encode(JSON.stringify(pack(m)));
+  if (window.CompressionStream) { try { const z = await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer(); return 'TMZ' + b64(z); } catch (e) { /* 圧縮できなければそのまま */ } }
+  return 'TMJ' + b64(bytes);
+}
+async function decode(code) {
+  code = String(code || '').replace(/\s+/g, '');
+  const k = code.match(/TM[ZJ][A-Za-z0-9_-]+/); if (!k) throw new Error('コードが見つかりません');
+  const body = k[0].slice(3);
+  let bytes = unb64(body);
+  if (k[0][2] === 'Z') { if (!window.DecompressionStream) throw new Error('この端末ではこのコードを開けません'); bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); }
+  return unpack(JSON.parse(new TextDecoder().decode(bytes)));
+}
+async function renderShare() {
+  const m = M();
+  $('#shCode').value = await encode(m);
+  $('#shLink').hidden = GKY.IN_VIEWER;
+  $('#durNow').innerHTML = `${esc(planOf(m).name)} <b>${GKY.dur(totals(m).music)}</b>`;
+}
+function addMap(n, msg) { if (S.maps[n.id]) n.id = uid('m'); S.maps[n.id] = n; S.order.unshift(n.id); S.current = n.id; past = []; future = []; persist(); renderAll(); toast(msg); }
+$('#shCopy').onclick = () => GKY.copyText($('#shCode').value, '共有コードをコピーしました');
+$('#shLink').onclick = () => GKY.copyText(location.origin + location.pathname + '#' + $('#shCode').value, '開くリンクをコピーしました');
+$('#inBtn').onclick = async () => { try { const n = await decode($('#inCode').value); $('#inCode').value = ''; addMap(n, `「${n.title}」を読み込みました`); showTab('map'); } catch (e) { toast('読み込めませんでした：' + e.message); } };
+$('#durCopy').onclick = () => GKY.copyText(GKY.dur(totals(M()).music), '演奏時間をコピーしました');
+$('#prMap').onclick = () => {
+  const m = M(), p = planOf(m), cut = new Set(p.cut), st = barStarts(m);
+  const d = GKY.doc({ title: 'テンポマップ', sub: [m.title, m.composer].filter(Boolean).join('　'), foot: GKY.org().org.name, file: 'テンポマップ_' + m.title });
+  let cum = 0;
+  d.table({ cols: [{ h: '練習番号', w: '11%' }, { h: '小節', w: '12%', cls: 'c' }, { h: '拍子', w: '8%', cls: 'c' }, { h: 'テンポ', w: '16%', cls: 'c' }, { h: 'ゆとり', w: '8%', cls: 'num' }, { h: '時間', w: '9%', cls: 'num' }, { h: '累計', w: '9%', cls: 'num' }, { h: 'メモ', w: '27%' }],
+    rows: m.sections.map((s, i) => { const t = secTime(s); const c = cut.has(s.id); if (!c) cum += t; return { cls: c ? 'cutrow' : '', cells: [esc(s.name) + (c ? '（切る）' : ''), `${st[i]}〜${st[i] + s.bars - 1}`, esc(s.meter), `${UNITS[s.unit][2]}=${s.bpm}${s.bpmEnd ? '→' + s.bpmEnd : ''}`, s.extra ? s.extra + '秒' : '', GKY.clock(t), c ? '—' : GKY.clock(cum), esc(s.note)] }; }) });
+  d.block(`<h3>カット案の比較（${m.limit != null ? '制限 ' + GKY.clock(m.limit) : '制限時間なし'}${m.others.length ? '・ほかの曲 ' + esc(m.others.map(o => o.name + ' ' + GKY.clock(o.sec)).join('、')) : ''}）</h3>`, { keep: true });
+  d.table({ cols: [{ h: '案', w: '30%' }, { h: '切る区間', w: '22%' }, { h: '時間', w: '12%', cls: 'num' }, { h: 'あわせて', w: '12%', cls: 'num' }, { h: '制限との差', w: '14%', cls: 'num' }, { h: '実測', w: '10%', cls: 'num' }],
+    rows: m.plans.map(pl => { const t = totals(m, pl.id), ov = m.limit != null ? t.sum - m.limit : null; return [esc(pl.name) + (pl.id === m.plan ? '　★' : ''), esc(pl.cut.map(id => (m.sections.find(s => s.id === id) || {}).name).filter(Boolean).join('・') || 'なし'), GKY.clock(t.music), GKY.clock(t.sum), ov == null ? '' : (ov > 0 ? '+' : '−') + GKY.clock(Math.abs(ov)), pl.measured ? GKY.clock(pl.measured) : '']; }) });
+  d.block('<p class="muted" style="font-size:8pt">時間は小節数・拍子・テンポからの計算です（rit.・accel. は拍ごとにまっすぐ変わるとして計算）。★はいま選んでいる案。</p>');
+  d.show();
+};
+$('#csvOut').onclick = () => { const m = M(), st = barStarts(m); GKY.saveFile(`テンポマップ_${m.title}.csv`, GKY.csv([['練習番号', 'はじめの小節', '小節数', '拍子', '拍の単位', 'テンポ', '終わりのテンポ', 'ゆとり秒', '時間', 'メモ', ...m.plans.map(p => p.name + '（切る=×）')], ...m.sections.map((s, i) => [s.name, st[i], s.bars, s.meter, UNITS[s.unit][0], s.bpm, s.bpmEnd ?? '', s.extra || '', GKY.clock(secTime(s)), s.note, ...m.plans.map(p => p.cut.includes(s.id) ? '×' : '')])]), 'text/csv'); };
+$('#jsonOut').onclick = () => GKY.saveJSON(`テンポマップ_${GKY.stamp()}.json`, { app: 'tempomap', format: 1, exportedAt: new Date().toISOString(), maps: S.order.map(id => S.maps[id]) });
+$('#jsonIn').onclick = async () => {
+  const f = await GKY.openJSON(); if (!f) return;
+  if (f.kind !== 'tempomap' || !Array.isArray(f.data.maps)) { toast(`これは${GKY.APP_NAMES[f.kind] || '別のツール'}のファイルです。テンポマップで保存したファイルを選んでください`); return; }
+  let n = 0; f.data.maps.forEach(x => { const m = normalizeMap(x); if (S.maps[m.id]) m.id = uid('m'); S.maps[m.id] = m; S.order.push(m.id); n++; });
+  persist(); renderAll(); toast(`${n}曲を読み込みました`);
+};
+
+/* ---------- はじまり ---------- */
+$('#btnUndo').onclick = undo; $('#btnRedo').onclick = redo;
+$('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: 'テンポマップ', what: '練習番号ごとの小節数・拍子・テンポから演奏時間を計算し、コンクールなどのカット案を制限時間と比べるツールです。テンポや拍子の変化どおりに鳴る練習用クリックもあります。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
+$('#homeLink').href = GKY.linkTo('gakuya');
+document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return; e.preventDefault(); if (e.shiftKey) redo(); else undo(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing) stop(); });
+GKY.fitTop(); GKY.offline();
+// 開くリンク（#TMZ…）で来たときは、その曲を読み込む
+(async () => {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (/^TM[ZJ]/.test(h)) { try { const n = await decode(h); addMap(n, `「${n.title}」をリンクから開きました`); history.replaceState(null, '', location.pathname + location.search); } catch (e) { toast('リンクのテンポマップを開けませんでした'); } }
+})();
+showTab('map');
+renderAll();
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, M, secTime, totals, beatsPerBar, buildClicks, encode, decode, normalizeMap, ratioOf, renderAll };
+})();
+</script>
+</body>
+</html>
