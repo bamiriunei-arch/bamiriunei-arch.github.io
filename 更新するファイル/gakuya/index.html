@@ -1,0 +1,2035 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="吹奏楽の団体のためのツール集「楽屋シリーズ」の入口。部員・曲・楽器のデータを入れておくと、全部のツールで使える">
+<meta name="theme-color" content="#ECEFEC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111315" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="楽屋">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316191C'/%3E%3Crect x='6' y='13' width='20' height='7' rx='1' fill='%232B2F36' transform='rotate(-10 16 16)'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>楽屋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* ==== 楽屋シリーズ 共通部品（見た目） ここから ==== */
+/* 全ツールで同じ内容です。楽屋（gakuya/index.html）で直してから、リポジトリのいちばん上で node sync-common.js を動かすと全ツールにそろえて写せます。
+   レイアウト：舞台床のような落ち着いた灰緑の作業面に、ツールごとの色のバミリテープを1色だけ使う */
+:root{
+  --bg:#ECEFEC; --surface:#FFFFFF; --surface-2:#F4F6F4; --surface-3:#E6EAE7;
+  --ink:#1B211F; --muted:#5C6662; --line:#D4D9D6; --line-strong:#B5BDB8;
+  --ok:#2B7A4B; --ok-soft:#E2F3E8; --warn:#9A5B00; --warn-soft:#FFF1D0; --bad:#B3261E; --bad-soft:#FBE3E0;
+  --focus:#2F6FD0; --shadow:0 1px 2px rgba(18,24,22,.07),0 8px 22px rgba(18,24,22,.09);
+  --tape:#D73A44; --tape-ink:#FFFFFF;
+  --tape-soft:color-mix(in srgb,var(--tape) 13%,var(--surface));
+  --tape-line:color-mix(in srgb,var(--tape) 45%,var(--line));
+  --paper:#FFFFFF; --paper-ink:#111111; --paper-line:#222222; --paper-rule:#9A9A9A; --paper-mute:#5E5E5E; --paper-head:#EFEFEF; --paper-mark:#FFE58A;
+  --f-ui:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --f-doc:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+    --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+    --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+    --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111315; --surface:#1A1D20; --surface-2:#22262A; --surface-3:#2B3035;
+  --ink:#E7EBE9; --muted:#9AA39F; --line:#2E3337; --line-strong:#454C51;
+  --ok:#6CCB93; --ok-soft:#173225; --warn:#F0B649; --warn-soft:#352812; --bad:#F2867E; --bad-soft:#3B1D1A;
+  --focus:#78A6F0; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-ui); font-size:14px; line-height:1.6; -webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+a{color:inherit}
+h1,h2,h3,h4{text-wrap:balance; margin:0}
+.mono,.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+/* ---- 骨組み ---- */
+.gky-app{min-height:100%; display:flex; flex-direction:column}
+.gky-top{position:sticky; top:env(safe-area-inset-top,0px); z-index:30; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
+  padding-block:10px; padding-inline:16px; background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-brand{display:flex; align-items:center; gap:10px; min-width:0; text-decoration:none}
+.gky-tape{flex:none; display:inline-block; width:26px; height:10px; background:var(--tape); transform:rotate(-8deg); border-radius:1px;
+  clip-path:polygon(2px 0,100% 0,calc(100% - 2px) 50%,100% 100%,0 100%,2px 50%,0 0)}
+.gky-brand b{font-size:19px; font-weight:700; letter-spacing:.06em; white-space:nowrap}
+.gky-brand small{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gky-top-actions{margin-left:auto; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+@media (max-width:600px){ .gky-top-actions{width:100%; margin-left:0} .gky-top-actions>select{flex:1 1 150px; min-width:0} }
+.gky-home{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px 3px 8px; white-space:nowrap}
+.gky-home:hover{color:var(--ink); border-color:var(--line-strong)}
+.gky-home i{display:inline-block; width:12px; height:5px; background:var(--muted); transform:rotate(-8deg)}
+.gky-tabs{position:sticky; top:calc(env(safe-area-inset-top,0px) + var(--top-h,57px)); z-index:20; display:flex; gap:2px; padding-inline:12px; background:var(--surface); border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+.gky-tabs::-webkit-scrollbar{display:none}
+.gky-tabs button{position:relative; border:0; background:transparent; padding:11px 12px 10px; cursor:pointer; white-space:nowrap; color:var(--muted); font-weight:500; font-size:14px}
+.gky-tabs button[aria-selected="true"]{color:var(--ink); font-weight:700}
+.gky-tabs button[aria-selected="true"]::after{content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:3px; background:var(--tape); border-radius:2px 2px 0 0}
+.gky-tabs .count{display:inline-grid; place-items:center; min-width:19px; height:19px; padding:0 5px; margin-left:5px; border-radius:10px; background:var(--warn-soft); color:var(--warn); font-size:11px; font-weight:700; font-family:var(--f-mono)}
+.gky-tabs .count:empty{display:none}
+.gky-tabs .count.ok{background:var(--ok-soft); color:var(--ok)}
+.gky-main{flex:1; width:100%; max-width:1180px; margin:0 auto; padding-block:16px 64px; padding-inline:16px}
+.gky-main.wide{max-width:none}
+.gky-cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px}
+@media (max-width:860px){.gky-cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- 部品 ---- */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 12px; border-radius:6px; cursor:pointer;
+  border:1px solid var(--line-strong); background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; white-space:nowrap; text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--tape); border-color:var(--tape); color:var(--tape-ink); font-weight:700}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent; background:transparent}
+.btn.ghost:hover{background:var(--surface-2); border-color:var(--line)}
+.btn.danger{color:var(--bad)}
+.btn.armed{background:var(--bad); border-color:var(--bad); color:#fff}
+.btn.sm{min-height:28px; padding:0 9px; font-size:12px}
+.btn.lg{min-height:44px; padding:0 16px; font-size:15px}
+.btn:disabled{opacity:.45; cursor:default}
+.btn svg,.ibtn svg{width:16px; height:16px; flex:none}
+.ibtn{width:32px; height:32px; display:inline-grid; place-items:center; border-radius:6px; cursor:pointer; border:1px solid transparent; background:transparent; color:var(--muted); padding:0}
+.ibtn:hover{background:var(--surface-2); border-color:var(--line); color:var(--ink)}
+.ibtn.del:hover{color:var(--bad)}
+.btnrow{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+input[type="text"],input[type="search"],input[type="number"],input[type="date"],input[type="time"],input[type="url"],input[type="tel"],select,textarea{
+  border:1px solid var(--line-strong); border-radius:6px; background:var(--surface); padding:6px 9px; min-height:34px; width:100%; min-width:0}
+select{width:auto; max-width:100%}
+textarea{resize:vertical; line-height:1.65; min-height:64px}
+input[type="number"]{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+input::placeholder,textarea::placeholder{color:color-mix(in srgb,var(--muted) 72%,transparent)}
+input.bad,select.bad{border-color:var(--bad); background:var(--bad-soft)}
+label.chk{display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-size:13px}
+label.chk input{width:16px; height:16px; accent-color:var(--tape); flex:none}
+.fld{display:flex; flex-direction:column; gap:3px; min-width:0}
+.fld>span{font-size:12px; color:var(--muted); font-weight:500}
+.fld .hint{font-size:11.5px; color:var(--muted)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px 12px}
+.grid .wide{grid-column:1/-1}
+
+.sec{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px 16px; margin-bottom:14px; min-width:0}
+.sec>h2,.sec>h3{font-size:15px; font-weight:700; margin:0 0 10px; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px}
+.sec>h2 small,.sec>h3 small{font-weight:400; color:var(--muted); font-size:12px}
+.sec .note{font-size:12px; color:var(--muted); margin:8px 0 0}
+.lead{font-size:13px; color:var(--muted); margin:0 0 12px; max-width:68ch}
+.intro{display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:14px; border-radius:var(--r); background:var(--surface); border:1px dashed var(--line-strong); font-size:13px}
+.intro p{margin:0; flex:1; min-width:0}
+.sample-flag{display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:4px; background:var(--warn-soft); color:var(--warn); font-size:12px; font-weight:700; white-space:nowrap}
+
+/* テープ形のラベル */
+.tape{--tc:var(--tape); --ti:var(--tape-ink); display:inline-flex; align-items:center; height:22px; padding:0 10px; flex:none;
+  background:var(--tc); color:var(--ti); font-size:12px; font-weight:700; letter-spacing:.06em; line-height:1; white-space:nowrap;
+  clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 22%,calc(100% - 2px) 45%,100% 70%,calc(100% - 3px) 100%,3px 100%,0 78%,2px 52%,0 26%)}
+.chip{display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; font-size:12px; background:var(--surface-2); color:var(--muted); border:1px solid var(--line); white-space:nowrap}
+.chip.ok{background:var(--ok-soft); color:var(--ok); border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+.chip.warn{background:var(--warn-soft); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 35%,var(--line))}
+.chip.bad{background:var(--bad-soft); color:var(--bad); border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
+.chip.tp{background:var(--tape-soft); color:var(--ink); border-color:var(--tape-line)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--tape); color:var(--tape-ink); border-color:var(--tape)}
+.dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--line-strong); flex:none}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+
+/* 集計の小さな札 */
+.sums{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+.sum{display:inline-flex; align-items:baseline; gap:6px; padding:6px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:12px; color:var(--muted)}
+.sum b{font-family:var(--f-mono); font-size:15px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.sum.warn{border-color:color-mix(in srgb,var(--warn) 55%,var(--line)); background:var(--warn-soft)} .sum.warn b{color:var(--warn)}
+.sum.bad{border-color:color-mix(in srgb,var(--bad) 55%,var(--line)); background:var(--bad-soft)} .sum.bad b{color:var(--bad)}
+.sum.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line)); background:var(--ok-soft)} .sum.ok b{color:var(--ok)}
+
+/* 表 */
+.tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
+table.tbl{border-collapse:collapse; width:100%; font-size:13px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:middle}
+.tbl thead th{position:sticky; top:0; z-index:1; background:var(--surface-2); font-size:12px; color:var(--muted); font-weight:700; white-space:nowrap}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl td.num,.tbl th.num{text-align:right; font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.tbl tr.sel td{background:var(--tape-soft)}
+.tbl input,.tbl select{min-height:30px; padding:3px 6px}
+/* スマホ：表の列が細くなりすぎて1文字ずつ折り返さないように（入りきらないときは、表の中だけ横に動く） */
+@media (max-width:600px){ .tbl td{min-width:3.6em} .tbl td.num,.tbl td:empty{min-width:0} .tbl td.mono{white-space:nowrap} }
+
+/* 一覧 */
+.list{display:flex; flex-direction:column; gap:8px}
+.item{display:flex; align-items:center; gap:10px; padding:9px 10px 9px 12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); min-width:0}
+.item.on{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape)}
+.item .main{flex:1; min-width:0}
+.item .t1{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.item .t2{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+button.item{width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit}
+button.item:hover{border-color:var(--line-strong)}
+.empty{padding:28px 16px; text-align:center; color:var(--muted); font-size:13px; border:1px dashed var(--line-strong); border-radius:var(--r); background:var(--surface)}
+.empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px}
+
+/* 確認の一覧 */
+.issues{display:flex; flex-direction:column; gap:6px}
+.issue{display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); font-size:13px}
+.issue .dot{margin-top:7px}
+.issue.bad{border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.issue.warn{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+.issue .main{flex:1; min-width:0}
+.issue .sub{font-size:12px; color:var(--muted)}
+
+/* シート（重ねて出す画面） */
+.gky-veil{position:fixed; inset:0; z-index:80; background:rgba(10,14,12,.45); display:flex; align-items:flex-end; justify-content:center; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px)); padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.gky-veil{align-items:center}}
+.gky-sheet{width:min(640px,100%); max-height:100%; display:flex; flex-direction:column; background:var(--surface); border-radius:12px; box-shadow:var(--shadow); border:1px solid var(--line)}
+.gky-sheet.wide{width:min(980px,100%)}
+.gky-sheet>header{display:flex; align-items:center; gap:10px; padding:12px 12px 10px 16px; border-bottom:1px solid var(--line)}
+.gky-sheet>header h2{flex:1; font-size:16px}
+.gky-sheet>.body{padding:14px 16px; overflow:auto; min-height:0}
+.gky-sheet>footer{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; padding:10px 16px 14px; border-top:1px solid var(--line)}
+.gky-sheet>footer .left{margin-right:auto}
+
+.gky-toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); z-index:100; max-width:min(560px,calc(100% - 32px));
+  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:var(--ink); color:var(--bg); font-size:13px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s}
+.gky-toast.on{opacity:1; transform:translateX(-50%); pointer-events:auto}
+.gky-toast button{border:0; background:transparent; color:inherit; font-weight:700; text-decoration:underline; cursor:pointer; padding:0}
+@media (prefers-reduced-motion:reduce){.gky-toast{transition:none}}
+
+/* 印刷・PDFのプレビュー */
+.gky-pv{position:fixed; inset:0; z-index:90; display:flex; flex-direction:column; background:var(--surface-3)}
+.gky-pv>header{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-block:10px; padding-inline:16px; padding-top:calc(10px + env(safe-area-inset-top,0px)); background:var(--surface); border-bottom:1px solid var(--line)}
+.gky-pv>header h2{font-size:15px; flex:1; min-width:10em}
+.gky-pv .stage{flex:1; overflow:auto; padding:18px 16px 60px}
+.gky-pv .scaler{transform-origin:top left; display:flex; flex-direction:column; gap:18px}
+.gky-pv .scaler>.gky-page{flex:none}   /* 縮めて見せるときに、紙の高さがつぶれないように */
+.gky-pv .msg{font-size:12px; color:var(--muted)}
+
+/* 紙（印刷物）はテーマに関係なく白い紙に黒い字 */
+.gky-page{position:relative; width:794px; height:1123px; background:var(--paper); color:var(--paper-ink); box-shadow:0 2px 10px rgba(0,0,0,.18);
+  font-family:var(--f-doc); font-size:10pt; line-height:1.5; display:flex; flex-direction:column; padding:42px 44px 30px; overflow:hidden}
+.gky-page.landscape{width:1123px; height:794px}
+.gky-page .pg-head{flex:none; display:flex; align-items:flex-end; gap:12px; border-bottom:1.5px solid var(--paper-line); padding-bottom:6px; margin-bottom:10px}
+.gky-page .pg-title{font-size:15pt; font-weight:700; letter-spacing:.04em}
+.gky-page .pg-sub{font-size:9.5pt; color:var(--paper-mute); flex:1; text-align:right}
+.gky-page .pg-body{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:8px}
+.gky-page .pg-foot{display:flex; justify-content:space-between; gap:12px; font-size:8pt; line-height:1.5; min-height:1.5em; color:var(--paper-mute); margin-top:8px; flex:none}
+.gky-page h3{font-size:11.5pt; margin:4px 0 0; padding-left:7px; border-left:3px solid var(--paper-line)}
+.gky-page h4{font-size:10pt; margin:2px 0 0}
+.gky-page p{margin:0}
+.gky-page .muted{color:var(--paper-mute)}
+.gky-page table{border-collapse:collapse; width:100%; font-size:9pt; table-layout:fixed}
+.gky-page th,.gky-page td{border:0.75px solid var(--paper-line); padding:3px 5px; vertical-align:top; overflow-wrap:anywhere}
+.gky-page th{background:var(--paper-head); font-weight:700; text-align:left}
+.gky-page td.num,.gky-page th.num{text-align:right; font-variant-numeric:tabular-nums}
+.gky-page td.c,.gky-page th.c{text-align:center}
+.gky-page .mark{background:var(--paper-mark)}
+.gky-page .box{border:0.75px solid var(--paper-line); padding:6px 8px}
+#gky-print-root{display:none}
+@media print{
+  body.gky-printing>*:not(#gky-print-root){display:none!important}
+  body.gky-printing{background:#fff!important}
+  body.gky-printing #gky-print-root{display:block}
+  #gky-print-root .gky-page{box-shadow:none; margin:0; break-after:page; page-break-after:always}
+  #gky-print-root .gky-page:last-child{break-after:auto; page-break-after:auto}
+}
+/* ---- 上の帯：ご意見・楽屋へのリンク ---- */
+.gky-fb{display:inline-flex; align-items:center; font-size:12px; color:var(--muted); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:3px 10px; white-space:nowrap}
+.gky-fb:hover{color:var(--ink); border-color:var(--line-strong)}
+/* タブが画面の端で切れるとき、続きがあることを影で見せる */
+.gky-tabs.more-r{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent)}
+.gky-tabs.more-l{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(to left,#000 calc(100% - 40px),transparent)}
+.gky-tabs.more-l.more-r{-webkit-mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+
+/* ---- 文字を大きく（この端末の全部のツール） ---- */
+:root[data-size="lg"] .gky-app,:root[data-size="lg"] .gky-veil,:root[data-size="lg"] .gky-toast,:root[data-size="lg"] .gky-pv>header{zoom:1.18}
+
+/* ---- 表を、スマホでは1行ずつの札にする（table に cards をつける。td の data-l が見出し） ---- */
+@media (max-width:640px){
+  table.tbl.cards thead{display:none}
+  table.tbl.cards,table.tbl.cards tbody,table.tbl.cards tfoot{display:block; width:100%}
+  table.tbl.cards tr{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px 10px; padding:10px 12px; border-bottom:1px solid var(--line)}
+  table.tbl.cards tbody tr:last-child{border-bottom:0}
+  table.tbl.cards td{display:block; border:0; padding:0; min-width:0}
+  table.tbl.cards td[data-l]::before{content:attr(data-l); display:block; font-size:11px; color:var(--muted); margin-bottom:1px}
+  table.tbl.cards td.wide{grid-column:1/-1}
+  table.tbl.cards td.end{grid-column:1/-1; display:flex; justify-content:flex-end; gap:6px}
+}
+
+/* ---- 読み込む前に確かめる表 ---- */
+.gky-pvt td,.gky-pvt th{vertical-align:top}
+.gky-pvt tr.skip td{opacity:.5}
+.gky-pvt .unk{display:inline-flex; align-items:center; height:20px; padding:0 7px; margin:1px 3px 1px 0; border-radius:4px; background:var(--bad-soft); color:var(--bad); font-size:11.5px; font-weight:700}
+.gky-pvt .guess{display:inline-flex; align-items:center; height:20px; padding:0 7px; margin:1px 3px 1px 0; border-radius:4px; background:var(--warn-soft); color:var(--warn); font-size:11.5px; font-weight:700}
+.gky-pvt input[type=text]{min-width:7em}
+.gky-pvt select{max-width:9em}
+
+/* ---- 共有（見るだけのリンク・QRコード） ---- */
+.gky-share{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start}
+.gky-share .qr svg{width:180px; height:180px; display:block; background:#fff; border-radius:8px; padding:6px; border:1px solid var(--line)}
+.gky-share .url{flex:1 1 240px; min-width:0}
+.gky-share textarea{font-family:var(--f-mono); font-size:11.5px; min-height:90px; word-break:break-all}
+.gky-viewer{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:10px 14px; margin-bottom:14px; border-radius:var(--r); background:var(--tape-soft); border:1px solid var(--tape-line); font-size:13px}
+.gky-viewer b{font-size:14px}
+.gky-viewer .sp{flex:1}
+
+/* ---- ほかのタブとぶつかったとき・容量の目盛り ---- */
+.gky-meter{height:10px; border-radius:5px; background:var(--surface-3); overflow:hidden; margin:6px 0}
+.gky-meter i{display:block; height:100%; background:var(--ok); border-radius:5px}
+.gky-meter.warn i{background:var(--warn)} .gky-meter.bad i{background:var(--bad)}
+
+/* ---- 印刷のプレビューの上の帯（用紙） ---- */
+.gky-pv>header select{min-height:32px; padding:2px 8px}
+.gky-pdfopt{display:flex; flex-direction:column; gap:8px}
+/* ==== 楽屋シリーズ 共通部品（見た目） ここまで ==== */
+
+/* ==== 楽屋だけの見た目 ==== */
+/* レイアウト：楽屋の壁に並んだ道具箱。ツールごとの色のテープが、そのツールの名札 */
+:root{ --tape:#2B2F36; --tape-ink:#FFFFFF; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --tape:#E7EBE9; --tape-ink:#16191C; } }
+:root[data-theme="dark"]{ --tape:#E7EBE9; --tape-ink:#16191C; }
+.hello{display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px 18px; margin:4px 0 14px}
+.hello h1{font-size:26px; font-weight:900; letter-spacing:.06em}
+.hello p{margin:0; color:var(--muted); font-size:13px; max-width:62ch}
+.hello .org{font-size:14px; font-weight:700}
+.phase{margin-bottom:20px}
+.phase>h2{font-size:13px; color:var(--muted); font-weight:700; margin:0 0 8px; letter-spacing:.04em}
+.tools{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px}
+.tool{position:relative; display:flex; flex-direction:column; gap:6px; padding:14px 14px 12px; background:var(--surface); border:1px solid var(--line); border-radius:10px; text-decoration:none; color:inherit; min-width:0}
+.tool:hover{border-color:var(--line-strong); box-shadow:var(--shadow)}
+.tool .tp{display:flex; align-items:center; gap:10px; min-width:0}
+.tool .tp i{display:inline-block; width:30px; height:11px; transform:rotate(-8deg); border-radius:1px; background:var(--c); flex:none}
+.tool .tp b{font-size:16px; letter-spacing:.04em; min-width:0; overflow-wrap:anywhere; line-height:1.3}
+.tool p{margin:0; font-size:12.5px; color:var(--muted); line-height:1.55}
+.tool .st{display:flex; flex-wrap:wrap; gap:4px; margin-top:auto; padding-top:4px}
+.tool .st .chip{height:auto; min-height:20px; font-size:11px; padding:1px 7px; max-width:100%; white-space:normal; line-height:1.4}
+/* スマホ：2列の小さな札にして、説明は2行まで */
+@media (max-width:600px){
+  .tools{grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+  .tool{padding:10px 10px 9px; gap:4px}
+  .tool .tp{gap:7px} .tool .tp i{width:20px; height:8px} .tool .tp b{font-size:14px; letter-spacing:.02em}
+  .tool p{font-size:11.5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .phase{margin-bottom:14px}
+}
+.firsts{display:flex; flex-direction:column; gap:6px}
+.first{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 10px; border-radius:8px; background:var(--surface-2)}
+.first .ck{display:grid; place-items:center; width:22px; height:22px; border-radius:50%; border:2px solid var(--line-strong); font-size:12px; font-weight:900; color:transparent}
+.first.done .ck{background:var(--ok); border-color:var(--ok); color:#fff}
+.first.done .t{color:var(--muted); text-decoration:line-through}
+.first .t{font-size:13.5px; font-weight:700}
+.first .s{font-size:12px; color:var(--muted)}
+.types{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px}
+.types button{display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 12px; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface); cursor:pointer; text-align:left}
+.types button b{font-size:14px} .types button span{font-size:11.5px; color:var(--muted)}
+.types button[aria-pressed="true"]{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape); background:var(--tape-soft)}
+.mbar{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 8px}
+.mbar input[type=search]{flex:1 1 200px; width:auto}
+.mbar select{flex:0 1 auto}
+.mt td input,.mt td select{min-height:30px}
+.mt td input[type=text]{min-width:6em}
+.mt td input.warn{border-color:var(--warn); background:var(--warn-soft)}
+.mt tr.off td{color:var(--muted)}
+.mt tr.off td input,.mt tr.off td select{color:var(--muted)}
+.mt .roles{min-width:8em}
+/* スマホの札：右上に「消す」、メモは半分の幅にして札を低く */
+@media (max-width:640px){ #mTable tbody tr{position:relative; padding-right:40px} #mTable td.end{position:absolute; top:8px; right:6px} }
+.cnts{display:flex; flex-wrap:wrap; gap:6px}
+.flow{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px}
+.flowc{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px 14px}
+.flowc h3{font-size:14px; margin:0 0 8px; display:flex; align-items:center; gap:8px}
+.flowc .row{display:grid; grid-template-columns:5.6em minmax(0,1fr); gap:6px; align-items:start; font-size:12.5px; padding:3px 0}
+.flowc .row span:first-child{color:var(--muted)}
+.tn{display:inline-flex; align-items:center; gap:5px; margin:0 6px 4px 0; font-weight:700; font-size:12.5px; white-space:nowrap}
+.tn i{display:inline-block; width:16px; height:6px; transform:rotate(-8deg); background:var(--c)}
+.steps{margin:0; padding-left:1.3em; font-size:13px; line-height:1.8}
+.tbl td.c,.tbl th.c{text-align:center}
+.steps code,[data-panel="setup"] .note code,[data-panel="setup"] .lead code{font-family:var(--f-mono); font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:4px}
+.keys{font-family:var(--f-mono); font-size:12px}
+.profs{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
+.prof{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+.prof.on{border-color:var(--tape); box-shadow:0 0 0 1px var(--tape)}
+.prof .t1{font-weight:700} .prof .t2{font-size:12px; color:var(--muted)}
+.promo .yr{font-family:var(--f-mono); font-size:22px; font-weight:600}
+.promo .arrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:2px 0 10px}
+</style>
+</head>
+<body>
+<div class="gky-app">
+  <header class="gky-top">
+    <a class="gky-brand" href="#" id="brand" title="楽屋について"><span class="gky-tape"></span><b>楽屋</b><small>吹奏楽の団体のためのツール集</small></a>
+    <div class="gky-top-actions"><span class="muted" style="font-size:12px" id="orgTop"></span><a class="gky-fb" id="fbTop" href="#" target="_blank" rel="noopener">ご意見</a></div>
+  </header>
+  <nav class="gky-tabs" id="tabs" role="tablist">
+    <button data-tab="tools">ツール</button>
+    <button data-tab="members"><span id="wMember">部員</span><span class="count ok" id="cntM"></span></button>
+    <button data-tab="org">団体・年度</button>
+    <button data-tab="links">つながり</button>
+    <button data-tab="backup">バックアップ<span class="count" id="cntBk"></span></button>
+    <button data-tab="setup" hidden>置き方</button>
+  </nav>
+  <main class="gky-main">
+    <div id="viewerNote"></div>
+
+    <section data-panel="tools" hidden>
+      <div class="hello"><div><h1>楽屋</h1><p id="helloP">部員・曲・楽器のデータをここ（楽屋）に入れておくと、同じ場所に置いた全部のツールで使えます。データはこの端末のブラウザの中だけに保存され、どこにも送られません。</p></div><span class="org" id="orgName"></span></div>
+      <div id="typeAsk"></div>
+      <div id="bkRemind"></div>
+      <div id="firstBox"></div>
+      <div id="toolGrid"></div>
+    </section>
+
+    <section data-panel="members" hidden>
+      <div class="sec">
+        <h2><span id="mTitle">部員</span><small id="mSum"></small></h2>
+        <p class="lead" id="mLead"></p>
+        <div class="btnrow" style="margin-bottom:10px"><button class="btn primary" id="mAdd">＋ 1人足す</button><button class="btn" id="mMany">まとめて足す</button><button class="btn" id="mCsv">CSVから読み込む</button><button class="btn" id="mCsvOut">CSVで保存</button><button class="btn" id="mTpl">見本のCSV</button></div>
+        <div class="mbar">
+          <input type="search" id="mQ" placeholder="名前・よみ・メモでさがす" aria-label="さがす">
+          <select id="mFSt" aria-label="状態でしぼる"></select>
+          <select id="mFPart" aria-label="楽器でしぼる"></select>
+          <select id="mFGrade" aria-label="学年でしぼる"></select>
+          <select id="mFRole" aria-label="役職でしぼる"></select>
+          <select id="mSort" aria-label="並べ方"></select>
+          <label class="chk"><input type="checkbox" id="mStaff"> <span id="mStaffL">指導者メモを出す</span></label>
+        </div>
+        <div class="cnts" id="mCnts"></div>
+        <div class="tbl-wrap" style="margin-top:10px"><table class="tbl mt cards" id="mTable"></table></div>
+        <p class="note" id="mNote"></p>
+      </div>
+    </section>
+
+    <section data-panel="org" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>団体</h2>
+            <h3 style="font-size:13px;margin:0 0 6px">団体の種類</h3>
+            <div class="types" id="oTypes" role="group" aria-label="団体の種類"></div>
+            <p class="note" id="oTypeNote" style="margin:6px 0 12px"></p>
+            <div class="grid">
+              <label class="fld wide"><span>団体の名前（印刷物の下に入ります）</span><input type="text" id="oName" placeholder="例：〇〇中学校吹奏楽部"></label>
+              <label class="fld"><span>いまの名簿の年度</span><input type="number" id="oYear" min="2000" max="2100" step="1"><span class="hint" id="oYearHint"></span></label>
+              <label class="fld" id="oRetireF" hidden><span>引退の時期</span><select id="oRetire"><option value="大3">3回生の秋（3回生で引退）</option><option value="大4">4回生の定期演奏会のあと</option></select></label>
+            </div>
+          </div>
+          <div class="sec">
+            <h2>表示</h2>
+            <label class="chk"><input type="checkbox" id="oBig"> 文字を大きくする（この端末の全部のツール）</label>
+            <h3 style="font-size:13px;margin:14px 0 4px">ホーム画面に追加する</h3>
+            <p class="note" style="margin:0">iPhone・iPad は Safari の共有ボタン →「ホーム画面に追加」、Android は Chrome のメニュー →「ホーム画面に追加」。どのツールの画面から追加しても、「楽屋」という1つのアプリになります。アプリの中では、ツールを行き来しても同じ画面のまま開き、前に開いていたツールへ「つづきから」で戻れます。</p>
+          </div>
+          <div class="sec">
+            <h2>この端末の団体<small>切りかえて使う</small></h2>
+            <p class="lead">学校の部と地域クラブのように、いくつかの団体のデータを1つのブラウザで切りかえて使えます。切りかえると、全部のツールのデータ（部員・楽譜・香盤表など）がその団体のものに入れかわります。</p>
+            <div class="profs" id="profList"></div>
+            <div class="btnrow"><button class="btn" id="profNew">＋ 新しい団体を作る</button></div>
+            <p class="note">切りかえる前のデータは、この端末の中にそのまま残ります。開いているほかのツールのタブは、自動で新しい団体の内容になります。楽器台帳の写真は、どの団体からも見えます。</p>
+          </div>
+        </div>
+        <div>
+          <div class="sec promo">
+            <h2>年度がかわったら（進級）</h2>
+            <div id="promote"></div>
+          </div>
+          <div class="sec">
+            <h2>引退させる</h2>
+            <p class="lead" id="rtLead"></p>
+            <div class="btnrow"><select id="rtGrade" aria-label="引退させる学年"></select><button class="btn" id="doRetire">この学年を引退にする</button><button class="btn ghost" id="undoRetire">引退の人を在籍にもどす</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="links" hidden>
+      <p class="lead">楽屋のデータを、どのツールが入れて、どのツールが使うかです。ステマネ・バミリ・テンポマップのファイル（共有コード）や、見るだけのリンクでも、ツールどうし・人どうしがつながります。</p>
+      <div class="flow" id="flow"></div>
+    </section>
+
+    <section data-panel="backup" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>まとめてバックアップ</h2>
+            <p class="lead">この端末に保存している、楽屋シリーズとバミリ・ドリルボードのデータを、1つのファイルにまとめます。機種変更やブラウザのデータを消す前に。学校のChromebook・iPadは、サインアウトでデータが消える設定のこともあるので、こまめに保存してください。</p>
+            <p class="note" id="bkLast" style="margin:0 0 8px"></p>
+            <div id="bkList"></div>
+            <label class="chk" style="margin:8px 0"><input type="checkbox" id="bkPhotos" checked> 楽器台帳の写真も入れる</label>
+            <div class="btnrow"><button class="btn primary" id="bkSave">バックアップを保存</button><button class="btn" id="bkLoad">バックアップから戻す</button></div>
+            <p class="note">合奏ノート・ドリルボードの録音・音源はバックアップに入りません（元のファイルを残しておいてください）。</p>
+          </div>
+          <div class="sec">
+            <h2>保存している量</h2>
+            <div id="usage"></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>引き継ぎ<small>幹部・係・顧問の交代のときに</small></h2>
+            <p class="lead">全部のツールのデータと、次の人へのメモを1つのファイルにまとめます。次の人は、自分の端末の楽屋で「バックアップから戻す」で開くと、そのまま続きから使えます。</p>
+            <label class="fld"><span>次の人へのメモ（やりかけのこと・気をつけること・連絡先など）</span><textarea id="hoMemo" style="min-height:120px" placeholder="例：楽器運搬のトラックは〇〇楽器さん（毎年6月に予約）。&#10;楽譜のレンタルは12月に返す。"></textarea></label>
+            <label class="chk" style="margin:8px 0"><input type="checkbox" id="hoStaff"> <span id="hoStaffL">指導者メモも入れる</span></label>
+            <div class="btnrow"><button class="btn primary" id="hoSave">引き継ぎファイルを保存</button><button class="btn" id="hoPrint">引き継ぎのしおりを印刷</button></div>
+          </div>
+          <div class="sec">
+            <h2>楽屋のデータだけ</h2>
+            <p class="lead">部員・曲・楽器の楽屋データだけを保存・読み込みします。ほかの端末の楽屋に渡すときに使います。</p>
+            <label class="chk" style="margin:0 0 8px"><input type="checkbox" id="orgStaff"> <span id="orgStaffL">指導者メモも入れる</span></label>
+            <div class="btnrow"><button class="btn" id="orgSave">楽屋のデータを保存</button><button class="btn" id="orgLoad">楽屋のデータを読み込む</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="setup" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>GitHub Pages に置く（はじめの1回）</h2>
+            <p class="lead">開発する人向けの手順です（アドレスに <code>?dev</code> をつけたときだけ出ます）。楽屋シリーズは、全部のツールを<b>1つのリポジトリ</b>に入れます。フォルダ1つがツール1つです。くわしくはリポジトリのいちばん上の <code>README.md</code> にあります。</p>
+            <ol class="steps">
+              <li>GitHub（bamiriunei-arch）で「New repository」を押し、名前を <code>bamiriunei-arch.github.io</code>（このとおり）にして、<b>Public</b> で作ります。</li>
+              <li>「uploading an existing file」を押し、配ったフォルダの中身を入れて「Commit changes」。1回に上げられるのは100ファイルまでなので、右の表のとおり分けます。</li>
+              <li>自動テストの設定 <code>.github/workflows/test.yml</code> は、「Add file」→「Create new file」で名前に <code>.github/workflows/test.yml</code> と入れ、中身を貼って作るのが確実です。</li>
+              <li>「Settings」→「Pages」で、Branch が <code>main</code>・フォルダが <code>/ (root)</code> になっているか確かめます。</li>
+              <li>数分すると <code>https://bamiriunei-arch.github.io/gakuya/</code> で楽屋が開けます。「Actions」タブで「自動テスト」に緑のチェック（✓）が付けば、正しく動いています。</li>
+            </ol>
+          </div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>フォルダと公開ページ</h2>
+            <div class="tbl-wrap"><table class="tbl" id="repoTable"></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここから ==== */
+/* 全ツールで同じ内容です。楽屋（gakuya/index.html）で直してから、リポジトリのいちばん上で node sync-common.js を動かすと、
+   全ツールにそろえて写せます。変えたら GKY.VERSION を上げてください。
+   ・楽屋データ（部員・曲・楽器・団体）の読み書き  GKY.org / GKY.saveOrg
+   ・団体の種類・学年・進級・呼び方                GKY.ORG_TYPES / GKY.gradesOf / GKY.nextGradeOf / GKY.words / GKY.STATUS
+   ・名簿の読み取り（まとめて足す・CSV）          GKY.parseMemberLine / GKY.membersFromRows / GKY.previewMembers
+   ・ファイルの保存と読み込み（Shift_JISも読む）  GKY.saveFile / GKY.openFile / GKY.decodeText
+   ・CSV（Excelで開ける形）                        GKY.csv / GKY.parseCSV
+   ・パートの名前のそろえ方                        GKY.PARTS / GKY.partOf / GKY.baseOf / GKY.readPart
+   ・ほかのツールのファイルの見分け                GKY.identify / GKY.stagemane / GKY.bamiri
+   ・同じツールを2つのタブで開いたとき            GKY.guard
+   ・保存している量・文字の大きさ                  GKY.usage / GKY.pref / GKY.setPref
+   ・印刷とPDF（A4・B4・A3）                       GKY.doc
+   ・見るだけのリンクとQRコード                    GKY.shareUrl / GKY.readShare / GKY.shareSheet / GKY.viewer / GKY.qrSVG
+   ・小さな画面部品                                GKY.toast / GKY.sheet / GKY.arm / GKY.tabs                              */
+/* QR Code Generator for JavaScript — Copyright (c) 2009 Kazuhiko Arase — MIT License — https://github.com/kazuhikoarase/qrcode-generator （QR Code は株式会社デンソーウェーブの登録商標です） */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+const GKY = (() => {
+  const VERSION = '2';
+  /* Claudeの画面の中で開いているか（そのときはファイル保存の方法と印刷のしかたが変わる） */
+  const IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function');
+  const TEST = /[?&]test\b/.test(location.search);
+  /* ご意見・ご要望のフォーム（バミリと同じ）。ツールごとに FEEDBACK_URL を入れたときは、そちらを使います */
+  const FEEDBACK_URL = 'https://forms.gle/HpXuHj7YCkBAsbGt9';
+
+  /* ---------- 小物 ---------- */
+  const $ = (q, el = document) => el.querySelector(q);
+  const $$ = (q, el = document) => Array.from(el.querySelectorAll(q));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = (p = 'x') => p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const norm = s => String(s ?? '').normalize('NFKC').trim();
+  /* ひらがな → カタカナ（「ぱーかす」も「パーカス」として読むため） */
+  const kata = s => String(s ?? '').replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  /* 曲名などを見比べるための形（空白・記号・大文字小文字の違いをなくす） */
+  const key = s => norm(s).toLowerCase().replace(/[\s・･「」『』（）()［］\[\]〈〉《》“”"'’‘、。,.:：;；!！?？~〜ー－―‐\-_/／]+/g, '');
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  /* 少し待ってからまとめて実行する。ページを閉じる・ほかのアプリに切りかえるときは、待っている分をすぐ実行する（保存のもれを防ぐ） */
+  const pendings = new Set();
+  const debounce = (fn, ms = 400) => {
+    let t = 0, args = [];
+    const f = (...a) => { args = a; clearTimeout(t); pendings.add(f); t = setTimeout(() => { pendings.delete(f); fn(...args); }, ms); };
+    f.flush = () => { if (!pendings.has(f)) return; clearTimeout(t); pendings.delete(f); fn(...args); };
+    return f;
+  };
+  const flushAll = () => [...pendings].forEach(f => f.flush());
+  window.addEventListener('pagehide', flushAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushAll(); });
+  const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+  /* ---------- 時間と日付 ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  /* 秒 → 8:43 */
+  const clock = s => { if (s == null || !isFinite(s)) return '—'; s = Math.round(s); const neg = s < 0; s = Math.abs(s); const m = Math.floor(s / 60), r = s % 60; return (neg ? '−' : '') + (m >= 60 ? Math.floor(m / 60) + ':' + pad(m % 60) : m) + ':' + pad(r); };
+  /* 秒 → 8'43" （吹奏楽の資料でよく使う書き方） */
+  const dur = s => { if (s == null || !isFinite(s)) return ''; s = Math.round(s); const m = Math.floor(s / 60), r = s % 60; return m + "'" + pad(r) + '"'; };
+  /* 8:43 / 8'43" / 8分43秒 / 523 → 秒。読めないときは null */
+  function parseDur(v) {
+    const t = norm(v).replace(/\s/g, '');
+    if (!t) return null;
+    let m;
+    if ((m = t.match(/^(\d+):(\d{1,2}):(\d{1,2})$/))) return +m[1] * 3600 + +m[2] * 60 + +m[3];
+    if ((m = t.match(/^(\d+)[:'′分](\d{1,2})(?:["″秒]|'')?$/))) return +m[1] * 60 + +m[2];
+    if ((m = t.match(/^(\d+)[分'′]$/))) return +m[1] * 60;
+    if ((m = t.match(/^(\d+(?:\.\d+)?)秒?$/))) return Math.round(+m[1]);
+    return null;
+  }
+  const ymd = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parseYmd = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const WD = ['日', '月', '火', '水', '木', '金', '土'];
+  const jpDate = (s, withWeek = true) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日' + (withWeek ? '（' + WD[d.getDay()] + '）' : ''); };
+  const mdDate = (s) => { const d = typeof s === 'string' ? parseYmd(s) : s; if (!d) return ''; return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）'; };
+  const addDays = (s, n) => { const d = parseYmd(s); if (!d) return ''; d.setDate(d.getDate() + n); return ymd(d); };
+  const daysBetween = (a, b) => { const x = parseYmd(a), y = parseYmd(b); if (!x || !y) return null; return Math.round((y - x) / 86400000); };
+  /* 4月はじまりの年度 */
+  const fiscalYear = (d = new Date()) => d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const stamp = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()); };
+
+  /* ---------- ブラウザへの保存（この端末の中だけ） ---------- */
+  /* 1つの場所（例：bamiriunei-arch.github.io）で保存できる量の、おおよその上限（文字の数）。ブラウザによって少しちがいます */
+  const LIMIT = 5000000;
+  const guards = {};
+  let usageAt = 0, usageWarned = false;
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  function setRaw(k, raw) {
+    const g = guards[k];
+    if (g) {
+      // ほかのタブとぶつかって、どちらにするか聞いているあいだは、最後の内容だけ覚えておく
+      if (g.conflict) { g.pending = raw; return true; }
+      const now = lsGet(k);
+      if (now !== g.last && now !== raw) { conflict(k, raw); return true; }
+    }
+    try { localStorage.setItem(k, raw); } catch (e) { return false; }
+    if (g) g.last = raw;
+    watchUsage();
+    return true;
+  }
+  const store = {
+    get(k, d = null) { const v = lsGet(k); if (v == null) return d; try { return JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { return setRaw(k, JSON.stringify(v)); },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } if (guards[k]) guards[k].last = null; },
+    keys() { try { return Object.keys(localStorage); } catch (e) { return []; } },
+    raw: lsGet,
+    setRaw,
+  };
+  /* 保存している量（文字の数）。by はキーの頭（gakuya・kouban など）ごと */
+  function usage() {
+    let used = 0; const by = {};
+    store.keys().forEach(k => { const n = k.length + (lsGet(k) || '').length; used += n; const p = k.split('.')[0]; by[p] = (by[p] || 0) + n; });
+    return { used, limit: LIMIT, ratio: used / LIMIT, by };
+  }
+  function watchUsage() {
+    if (usageWarned || Date.now() - usageAt < 20000) return;
+    usageAt = Date.now();
+    const u = usage();
+    if (u.ratio < 0.85) return;
+    usageWarned = true;
+    setTimeout(() => toast(`この端末で保存できる量の${Math.round(u.ratio * 100)}%ほどを使っています。楽屋の「バックアップ」で使っている量を確かめ、ファイルに保存しておいてください`, null, null, 9000), 500);
+  }
+  /* 同じツールを2つのタブで開いたとき：
+     ・ほかのタブで保存されたら、こちらで直している途中でなければ、新しい内容を読み直す（reload）
+     ・こちらで直している途中に、ほかのタブが先に保存していたら、どちらを残すか聞く（黙って上書きしない） */
+  function guard(k, reload) {
+    const g = guards[k] = { last: lsGet(k), reload, conflict: false, pending: null };
+    const adopt = () => {
+      const now = lsGet(k);
+      if (now === g.last || g.conflict || pendings.size) return;
+      g.last = now; reload();
+      toast('ほかのタブ（またはほかの画面）で変わったので、新しい内容にしました');
+    };
+    window.addEventListener('storage', e => { if (e.key === k || e.key === null) adopt(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) adopt(); });
+    return g;
+  }
+  function conflict(k, raw) {
+    const g = guards[k];
+    g.conflict = true; g.pending = raw;
+    sheet({ title: 'ほかのタブで先に保存されました', content: `<p style="margin:0 0 8px">このツールは、ほかのタブ（またはほかの画面）でも開かれていて、そちらで先にデータが変わりました。どちらの内容を残すか選んでください。</p><p class="note" style="margin:0">選ばずに閉じると、ここで直した分はまだ保存されません（もう一度直すと、また聞きます）。同じツールは、1つのタブで使うのがおすすめです。</p>`,
+      actions: [
+        { label: 'ほかのタブの内容にする', onClick: () => { g.conflict = false; g.pending = null; g.last = lsGet(k); if (g.reload) g.reload(); toast('ほかのタブの内容にしました'); } },
+        { label: 'ここの内容で上書きする', primary: true, onClick: () => { const r = g.pending; g.conflict = false; g.pending = null; g.last = lsGet(k); if (r != null && !setRaw(k, r)) toast('保存できませんでした（容量がいっぱいかもしれません）'); else toast('ここの内容で保存しました'); } },
+      ],
+      onClose: () => { if (g.conflict) { g.conflict = false; g.pending = null; } } });
+  }
+
+  /* ---------- この端末の表示の好み（全部のツールで共通） ---------- */
+  const UI_KEY = 'gakuya.ui';
+  const pref = (k, d) => { const u = store.get(UI_KEY, {}) || {}; return Object.prototype.hasOwnProperty.call(u, k) ? u[k] : d; };
+  function setPref(k, v) { const u = store.get(UI_KEY, {}) || {}; u[k] = v; store.set(UI_KEY, u); if (k === 'big') applyUI(); }
+  function applyUI() { document.documentElement.dataset.size = pref('big', false) ? 'lg' : ''; }
+  applyUI();
+  window.addEventListener('storage', e => { if (e.key === UI_KEY) applyUI(); });
+
+  /* ---------- パート ---------- */
+  /* バミリの奏者ラベルと同じ書き方にそろえています */
+  const SECTIONS = { ww: '木管', br: '金管', str: '弦', perc: '打楽器', key: '鍵盤・ハープ', etc: 'その他' };
+  const PARTS = [
+    ['Pic', 'ピッコロ', 'ww'], ['Fl', 'フルート', 'ww'], ['Ob', 'オーボエ', 'ww'], ['E.H.', 'イングリッシュホルン', 'ww'], ['Fg', 'ファゴット', 'ww'],
+    ['E♭Cl', 'E♭クラリネット', 'ww'], ['Cl', 'クラリネット', 'ww'], ['A.Cl', 'アルトクラリネット', 'ww'], ['B.Cl', 'バスクラリネット', 'ww'],
+    ['S.Sax', 'ソプラノサックス', 'ww'], ['A.Sax', 'アルトサックス', 'ww'], ['T.Sax', 'テナーサックス', 'ww'], ['B.Sax', 'バリトンサックス', 'ww'],
+    ['Tp', 'トランペット', 'br'], ['Cor', 'コルネット', 'br'], ['Hn', 'ホルン', 'br'], ['Tb', 'トロンボーン', 'br'], ['B.Tb', 'バストロンボーン', 'br'],
+    ['Euph', 'ユーフォニアム', 'br'], ['Tuba', 'テューバ', 'br'],
+    ['St.B', '弦バス', 'str'], ['Perc', '打楽器', 'perc'], ['Pf', 'ピアノ', 'key'], ['Hp', 'ハープ', 'key'],
+  ];
+  /* 打楽器の中の楽器（コウバンなどの「受け持ち」で使う） */
+  const PERC = [
+    ['Timp', 'ティンパニ'], ['S.D.', 'スネアドラム'], ['B.D.', 'バスドラム'], ['Cym', 'クラッシュシンバル'], ['Sus.Cym', 'サスペンデッドシンバル'],
+    ['Tam-t', 'タムタム'], ['Drs', 'ドラムセット'], ['Mar', 'マリンバ'], ['Xylo', 'シロフォン'], ['Vib', 'ヴィブラフォン'], ['Glk', 'グロッケン'],
+    ['Chime', 'チャイム'], ['Tamb', 'タンバリン'], ['Tri', 'トライアングル'], ['W.B.', 'ウッドブロック'], ['Toms', 'タムタム（太鼓）'],
+    ['Cong', 'コンガ'], ['Bongo', 'ボンゴ'], ['Timb', 'ティンバレス'], ['Perc', '打楽器（小物）'],
+  ];
+  const PART_CODES = new Set(PARTS.map(p => p[0]));
+  const PERC_CODES = new Set(PERC.map(p => p[0]));
+  /* よく使う呼び方 → 記号（カタカナで書く。ひらがなで入れてもカタカナにして読みます） */
+  const ALIAS = {
+    'ピッコロ': 'Pic', 'picc': 'Pic', 'pic': 'Pic', 'ピッコ': 'Pic', 'piccolo': 'Pic',
+    'フルート': 'Fl', 'fl': 'Fl', 'flute': 'Fl', 'フルト': 'Fl',
+    'オーボエ': 'Ob', 'ob': 'Ob', 'oboe': 'Ob', 'eh': 'E.H.', 'e.h.': 'E.H.', 'イングリッシュホルン': 'E.H.', 'コールアングレ': 'E.H.',
+    'ファゴット': 'Fg', 'ファゴ': 'Fg', 'バスーン': 'Fg', 'バソン': 'Fg', 'fg': 'Fg', 'bsn': 'Fg', 'bassoon': 'Fg',
+    'クラ': 'Cl', 'クラリネット': 'Cl', 'cl': 'Cl', 'clarinet': 'Cl', 'b♭cl': 'Cl', 'bbcl': 'Cl', 'エスクラ': 'E♭Cl', 'e♭cl': 'E♭Cl', 'ebcl': 'E♭Cl',
+    'アルトクラ': 'A.Cl', 'アルトクラリネット': 'A.Cl', 'a.cl': 'A.Cl', 'acl': 'A.Cl',
+    'バスクラ': 'B.Cl', 'バスクラリネット': 'B.Cl', 'b.cl': 'B.Cl', 'bcl': 'B.Cl',
+    'ソプラノサックス': 'S.Sax', 'ソプラノ': 'S.Sax', 'ソプサク': 'S.Sax', 'ss': 'S.Sax', 's.sax': 'S.Sax', 'ssax': 'S.Sax',
+    'アルトサックス': 'A.Sax', 'アルト': 'A.Sax', 'アルサク': 'A.Sax', 'as': 'A.Sax', 'a.sax': 'A.Sax', 'asax': 'A.Sax',
+    'テナーサックス': 'T.Sax', 'テナー': 'T.Sax', 'テナサク': 'T.Sax', 'ts': 'T.Sax', 't.sax': 'T.Sax', 'tsax': 'T.Sax',
+    'バリトンサックス': 'B.Sax', 'バリトン': 'B.Sax', 'バリサク': 'B.Sax', 'bs': 'B.Sax', 'b.sax': 'B.Sax', 'bsax': 'B.Sax',
+    'サックス': 'A.Sax', 'sax': 'A.Sax', 'サクソフォン': 'A.Sax', 'サキソフォン': 'A.Sax',
+    'トランペット': 'Tp', 'ラッパ': 'Tp', 'ペット': 'Tp', 'トラペ': 'Tp', 'tp': 'Tp', 'trp': 'Tp', 'tpt': 'Tp', 'trumpet': 'Tp', 'コルネット': 'Cor', 'cor': 'Cor', 'crt': 'Cor',
+    'ホルン': 'Hn', 'フレンチホルン': 'Hn', 'hn': 'Hn', 'hr': 'Hn', 'horn': 'Hn',
+    'トロンボーン': 'Tb', 'ボーン': 'Tb', 'テナーバストロンボーン': 'Tb', 'tb': 'Tb', 'trb': 'Tb', 'trombone': 'Tb', 'バストロンボーン': 'B.Tb', 'バストロ': 'B.Tb', 'b.tb': 'B.Tb', 'btb': 'B.Tb',
+    'ユーフォニアム': 'Euph', 'ユーフォ': 'Euph', 'ユーフォニウム': 'Euph', 'ユーフォニューム': 'Euph', 'euph': 'Euph', 'eup': 'Euph', 'eu': 'Euph', 'euphonium': 'Euph',
+    'テューバ': 'Tuba', 'チューバ': 'Tuba', 'スーザフォン': 'Tuba', 'スーザ': 'Tuba', 'tuba': 'Tuba', 'tu': 'Tuba',
+    '弦バス': 'St.B', 'ゲンバス': 'St.B', 'コントラバス': 'St.B', 'コンバス': 'St.B', 'ウッドベース': 'St.B', 'エレキベース': 'St.B', 'エレベ': 'St.B', 'ベース': 'St.B', 'st.b': 'St.B', 'stb': 'St.B', 'cb': 'St.B', 'contrabass': 'St.B',
+    '打楽器': 'Perc', 'パーカッション': 'Perc', 'パーカス': 'Perc', 'perc': 'Perc', 'per': 'Perc', 'ダガッキ': 'Perc', 'percussion': 'Perc',
+    'ピアノ': 'Pf', 'キーボード': 'Pf', 'キーボ': 'Pf', 'pf': 'Pf', 'pno': 'Pf', 'piano': 'Pf', 'ハープ': 'Hp', 'hp': 'Hp', 'harp': 'Hp',
+    'ティンパニ': 'Timp', 'ティンパニー': 'Timp', 'timp': 'Timp', 'tim': 'Timp', 'スネア': 'S.D.', 'スネアドラム': 'S.D.', '小太鼓': 'S.D.', 'sd': 'S.D.', 's.d.': 'S.D.', 'sn': 'S.D.',
+    'バスドラム': 'B.D.', 'バスドラ': 'B.D.', '大太鼓': 'B.D.', 'bd': 'B.D.', 'b.d.': 'B.D.', 'シンバル': 'Cym', 'cym': 'Cym', 'cymb': 'Cym',
+    'サスペンデッドシンバル': 'Sus.Cym', 'サスシン': 'Sus.Cym', 'sus.cym': 'Sus.Cym', 'タムタム': 'Tam-t', 'ドラ': 'Tam-t', 'ドラムセット': 'Drs', 'ドラム': 'Drs', 'ドラムス': 'Drs', 'drs': 'Drs', 'dr': 'Drs',
+    'マリンバ': 'Mar', 'mar': 'Mar', 'mrb': 'Mar', 'シロフォン': 'Xylo', '木琴': 'Xylo', 'xylo': 'Xylo', 'xyl': 'Xylo',
+    'ヴィブラフォン': 'Vib', 'ビブラフォン': 'Vib', 'ヴィブラ': 'Vib', 'ビブラ': 'Vib', 'vib': 'Vib', '鉄琴': 'Glk', 'グロッケン': 'Glk', 'glk': 'Glk', 'glock': 'Glk',
+    'チャイム': 'Chime', 'chime': 'Chime', 'chimes': 'Chime', 'タンバリン': 'Tamb', 'tamb': 'Tamb', 'トライアングル': 'Tri', 'tri': 'Tri',
+    'ウッドブロック': 'W.B.', 'wb': 'W.B.', 'w.b.': 'W.B.', 'コンガ': 'Cong', 'ボンゴ': 'Bongo', 'ティンバレス': 'Timb',
+  };
+  /* どの楽器か決めきれない呼び方（読み込む前の確かめで「これでよいか」を聞く） */
+  const GUESS = new Set(['サックス', 'sax', 'サクソフォン', 'サキソフォン', 'ベース', 'キーボード', 'キーボ']);
+  /* 入力された名前を記号にそろえる（わからなければそのまま） */
+  function partOf(v) {
+    const t = norm(v);
+    if (!t) return '';
+    if (PART_CODES.has(t) || PERC_CODES.has(t)) return t;
+    const k = t.toLowerCase().replace(/\s/g, ''), kk = kata(k);
+    if (ALIAS[k]) return ALIAS[k];
+    if (ALIAS[kk]) return ALIAS[kk];
+    if (ALIAS[t]) return ALIAS[t];
+    for (const p of PARTS) if (p[0].toLowerCase() === k || p[1] === t || p[1] === kk) return p[0];
+    for (const p of PERC) if (p[0].toLowerCase() === k || p[1] === t || p[1] === kk) return p[0];
+    return t;
+  }
+  /* 「Cl1」「1st Cl」「Tp 2」→ 楽器の記号（Cl, Tp）。打楽器の中の楽器はそのまま */
+  function baseOf(label) {
+    let t = norm(label).replace(/\s+/g, ' ');
+    t = t.replace(/^(?:\d+(?:st|nd|rd|th)|[1-9]番?)\s*/i, '').replace(/\s*(?:\d+(?:st|nd|rd|th)?|[ⅠⅡⅢⅣ]|[1-9]番)$/i, '').trim();
+    return partOf(t) || t;
+  }
+  /* その受け持ちに入れる楽器の仲間（打楽器はまとめて Perc） */
+  const familyOf = label => { const b = baseOf(label); return PERC_CODES.has(b) ? 'Perc' : b; };
+  const partName = code => { const p = PARTS.find(x => x[0] === code) || PERC.find(x => x[0] === code); return p ? p[1] : code; };
+  const sectionOf = code => { const f = familyOf(code); const p = PARTS.find(x => x[0] === f); return p ? p[2] : 'etc'; };
+  const partOrder = code => { const f = familyOf(code); const i = PARTS.findIndex(x => x[0] === f); const j = PERC.findIndex(x => x[0] === baseOf(code)); return (i < 0 ? 900 : i * 10) + (j < 0 ? 0 : j / 100); };
+  /* 名簿の「楽器」の言葉 → { part（いつもの楽器）, subs（持ち替え）, guess（決めきれない呼び方）}。楽器と読めなければ null
+     「フルート・ピッコロ」「Fl/Pic」「クラ（バスクラ）」のように2つ書いてあれば、2つめからは持ち替え。打楽器の中の楽器（スネアなど）は「打楽器」 */
+  function readPart(token) {
+    const t = norm(token);
+    if (!t) return null;
+    const bits = t.split(/[・\/／&＆+＋、,()（）]/).map(norm).filter(Boolean);
+    if (!bits.length) return null;
+    const codes = []; let guess = false;
+    for (const b of bits) {
+      const c = partOf(b);
+      if (!PART_CODES.has(c) && !PERC_CODES.has(c)) return null;
+      if (GUESS.has(kata(b).toLowerCase()) || GUESS.has(b.toLowerCase())) guess = true;
+      codes.push(c);
+    }
+    const fam = c => PERC_CODES.has(c) ? 'Perc' : c;
+    const part = fam(codes[0]);
+    return { part, subs: [...new Set(codes.slice(1).filter(c => c !== part))], guess };
+  }
+
+  /* ---------- 団体の種類・学年・進級・呼び方 ---------- */
+  const ORG_TYPES = { chu: '中学校', koko: '高校', chuko: '中高一貫', daigaku: '大学', ippan: '一般の団体', chiiki: '地域クラブ' };
+  const GRADES = ['小4', '小5', '小6', '中1', '中2', '中3', '高1', '高2', '高3', '大学', '一般'];
+  const GRADE_SETS = {
+    chu: ['中1', '中2', '中3'], koko: ['高1', '高2', '高3'], chuko: ['中1', '中2', '中3', '高1', '高2', '高3'],
+    daigaku: ['大1', '大2', '大3', '大4', '院1', '院2'], chiiki: GRADES, ippan: [],
+  };
+  /* 学年の並べ方（学年の早い順） */
+  const GRADE_ORDER = ['小1', '小2', '小3', '小4', '小5', '小6', '中1', '中2', '中3', '高1', '高2', '高3', '大1', '大2', '大3', '大4', '大5', '大6', '院1', '院2', '院3', '博1', '博2', '博3', '大学', '一般'];
+  const gradeRank = g => { const i = GRADE_ORDER.indexOf(norm(g)); return i < 0 ? -1 : i; };
+  /* 部員の状態。在籍・エキストラ・賛助の人は、パート割りの候補に入る（active） */
+  const STATUS = { active: '在籍', leave: '休部', retired: '引退', extra: 'エキストラ', support: '賛助・OB/OG', gone: '卒業・退部' };
+  const PLAYS = new Set(['active', 'extra', 'support']);
+  /* 楽屋の団体の種類（まだ決めていなければ ''） */
+  let typeCache = [undefined, ''];
+  const orgType = () => { const raw = lsGet(ORG_KEY); if (raw !== typeCache[0]) { let t = ''; try { const o = JSON.parse(raw || '{}'); t = o && o.org && ORG_TYPES[o.org.type] ? o.org.type : ''; } catch (e) { t = ''; } typeCache = [raw, t]; } return typeCache[1]; };
+  const gradesOf = (type = orgType()) => GRADE_SETS[type] || GRADES;
+  const gradeLabel = g => { const m = String(g || '').match(/^大([1-6])$/); return m ? `${g}（${m[1]}回生）` : g; };
+  /* 呼び方：学校は「部員」「顧問」、一般・地域クラブは「団員」 */
+  function words(type = orgType()) {
+    const adult = type === 'ippan' || type === 'chiiki';
+    return { member: adult ? '団員' : '部員', staff: type === 'ippan' ? '団長' : type === 'chiiki' ? '代表' : type === 'daigaku' ? '幹部' : '顧問',
+      leave: adult ? '休団' : '休部', gone: adult ? '退団' : '卒業・退部', club: adult ? '団' : '部' };
+  }
+  const statusName = (st, type = orgType()) => st === 'leave' ? words(type).leave : st === 'gone' ? words(type).gone : (STATUS[st] || st);
+  const isSchool = (type = orgType()) => ['chu', 'koko', 'chuko'].includes(type);
+  /* 次の年度の学年（いなくなるときは ''）。cont：中3から高1に続ける（中高一貫・地域クラブ） */
+  function nextGradeOf(g, type = orgType(), { cont = type === 'chuko' } = {}) {
+    const t = norm(g); let m;
+    if ((m = t.match(/^小([1-6])$/))) return +m[1] < 6 ? '小' + (+m[1] + 1) : '中1';
+    if ((m = t.match(/^中([1-3])$/))) return +m[1] < 3 ? '中' + (+m[1] + 1) : (cont ? '高1' : '');
+    if ((m = t.match(/^高([1-3])$/))) return +m[1] < 3 ? '高' + (+m[1] + 1) : '';
+    if ((m = t.match(/^大([1-6])$/))) return +m[1] === 4 || +m[1] === 6 ? '' : '大' + (+m[1] + 1);
+    if ((m = t.match(/^院([1-3])$/))) return +m[1] < 2 ? '院' + (+m[1] + 1) : '';
+    if ((m = t.match(/^博([1-3])$/))) return +m[1] < 3 ? '博' + (+m[1] + 1) : '';
+    return t;
+  }
+  const nextGrade = g => nextGradeOf(g, '', { cont: false });
+  /* その学年が「あと何年でいなくなるか」（中3・高3は今年度で終わり＝0）。わからなければ null */
+  function yearsLeft(grade) {
+    const g = norm(grade);
+    let m;
+    if ((m = g.match(/^小([1-6])$/))) return 6 - +m[1] + 3; // 中学まで続けると考える
+    if ((m = g.match(/^中([1-3])$/))) return 3 - +m[1];
+    if ((m = g.match(/^高([1-3])$/))) return 3 - +m[1];
+    if ((m = g.match(/^大([1-4])$/))) return 4 - +m[1];
+    return null;
+  }
+  /* 学年の書き方をそろえる：「1年生」「2回生」「大3」「院1」「中学2年」など → { grade, sure }。学年と読めなければ null
+     「2年」だけのときは、団体の種類で中学・高校・大学を決める（決められないときは sure:false） */
+  function readGrade(token, type = orgType()) {
+    const t = norm(token).replace(/\s/g, '');
+    if (!t) return null;
+    let m;
+    const ok = g => ({ grade: g, sure: true });
+    if ((m = t.match(/^(小|中|高)(?:学校?)?([1-6])(?:年生?)?$/)) || (m = t.match(/^(小学|中学|高校)([1-6])年生?$/))) { const k = m[1][0], n = +m[2]; return (k === '小' || n <= 3) ? ok(k + n) : null; }
+    if ((m = t.match(/^大(?:学)?([1-6])(?:年生?|回生?)?$/)) || (m = t.match(/^([1-6])回生?$/))) return ok('大' + m[1]);
+    if ((m = t.match(/^(?:院|M|修士)([1-3])(?:年生?|回生?)?$/i))) return ok('院' + m[1]);
+    if ((m = t.match(/^(?:D|博士)([1-3])(?:年生?)?$/i))) return ok('博' + m[1]);
+    if ((m = t.match(/^([1-6])年(?:生)?$/))) {
+      const n = +m[1];
+      if (type === 'chu' && n <= 3) return ok('中' + n);
+      if (type === 'koko' && n <= 3) return ok('高' + n);
+      if (type === 'daigaku') return ok('大' + n);
+      return { grade: '', sure: false, n };
+    }
+    if (/^(一般|社会人)$/.test(t)) return { grade: type === 'ippan' || type === 'daigaku' ? '' : '一般', sure: true };
+    if (/^大学生?$/.test(t)) return type === 'daigaku' ? { grade: '', sure: false } : ok('大学');
+    if (GRADE_ORDER.includes(t)) return ok(t);
+    return null;
+  }
+  const STATUS_WORDS = [[/^(在籍|現役)$/, 'active'], [/^(休部|休団|休み中)$/, 'leave'], [/^引退$/, 'retired'], [/^(トラ|エキストラ|助っ人|ヘルプ)$/i, 'extra'],
+    [/^(賛助|OB|OG|OB\/?OG|OG\/?OB|ＯＢ|ＯＧ)$/i, 'support'], [/^(卒業|退部|退団|退会)$/, 'gone']];
+  const readStatus = token => { const t = norm(token); for (const [re, st] of STATUS_WORDS) if (re.test(t)) return st; return null; };
+  const ROLE_WORDS = ['部長', '副部長', '団長', '副団長', '代表', '副代表', '主将', '学指揮', '学生指揮者', '指揮者', '幹部', 'パートリーダー', 'パーリー', 'PL', 'セクションリーダー',
+    'コンマス', 'コンミス', 'ライブラリアン', '楽譜係', '楽器係', '会計', '渉外', '広報', '記録', 'マネージャー', 'マネ', '係長', 'インスペクター', 'トレーナー'];
+  const ROLE_HINTS = { chu: ['部長', '副部長', 'パートリーダー', '楽器係', '楽譜係', '会計'], koko: ['部長', '副部長', '学生指揮者', 'パートリーダー', 'セクションリーダー', '楽器係', '楽譜係', '会計'],
+    chuko: ['部長', '副部長', '学生指揮者', 'パートリーダー', '楽器係', '楽譜係'], daigaku: ['部長', '副部長', '学指揮', '幹部', 'パートリーダー', 'ライブラリアン', '楽器係', '会計', '渉外', '広報'],
+    ippan: ['団長', '副団長', '指揮者', 'インスペクター', 'パートリーダー', 'ライブラリアン', '楽器係', '会計', '渉外', '広報'], chiiki: ['代表', '副代表', '指揮者', 'パートリーダー', '楽器係', '会計'] };
+  const roleHints = (type = orgType()) => ROLE_HINTS[type] || ROLE_HINTS.koko;
+  const readRole = token => { const t = norm(token); return ROLE_WORDS.find(r => r.toLowerCase() === t.toLowerCase()) ? (t === 'パーリー' || t.toUpperCase() === 'PL' ? 'パートリーダー' : t === 'マネ' ? 'マネージャー' : t) : null; };
+  const readJoined = token => { const t = norm(token); const m = t.match(/^(?:入団|入部|入会)?((?:19|20)\d\d)年?(?:度)?(?:入団|入部|入会)?$/); return m && /入|^(19|20)\d\d年?度?$/.test(t) ? +m[1] : null; };
+  /* 漢字の名前（3文字以上）のあとのカタカナだけの言葉は、名前ではなく「読めなかった言葉」として扱う（例：「田中一郎 カホン」） */
+  const looksNotName = (first, second) => /[一-鿿]/.test(first) && [...first].length >= 3 && /^[゠-ヿー・]+$/.test(second);
+  /* 1行に1人の書き方（「山田 花子 中2 クラリネット」など）を読む。読めなかった言葉は unknown に入れて、名前にはつけない */
+  function parseMemberLine(line, type = orgType()) {
+    const toks = norm(line).split(/[\s,，、\t]+/).filter(Boolean);
+    const r = { name: '', kana: '', grade: '', part: '', subs: [], status: 'active', roles: [], joined: null, note: '', unknown: [], guess: [], askGrade: false };
+    const nameT = []; let seen = false;
+    toks.forEach(x => {
+      let v;
+      if (!r.grade && !r.askGrade && (v = readGrade(x, type))) { r.grade = v.grade; if (!v.sure) { r.askGrade = true; r.guess.push(x); } seen = true; return; }
+      if ((v = readPart(x))) { if (!r.part) { r.part = v.part; r.subs.push(...v.subs); } else r.subs.push(v.part, ...v.subs); if (v.guess) r.guess.push(x); seen = true; return; }
+      if ((v = readStatus(x))) { r.status = v; seen = true; return; }
+      if ((v = readRole(x))) { if (!r.roles.includes(v)) r.roles.push(v); seen = true; return; }
+      if ((v = readJoined(x))) { r.joined = v; seen = true; return; }
+      if (!seen && nameT.length < 2 && !(nameT.length === 1 && looksNotName(nameT[0], x))) { nameT.push(x); return; }
+      r.unknown.push(x);
+    });
+    r.name = nameT.join(' ');
+    r.subs = [...new Set(r.subs.filter(s => s && s !== r.part))];
+    return r;
+  }
+  /* CSV・Excelの行 → 部員の読み取り結果（parseMemberLine と同じ形）。1行目が見出しなら、見出しの名前で列を見つける */
+  function membersFromRows(rows, type = orgType()) {
+    rows = (rows || []).filter(r => r && r.some(x => norm(x)));
+    if (!rows.length) return [];
+    const head = rows[0].map(norm);
+    const hasHead = head.some(x => /名前|氏名|なまえ|^name$/i.test(x));
+    if (!hasHead && rows.every(r => r.filter(x => norm(x)).length <= 1)) return rows.map(r => parseMemberLine(r.find(x => norm(x)) || '', type)).filter(r => r.name || r.unknown.length);
+    const ci = re => head.findIndex(x => re.test(x));
+    const c = hasHead ? { name: ci(/名前|氏名|なまえ|^name$/i), kana: ci(/よみ|読み|ふりがな|フリガナ|カナ/), grade: ci(/学年|回生/), part: head.findIndex(x => /パート|楽器/.test(x) && !/持ち替え|サブ|係/.test(x)), subs: ci(/持ち替え|サブ/),
+      status: ci(/状態|在籍/), roles: ci(/^役職|^係$|^役$|担当係/), joined: ci(/入団|入部|入会/), note: ci(/メモ|備考/) } : { name: 0, kana: -1, grade: 1, part: 2, subs: 3, status: -1, roles: -1, joined: -1, note: -1 };
+    if (c.subs === c.part) c.subs = -1;
+    return rows.slice(hasHead ? 1 : 0).map(row => {
+      const g = k => c[k] >= 0 ? norm(row[c[k]]) : '';
+      const r = { name: g('name').replace(/\s+/g, ' '), kana: g('kana'), grade: '', part: '', subs: [], status: 'active', roles: [], joined: null, note: g('note'), unknown: [], guess: [], askGrade: false };
+      let gr = g('grade');
+      if (/^[1-6]$/.test(gr)) gr += '年';   // 「2」だけのときは「2年」として読む
+      if (gr) { const v = readGrade(gr, type); if (v) { r.grade = v.grade; if (!v.sure) { r.askGrade = true; r.guess.push(gr); } } else { const st = readStatus(gr); if (st) r.status = st; else r.unknown.push('学年「' + gr + '」'); } }
+      const pt = g('part');
+      if (pt) { const v = readPart(pt); if (v) { r.part = v.part; r.subs.push(...v.subs); if (v.guess) r.guess.push(pt); } else r.unknown.push('楽器「' + pt + '」'); }
+      g('subs').split(/[、,・\/／\s]+/).filter(Boolean).forEach(x => { const v = readPart(x); if (v) r.subs.push(v.part, ...v.subs); else r.unknown.push('持ち替え「' + x + '」'); });
+      const st = g('status');
+      if (st) { if (/^(○|〇|◯|はい|yes|true|1|在籍)$/i.test(st)) r.status = 'active'; else if (/^(×|✕|いいえ|no|false|0|-)$/i.test(st)) r.status = 'gone'; else { const v = readStatus(st); if (v) r.status = v; else r.unknown.push('状態「' + st + '」'); } }
+      g('roles').split(/[、,・\/／\s]+/).filter(Boolean).forEach(x => r.roles.push(readRole(x) || x));
+      const jn = g('joined'); if (jn) { const y = +(jn.match(/(19|20)\d\d/) || [0])[0]; if (y) r.joined = y; else r.unknown.push('入団「' + jn + '」'); }
+      r.subs = [...new Set(r.subs.filter(s => s && s !== r.part))];
+      return r;
+    }).filter(r => r.name || r.unknown.length);
+  }
+  /* 足す前に確かめる画面。recs は parseMemberLine・membersFromRows の結果。
+     読めなかった言葉・決めきれない呼び方・同じ名前の人を知らせ、学年・楽器・状態をその場で直せる。onAdd(部員の配列) で足す */
+  function previewMembers(recs, { existing = [], type = orgType(), title = '足す前に確かめる', onAdd, source = '' } = {}) {
+    const have = new Set(existing.map(m => norm(m.name).replace(/\s+/g, '')));
+    const W = words(type);
+    const seen = new Set();
+    const rows = recs.map(r => { const k = norm(r.name).replace(/\s+/g, ''); const dup = !!k && have.has(k), twice = !!k && !dup && seen.has(k); if (k) seen.add(k); return Object.assign({}, r, { dup, twice, on: !!k && !dup && !twice }); });
+    const grades = gradesOf(type);
+    const gOpts = cur => `<option value="">${type === 'ippan' ? '—' : '（なし）'}</option>` + [...new Set(grades.concat(cur && !grades.includes(cur) ? [cur] : []))].map(g => `<option value="${esc(g)}"${g === cur ? ' selected' : ''}>${esc(gradeLabel(g))}</option>`).join('');
+    const pOpts = cur => `<option value="">（未定）</option>` + PARTS.map(p => `<option value="${esc(p[0])}"${p[0] === cur ? ' selected' : ''}>${esc(p[1])}</option>`).join('');
+    const sOpts = cur => Object.keys(STATUS).map(k => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(statusName(k, type))}</option>`).join('');
+    const issues = r => [
+      ...r.unknown.map(x => `<span class="unk" title="楽器・学年などとして読めなかった言葉">${esc(x)}</span>`),
+      ...r.guess.map(x => `<span class="guess" title="決めきれない書き方なので、合っているか確かめてください">${esc(x)}${r.askGrade && x === r.guess[0] && !r.grade ? '：学年を選んでください' : '：これでよいか確かめて'}</span>`),
+      r.dup ? `<span class="guess">同じ名前の人がもういます</span>` : '', r.twice ? `<span class="guess">この中に同じ名前が2回あります</span>` : '', !r.name ? '<span class="unk">名前がありません</span>' : '',
+    ].join('');
+    const nBad = rows.filter(r => r.unknown.length || r.guess.length || !r.name).length, nDup = rows.filter(r => r.dup || r.twice).length;
+    const askType = !type && rows.some(r => r.askGrade);
+    const sh = sheet({ title, wide: true, content: `<p class="lead" style="margin-bottom:8px">${source ? esc(source) + 'から' : ''}${rows.length}行を読みました。<b>まだ足していません。</b>名前・学年・楽器が正しいか確かめて、直してから「足す」を押してください。${nBad ? `<br><span style="color:var(--bad)">気になる所が${nBad}行あります（赤は読めなかった言葉で、名前にはつけていません）。</span>` : ''}${nDup ? `<br>同じ名前の${nDup}人は、チェックを外しています（足すときはチェックを入れてください）。` : ''}${askType ? '<br>楽屋の「団体・年度」で団体の種類（中学校・高校など）を選ぶと、「1年」「2年」も読めるようになります。' : ''}</p>
+      <div class="tbl-wrap" style="max-height:min(56vh,520px);overflow:auto"><table class="tbl gky-pvt cards"><thead><tr><th>足す</th><th>名前</th><th>${type === 'ippan' ? '入団した年' : '学年'}</th><th>いつもの楽器</th><th>持ち替え</th><th>役職</th><th>状態</th><th>気になる所</th></tr></thead><tbody>
+      ${rows.map((r, i) => `<tr data-i="${i}" class="${r.on ? '' : 'skip'}"><td data-l="足す"><input type="checkbox" data-k="on" ${r.on ? 'checked' : ''} aria-label="足す" style="width:18px;height:18px;accent-color:var(--tape)"></td>
+        <td data-l="名前"><input type="text" data-k="name" value="${esc(r.name)}" aria-label="名前"></td>
+        <td data-l="${type === 'ippan' ? '入団した年' : '学年'}">${type === 'ippan' ? `<input type="number" data-k="joined" value="${r.joined || ''}" min="1950" max="2100" style="width:6em" aria-label="入団した年">` : `<select data-k="grade" aria-label="学年">${gOpts(r.grade)}</select>`}</td>
+        <td data-l="いつもの楽器"><select data-k="part" aria-label="いつもの楽器">${pOpts(r.part)}</select></td>
+        <td data-l="持ち替え"><input type="text" data-k="subs" value="${esc(r.subs.join('、'))}" aria-label="持ち替え" style="min-width:5em"></td>
+        <td data-l="役職"><input type="text" data-k="roles" value="${esc(r.roles.join('、'))}" aria-label="役職" style="min-width:5em"></td>
+        <td data-l="状態"><select data-k="status" aria-label="状態">${sOpts(r.status)}</select></td>
+        <td data-l="気になる所" class="wide">${issues(r) || '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`,
+      actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => {
+        const out = [];
+        $$('tr[data-i]', body).forEach(tr => {
+          if (!$('[data-k="on"]', tr).checked) return;
+          const r = rows[+tr.dataset.i], v = k => { const el = $(`[data-k="${k}"]`, tr); return el ? el.value : ''; };
+          const name = norm(v('name')); if (!name) return;
+          out.push(normMember({ name, kana: r.kana, grade: type === 'ippan' ? (r.grade || '') : v('grade'), part: v('part'), subs: v('subs'), status: v('status'), roles: v('roles'), joined: type === 'ippan' ? (+v('joined') || null) : r.joined, note: r.note }));
+        });
+        if (!out.length) { toast('足す人がいません（チェックを入れてください）'); return false; }
+        if (onAdd) onAdd(out);
+      } }] });
+    $$('tr[data-i] [data-k="on"]', sh.body).forEach(cb => cb.onchange = () => { cb.closest('tr').classList.toggle('skip', !cb.checked); });
+    return sh;
+  }
+
+  /* ---------- 楽屋データ（全ツールで共通の 部員・曲・楽器・団体） ---------- */
+  /* 同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、この端末のブラウザの中でこのデータを共有します */
+  const ORG_KEY = 'gakuya.org';
+  const list = v => (Array.isArray(v) ? v : String(v || '').split(/[、,\/／・]+/)).map(norm).filter(Boolean);
+  const normMember = m => {
+    m = m && typeof m === 'object' ? m : {};
+    let st = STATUS[m.status] ? m.status : null;
+    if (!st) st = m.active === false ? 'gone' : 'active';
+    // 古いツールが「在籍」のチェックだけを変えたとき（状態と食いちがうとき）は、チェックに合わせる
+    else if (typeof m.active === 'boolean' && PLAYS.has(st) !== m.active) st = m.active ? 'active' : 'gone';
+    const y = +m.joined;
+    return {
+      id: typeof m.id === 'string' && m.id ? m.id : uid('m'), name: norm(m.name), kana: norm(m.kana), grade: norm(m.grade),
+      part: partOf(m.part), subs: (Array.isArray(m.subs) ? m.subs : String(m.subs || '').split(/[、,\/／・\s]+/)).map(partOf).filter(Boolean),
+      note: String(m.note ?? ''), status: st, active: PLAYS.has(st), roles: list(m.roles), joined: y >= 1900 && y <= 2100 ? Math.round(y) : null, staffNote: String(m.staffNote ?? ''),
+    };
+  };
+  /* 状態を変える（active もいっしょにそろえる） */
+  const setStatus = (m, st) => Object.assign(m, { status: STATUS[st] ? st : 'active', active: PLAYS.has(st) });
+  const normSong = s => ({
+    id: typeof s.id === 'string' && s.id ? s.id : uid('s'), title: norm(s.title), kana: norm(s.kana), composer: norm(s.composer), arranger: norm(s.arranger),
+    publisher: norm(s.publisher), dur: s.dur == null || s.dur === '' || !isFinite(+s.dur) ? null : Math.round(+s.dur),
+    parts: (Array.isArray(s.parts) ? s.parts : []).map(x => norm(x)).filter(Boolean), opt: (Array.isArray(s.opt) ? s.opt : []).map(x => norm(x)).filter(Boolean),
+  });
+  const normInst = i => ({ id: typeof i.id === 'string' && i.id ? i.id : uid('g'), no: norm(i.no), name: norm(i.name), part: partOf(i.part), owner: norm(i.owner), state: norm(i.state), user: norm(i.user), usable: i.usable !== false });
+  function normOrg(o) {
+    o = o && typeof o === 'object' ? o : {};
+    const u = o.updated && typeof o.updated === 'object' ? o.updated : {};
+    const oo = o.org && typeof o.org === 'object' ? o.org : {};
+    const pr = oo.promoted && typeof oo.promoted === 'object' && +oo.promoted.to ? { to: +oo.promoted.to, at: String(oo.promoted.at || '') } : null;
+    return {
+      app: 'gakuya', format: 1,
+      org: { name: norm(oo.name), year: +oo.year || null, type: ORG_TYPES[oo.type] ? oo.type : '', retire: norm(oo.retire), promoted: pr },
+      members: (Array.isArray(o.members) ? o.members : []).filter(m => m && (m.name || m.id)).map(normMember),
+      songs: (Array.isArray(o.songs) ? o.songs : []).filter(s => s && s.title).map(normSong),
+      instruments: (Array.isArray(o.instruments) ? o.instruments : []).filter(i => i && (i.name || i.no)).map(normInst),
+      updated: { org: +u.org || 0, members: +u.members || 0, songs: +u.songs || 0, instruments: +u.instruments || 0 },
+    };
+  }
+  /* いまの楽屋データ（なければ空） */
+  const org = () => normOrg(store.get(ORG_KEY));
+  const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length); };
+  /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
+  function saveOrg(section, value) {
+    const cur = org();
+    if (section === 'org') cur.org = normOrg({ org: Object.assign(cur.org, value) }).org;
+    else if (section === 'members') cur.members = value.map(normMember);
+    else if (section === 'songs') cur.songs = value.map(normSong);
+    else if (section === 'instruments') cur.instruments = value.map(normInst);
+    else if (section === 'all') { const n = normOrg(value); Object.assign(cur, { org: n.org, members: n.members, songs: n.songs, instruments: n.instruments }); }
+    const now = Date.now();
+    if (section === 'all') Object.keys(cur.updated).forEach(k => cur.updated[k] = now); else cur.updated[section] = now;
+    return store.set(ORG_KEY, cur);
+  }
+  /* 別のタブで楽屋データが変わったら知らせる */
+  function onOrgChange(fn) { window.addEventListener('storage', e => { if (e.key === ORG_KEY || e.key === null) fn(org()); }); }
+  const orgFile = o => ({ app: 'gakuya', format: 1, exportedAt: new Date().toISOString(), ...normOrg(o) });
+
+  /* ---------- ほかのツールのファイルを見分ける ---------- */
+  function identify(o) {
+    if (!o || typeof o !== 'object') return null;
+    if (o.app === 'gakuya') return 'gakuya';
+    if (o.app === 'stagemane' || Array.isArray(o.concerts) || (o.info && Array.isArray(o.program))) return 'stagemane';
+    if (Array.isArray(o.items) && o.W && o.D) return 'bamiri';
+    if (Array.isArray(o.performers) && Array.isArray(o.sets)) return 'drillboard';
+    if (typeof o.app === 'string') return o.app;
+    return null;
+  }
+  const APP_NAMES = { gakuya: '楽屋', stagemane: 'ステマネ', bamiri: 'バミリ', drillboard: 'ドリルボード', kouban: 'コウバン', gakufu: '楽譜ライブラリ', tempomap: 'テンポマップ', shikomi: '仕込み図', gakki: '楽器台帳', gakkigime: '楽器決め・編成計画', hannyu: '搬入出リスト', gassou: '合奏ノート', gyakusan: '本番逆算スケジュール', shukketsu: '出欠', kaikei: '会計', 'gakuya-backup': '楽屋のバックアップ' };
+  /* ステマネのファイル → 演奏会の一覧（曲は出てくる順） */
+  function stagemane(o) {
+    const lst = o && o.concert ? [o.concert] : Array.isArray(o && o.concerts) ? o.concerts : (o && o.info && Array.isArray(o.program) ? [o] : []);
+    return lst.filter(c => c && typeof c === 'object').map(c => {
+      const info = c.info || {};
+      let part = '';
+      const pieces = [];
+      (Array.isArray(c.program) ? c.program : []).forEach(it => {
+        if (!it || typeof it !== 'object') return;
+        if (it.type === 'part') part = norm(it.name);
+        if (it.type === 'piece' && norm(it.title)) {
+          pieces.push({ id: String(it.id || uid('p')), title: norm(it.title), composer: norm(it.composer), arranger: norm(it.arranger), conductor: norm(it.conductor),
+            dur: it.dur != null && isFinite(+it.dur) ? Math.round(+it.dur) : null, encore: norm(it.encore), part, contOf: it.contOf || '',
+            medley: (Array.isArray(it.parts) ? it.parts : []).map(p => norm(p && p.title)).filter(Boolean) });
+        }
+      });
+      return { title: norm(info.title), org: norm(info.org), date: String(info.date || ''), venue: norm(info.venue), start: String(info.start || ''), open: String(info.open || ''), end: String(info.end || ''), pieces, program: Array.isArray(c.program) ? c.program : [] };
+    });
+  }
+  /* バミリのファイル → 奏者・打楽器などの置き場所 */
+  function bamiri(o) {
+    if (!o || !Array.isArray(o.items)) return null;
+    return { title: norm(o.title), W: +o.W || 1400, D: +o.D || 900, items: o.items.filter(i => i && typeof i === 'object'), raw: o };
+  }
+
+  /* ---------- ファイルの保存 ---------- */
+  const safeName = n => String(n || 'file').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
+  async function saveFile(name, data, mime = 'application/octet-stream') {
+    name = safeName(name);
+    if (IN_VIEWER) {
+      let dl = null;
+      try { dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+      if (!dl) { toast('この画面ではファイルを保存できません。公開ページ（GitHub Pages）で開くと保存できます'); return false; }
+      try {
+        const r = await dl.save({ filename: name, data });
+        if (r && r.status === 'saved') toast('保存しました：' + name);
+        return true;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'declined') toast('保存をとりやめました');
+        else if (c === 'rate_limited') toast('保存の確認がもう開いています。先にそちらを済ませてください');
+        else if (c === 'rejected_extension' || c === 'extension_not_enabled') toast('この形式のファイルはここでは保存できません');
+        else toast('保存できませんでした（' + (c || 'わからないエラー') + '）');
+        return false;
+      }
+    }
+    const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+    toast('保存しました：' + name);
+    return true;
+  }
+  const saveJSON = (name, obj) => saveFile(name, JSON.stringify(obj, null, 1), 'application/json');
+  /* ファイルの文字を読む。UTF-8（BOMあり・なし）でなければ Shift_JIS（WindowsのExcelで保存したCSV）として読む */
+  function decodeText(buf) {
+    const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    if (b[0] === 0xFF && b[1] === 0xFE) return { text: new TextDecoder('utf-16le').decode(b.subarray(2)), enc: 'UTF-16' };
+    if (b[0] === 0xFE && b[1] === 0xFF) return { text: new TextDecoder('utf-16be').decode(b.subarray(2)), enc: 'UTF-16' };
+    try { return { text: new TextDecoder('utf-8', { fatal: true }).decode(b).replace(/^﻿/, ''), enc: 'UTF-8' }; } catch (e) { /* UTF-8 ではない */ }
+    try { return { text: new TextDecoder('shift_jis').decode(b), enc: 'Shift_JIS' }; } catch (e) { /* この端末では読めない */ }
+    return { text: new TextDecoder('utf-8').decode(b), enc: 'UTF-8' };
+  }
+  /* ファイルを選んでもらう。as: 'text'（UTF-8・Shift_JIS を見分けて読む） | 'dataurl' | 'buffer' | 'file' */
+  function openFile({ accept = '', as = 'text', multiple = false } = {}) {
+    return new Promise(resolve => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = accept; inp.multiple = multiple; inp.hidden = true;
+      document.body.appendChild(inp);
+      const done = v => { inp.remove(); resolve(v); };
+      inp.addEventListener('cancel', () => done(null));
+      inp.addEventListener('change', async () => {
+        const files = Array.from(inp.files || []);
+        if (!files.length) return done(null);
+        const read = f => new Promise((res, rej) => {
+          if (as === 'file') return res({ name: f.name, size: f.size, type: f.type, file: f });
+          const r = new FileReader();
+          r.onload = () => { if (as === 'text') { const d = decodeText(r.result); res({ name: f.name, size: f.size, type: f.type, data: d.text, enc: d.enc, file: f }); } else res({ name: f.name, size: f.size, type: f.type, data: r.result, file: f }); };
+          r.onerror = () => rej(r.error);
+          if (as === 'dataurl') r.readAsDataURL(f); else r.readAsArrayBuffer(f);
+        });
+        try { const out = await Promise.all(files.map(read)); done(multiple ? out : out[0]); }
+        catch (e) { toast('ファイルを読み込めませんでした'); done(null); }
+      });
+      inp.click();
+    });
+  }
+  /* JSONのファイルを選んで、中身と種類を返す */
+  async function openJSON() {
+    const f = await openFile({ accept: '.json,.txt,application/json,text/plain' });
+    if (!f) return null;
+    try {
+      const o = JSON.parse(String(f.data).replace(/^﻿/, ''));
+      return { name: f.name, data: o, kind: identify(o) };
+    } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
+  }
+
+  /* ---------- CSV（Excelでそのまま開ける形） ---------- */
+  const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  function parseCSV(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    const first = text.split('\n')[0];
+    const sep = (first.match(/\t/g) || []).length > (first.match(/,/g) || []).length ? '\t' : ',';
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+      if (c === '"') q = true;
+      else if (c === sep) { row.push(cell); cell = ''; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (c !== '\r') cell += c;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(x => String(x).trim() !== ''));
+  }
+
+  /* ---------- 画面の小物 ---------- */
+  let toastTimer = 0;
+  function toast(msg, actionLabel, action, ms = 3200) {
+    let el = $('#gkyToast');
+    if (!el) { el = document.createElement('div'); el.id = 'gkyToast'; el.className = 'gky-toast'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+    el.innerHTML = '';
+    const s = document.createElement('span'); s.textContent = msg; el.appendChild(s);
+    if (actionLabel && action) { const b = document.createElement('button'); b.textContent = actionLabel; b.onclick = () => { el.classList.remove('on'); action(); }; el.appendChild(b); }
+    el.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('on'), actionLabel ? Math.max(ms, 6000) : ms);
+  }
+  /* 重ねて出す画面。content は要素かHTML。戻り値の close() で閉じる */
+  function sheet({ title, content, actions = [], wide = false, onClose } = {}) {
+    const veil = document.createElement('div');
+    veil.className = 'gky-veil';
+    veil.innerHTML = `<div class="gky-sheet${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><h2>${esc(title)}</h2><button class="ibtn" data-close aria-label="閉じる"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></header><div class="body"></div>${actions.length ? '<footer></footer>' : ''}</div>`;
+    const body = $('.body', veil);
+    if (typeof content === 'string') body.innerHTML = content; else if (content) body.appendChild(content);
+    const foot = $('footer', veil);
+    const prevFocus = document.activeElement;
+    let closed = false;
+    const close = () => { if (closed) return; closed = true; veil.remove(); document.removeEventListener('keydown', onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); if (onClose) onClose(); };
+    actions.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (a.primary ? ' primary' : '') + (a.danger ? ' danger' : '') + (a.left ? ' left' : '');
+      b.textContent = a.label;
+      b.onclick = async () => { const r = a.onClick ? await a.onClick(body, close) : undefined; if (r !== false && !a.keep) close(); };
+      foot.appendChild(b);
+    });
+    const onKey = e => { if (e.key === 'Escape' && veil === $$('.gky-veil').pop()) close(); };
+    document.addEventListener('keydown', onKey);
+    veil.addEventListener('click', e => { if (e.target === veil) close(); });
+    $('[data-close]', veil).onclick = close;
+    document.body.appendChild(veil);
+    const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
+    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    return { el: veil, body, close };
+  }
+  /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
+  function arm(btn, onConfirm, label = 'もう一度押すと削除', ms = 3500) {
+    btn.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (btn.dataset.armed) { clearTimeout(+btn.dataset.armed); delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; onConfirm(); return; }
+      btn.dataset.label = btn.innerHTML;
+      btn.classList.add('armed'); btn.textContent = label;
+      btn.dataset.armed = String(setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.innerHTML = btn.dataset.label; } delete btn.dataset.armed; }, ms));
+    });
+  }
+  async function copyText(text, okMsg = 'コピーしました') {
+    try { await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (er) { ok = false; }
+      ta.remove();
+      toast(ok ? okMsg : 'コピーできませんでした。文字を選んでコピーしてください');
+      return ok;
+    }
+  }
+  /* タブの切り替え（ボタンに data-tab、中身に data-panel）。タブが画面の端で切れるときは、続きがあることを影で見せる */
+  function tabs(nav, onChange) {
+    const btns = $$('[data-tab]', nav);
+    const edge = () => { const l = nav.scrollLeft > 4, r = nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4; nav.classList.toggle('more-l', l); nav.classList.toggle('more-r', r); };
+    const show = id => {
+      btns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+      $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== id);
+      const cur = btns.find(b => b.dataset.tab === id);
+      if (cur && nav.scrollWidth > nav.clientWidth) { const a = cur.offsetLeft - 32, b = cur.offsetLeft + cur.offsetWidth + 32; if (a < nav.scrollLeft) nav.scrollLeft = a; else if (b > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = b - nav.clientWidth; }
+      edge();
+      if (onChange) onChange(id);
+    };
+    btns.forEach(b => { b.setAttribute('role', 'tab'); b.onclick = () => { show(b.dataset.tab); window.scrollTo({ top: 0 }); }; });
+    nav.addEventListener('scroll', edge, { passive: true });
+    window.addEventListener('resize', edge);
+    setTimeout(edge, 0);
+    return show;
+  }
+  /* 見出しの高さに合わせてタブの止まる位置を決める。楽屋へのリンクは、同じタブ（楽屋のタブ）で開く */
+  function fitTop() {
+    const t = $('.gky-top');
+    const hl = $('#homeLink'); if (hl) { hl.href = linkTo('gakuya'); hl.target = targetOf('gakuya'); }
+    if (!t) return;
+    const set = () => document.documentElement.style.setProperty('--top-h', t.offsetHeight + 'px');
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(t);
+  }
+
+  /* ---------- ほかのツールへのリンク ---------- */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  const ARTIFACT_URLS = {
+    gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
+    tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
+    gakkigime: 'https://claude.ai/artifact/8tfAUVsrJtAaa3R7vySdoT', hannyu: 'https://claude.ai/artifact/3fyJu1o9RddSKB9eM7QpQD', gassou: 'https://claude.ai/artifact/C1MVhJa5BJVGh3w3uDav7G',
+    gyakusan: 'https://claude.ai/artifact/5LtSnDWu6cr6KMkYzkigmc', stagemane: 'https://claude.ai/artifact/4YA7JtN5SSCkT3TUS1Sfkm',
+  };
+  const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
+  const ON_PAGES = () => /\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  function linkTo(slug) {
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
+    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (ON_PAGES()) return '../' + slug + '/';
+    return PAGES_BASE + slug + '/';
+  }
+  /* 同じツールは同じタブで開く（押すたびに新しいタブが増えて、2つのタブで上書きし合わないように） */
+  const targetOf = slug => 'gky-' + slug;
+  /* ホーム画面に追加した「楽屋」のアプリの中（standalone）では、同じ場所のツールは同じ画面で開く
+     （新しいタブにすると、iPhone ではアプリの外の Safari の小さな画面が開いてしまうため） */
+  const STANDALONE = (() => { try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } })();
+  if (STANDALONE) document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[target]'); if (!a || !a.href) return; try { if (new URL(a.href, location.href).origin === location.origin) a.removeAttribute('target'); } catch (er) { /* そのまま */ } }, true);
+  /* いま開いているツール（フォルダの名前）。楽屋の「つづきから」に使う */
+  const SLUG = (location.pathname.match(/\/([a-z]+)\/(?:index\.html)?$/) || [])[1] || '';
+  /* このツールの公開ページのアドレス（見るだけのリンクやQRに使う） */
+  const pageUrl = slug => (!IN_VIEWER && ON_PAGES()) ? location.origin + location.pathname : PAGES_BASE + slug + '/';
+
+  /* ---------- 印刷とPDF ---------- */
+  /* 使い方：
+       const d = GKY.doc({ title:'香盤表', sub:'定期演奏会', orient:'landscape', foot:'団体名', file:'香盤表' });
+       d.block('<h3>…</h3><p>…</p>');            ページに入りきらなければ次のページへ
+       d.block('<h3>見出し</h3>', { keep:true });  次の中身と同じページに置く（見出しだけ前のページに残らない）
+       d.table({ cols:[{h:'名前', w:'20%'}], rows:[['山田']] });   行がはみ出たら見出しをつけて次のページへ
+       d.page();                                  ここでページを変える
+       d.show();                                  プレビューを開く（用紙 A4・B4・A3 を選べる。印刷・PDF保存のボタンつき）
+     中身は覚えておき、用紙を変えたときは並べ直します。
+     用紙によって中身を変えたいとき（大きい紙なら1ページに曲を多く、など）は build を渡す：
+       GKY.doc({ title:'香盤表', build:(d, paper) => { … d.table(…) … } }).show();   paper は 'A4' | 'B4' | 'A3' */
+  const H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  const JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  const loadScript = src => new Promise((res, rej) => { if (document.querySelector('script[src="' + src + '"]')) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { s.remove(); rej(new Error('load')); }; document.head.appendChild(s); });
+  /* 用紙（mm）。B4 は日本でふつうに使う JIS の B4 */
+  const PAPERS = { A4: [210, 297], B4: [257, 364], A3: [297, 420] };
+  const mmpx = mm => Math.round(mm / 25.4 * 96);
+  function doc({ title = '', sub = '', orient = 'portrait', foot = '', file = '', size = '', build = null } = {}) {
+    const ops = [];
+    const pkey = 'paper.' + (title || 'doc');
+    let paper = PAPERS[size] ? size : pref(pkey, 'A4');
+    if (!PAPERS[paper]) paper = 'A4';
+    let pv = null, scaler = null, pages = [];
+    const dims = () => { const [a, b] = PAPERS[paper]; return orient === 'landscape' ? { w: b, h: a } : { w: a, h: b }; };
+    /* 中身をページに並べる（はみ出たら次のページへ） */
+    function render() {
+      const { w, h: hh } = dims(), W = mmpx(w), H = mmpx(hh);
+      if (build) { ops.length = 0; build(api, paper); }
+      scaler.innerHTML = ''; pages = [];
+      let body = null;
+      const newPage = () => {
+        const p = h(`<div class="gky-page${orient === 'landscape' ? ' landscape' : ''}" style="width:${W}px;height:${H}px"><div class="pg-head"><div class="pg-title">${esc(title)}</div><div class="pg-sub">${esc(sub)}</div></div><div class="pg-body"></div><div class="pg-foot"><span>${esc(foot)}</span><span class="pg-no">&nbsp;</span></div></div>`);
+        body = $('.pg-body', p); scaler.appendChild(p); pages.push(p); return p;
+      };
+      // 最後の中身の下の端が、ページの書ける所の下の端（少しゆとりを残す）を越えたら「はみ出し」
+      const over = () => { const last = body.lastElementChild; if (!last) return false; const br = body.getBoundingClientRect(), lr = last.getBoundingClientRect(); return lr.bottom > br.bottom - 4 * (br.height / body.clientHeight || 1); };
+      /* el を次のページへ移す。すぐ前に「次といっしょに」の見出しがあれば、それもいっしょに */
+      const carry = el => { const prev = el.previousElementSibling; const keep = prev && prev.dataset.keep && prev.previousElementSibling ? prev : null; el.remove(); if (keep) keep.remove(); newPage(); if (keep) body.appendChild(keep); body.appendChild(el); };
+      newPage();
+      ops.forEach(op => {
+        if (op.t === 'page') { if (body.childElementCount) newPage(); return; }
+        if (op.t === 'block') {
+          const el = h('<div>' + op.html + '</div>');
+          if (op.keep) el.dataset.keep = '1';
+          body.appendChild(el);
+          if (over() && body.childElementCount > 1) carry(el);
+          return;
+        }
+        const { cols, rows, cls = '', caption = '' } = op.spec;
+        const colg = '<colgroup>' + cols.map(c => `<col${c.w ? ` style="width:${c.w}"` : ''}>`).join('') + '</colgroup>';
+        const head = '<thead><tr>' + cols.map(c => `<th class="${c.cls || ''}">${c.h}</th>`).join('') + '</tr></thead>';
+        const mk = () => { const wrap = h(`<div>${caption ? `<h4>${caption}</h4>` : ''}<table class="${cls}">${colg}${head}<tbody></tbody></table></div>`); body.appendChild(wrap); return $('tbody', wrap); };
+        let tb = mk();
+        // 見出しの行と最初の1行が入らなければ、表ごと次のページへ
+        const probe = document.createElement('tr'); probe.innerHTML = '<td>&nbsp;</td>'; tb.appendChild(probe);
+        if (over() && body.childElementCount > 1) carry(tb.closest('div'));
+        probe.remove();
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          if (r && r.cls) tr.className = r.cls;
+          const cells = Array.isArray(r) ? r : r.cells;
+          tr.innerHTML = cells.map((c, i) => `<td class="${(cols[i] && cols[i].cls) || ''}"${c && c.span ? ` colspan="${c.span}"` : ''}>${c && typeof c === 'object' ? c.html : (c ?? '')}</td>`).join('');
+          tb.appendChild(tr);
+          if (over() && tb.children.length > 1) { tr.remove(); newPage(); tb = mk(); tb.appendChild(tr); }
+        });
+      });
+      if (pages.length > 1 && !body.childElementCount) { pages.pop().remove(); }
+      // ページ番号は最後に書く（下の欄は高さが決まっているので、書いても本文の高さは変わらない）
+      pages.forEach((p, i) => { $('.pg-no', p).textContent = pages.length > 1 ? (i + 1) + ' / ' + pages.length : ' '; });
+    }
+    const api = {
+      page() { ops.push({ t: 'page' }); return api; },
+      block(html, { keep = false } = {}) { ops.push({ t: 'block', html: typeof html === 'string' ? html : html.outerHTML, keep }); return api; },
+      table(spec) { ops.push({ t: 'table', spec }); return api; },
+      async show() {
+        pv = h(`<div class="gky-pv" role="dialog" aria-modal="true" aria-label="${esc(title)}の印刷"><header><h2>${esc(title)}<span class="msg" style="margin-left:10px"></span></h2>
+          <div class="btnrow"><label class="muted" style="font-size:12px;display:inline-flex;align-items:center;gap:4px">用紙 <select data-act="size" aria-label="用紙">${Object.keys(PAPERS).map(k => `<option value="${k}"${k === paper ? ' selected' : ''}>${k}</option>`).join('')}</select></label>${IN_VIEWER ? '' : '<button class="btn primary" data-act="print">印刷する</button>'}<button class="btn${IN_VIEWER ? ' primary' : ''}" data-act="pdf">PDFで保存</button><button class="btn" data-act="close">閉じる</button></div></header>
+          <div class="stage"><div class="scaler"></div></div></div>`);
+        scaler = $('.scaler', pv);
+        // ページの高さを測りながら分けるので、はじめから画面に入れておく（並べ終わるまで見えないように）
+        pv.style.visibility = 'hidden';
+        document.body.appendChild(pv);
+        try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* なくても続ける */ }
+        const stage = $('.stage', pv);
+        const fit = () => { const W = mmpx(dims().w); scaler.style.transform = ''; const s = Math.min(1, (stage.clientWidth - 32) / W); scaler.style.transform = `scale(${s})`; scaler.style.width = W + 'px'; scaler.style.height = s < 1 ? (scaler.scrollHeight * s) + 'px' : ''; };
+        const draw = () => { scaler.style.transform = ''; scaler.style.height = ''; render(); $('.msg', pv).textContent = `${paper}・${pages.length}ページ`; fit(); };
+        draw();
+        pv.style.visibility = '';
+        window.addEventListener('resize', fit);
+        const close = () => { window.removeEventListener('resize', fit); document.removeEventListener('keydown', onKey); pv.remove(); };
+        const onKey = e => { if (e.key === 'Escape' && !$('.gky-veil')) close(); };
+        document.addEventListener('keydown', onKey);
+        $('[data-act="close"]', pv).onclick = close;
+        $('[data-act="size"]', pv).onchange = e => { paper = e.target.value; setPref(pkey, paper); draw(); };
+        const pb = $('[data-act="print"]', pv);
+        if (pb) pb.onclick = () => api.print();
+        $('[data-act="pdf"]', pv).onclick = () => api.pdfMenu();
+        return api;
+      },
+      print() {
+        let root = $('#gky-print-root');
+        if (!root) { root = document.createElement('div'); root.id = 'gky-print-root'; document.body.appendChild(root); }
+        root.innerHTML = '';
+        pages.forEach(p => root.appendChild(p.cloneNode(true)));
+        let st = $('#gky-page-style');
+        if (!st) { st = document.createElement('style'); st.id = 'gky-page-style'; document.head.appendChild(st); }
+        const { w, h: hh } = dims();
+        st.textContent = `@page{size:${w}mm ${hh}mm;margin:0}`;
+        document.body.classList.add('gky-printing');
+        const done = () => { document.body.classList.remove('gky-printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        setTimeout(() => { window.print(); setTimeout(done, 1500); }, 60);
+      },
+      /* PDF：いちばんよいのは印刷の画面の「PDFに保存」（文字を選べる・さがせる・小さい）。できないときは画像のPDF */
+      pdfMenu() {
+        if (IN_VIEWER) return api.pdf();
+        sheet({ title: 'PDFで保存', content: `<div class="gky-pdfopt"><p style="margin:0">おすすめは、<b>印刷の画面で、送り先（プリンター）を「PDFに保存」</b>にする方法です。文字を選んだりさがしたりでき、ファイルも小さくなります。</p>
+          <p class="muted" style="margin:0;font-size:12.5px">iPhone・iPad：印刷の画面で、右上の共有ボタン →「ファイルに保存」。<br>うまくいかないときは「画像のPDFを作る」を使ってください（見た目は同じですが、文字は選べません）。</p></div>`,
+          actions: [{ label: '画像のPDFを作る', onClick: () => { api.pdf(); } }, { label: '印刷の画面を開く', primary: true, onClick: () => { api.print(); } }] });
+      },
+      async pdf() {
+        const btn = pv && $('[data-act="pdf"]', pv);
+        const old = btn ? btn.textContent : '';
+        if (btn) { btn.disabled = true; btn.textContent = 'PDFを作っています…'; }
+        try {
+          await loadScript(H2C); await loadScript(JSPDF);
+          const { jsPDF } = window.jspdf;
+          const { w, h: hh } = dims();
+          const pdf = new jsPDF({ unit: 'mm', format: [w, hh], orientation: orient, compress: true });
+          const holder = h('<div style="position:fixed;left:-30000px;top:0;"></div>');
+          document.body.appendChild(holder);
+          for (let i = 0; i < pages.length; i++) {
+            const c = pages[i].cloneNode(true); c.style.boxShadow = 'none'; holder.appendChild(c);
+            const canvas = await window.html2canvas(c, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            c.remove();
+            if (i) pdf.addPage([w, hh], orient);
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, w, hh, undefined, 'FAST');
+          }
+          holder.remove();
+          await saveFile(safeName(file || title) + '.pdf', pdf.output('blob'), 'application/pdf');
+        } catch (e) {
+          toast(IN_VIEWER ? 'PDFを作れませんでした。少し待ってからもう一度押してください' : 'PDFを作れませんでした。ネットにつながっているか確かめてください（「印刷する」からPDFに保存することもできます）');
+        } finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
+      },
+      get pages() { return pages; },
+      get paper() { return paper; },
+    };
+    return api;
+  }
+
+  /* 印刷用の文字（BIZ UDPゴシック）を先に読んでおく。ページの分け方が読み込みの前後で変わらないように */
+  try { if (document.fonts && document.fonts.load) ['400', '700'].forEach(w => document.fonts.load(w + ' 10pt "BIZ UDPGothic"').catch(() => {})); } catch (e) { /* なくても動く */ }
+
+  /* ---------- 見るだけのリンクとQRコード ---------- */
+  /* 中身（JSON）を、アドレスに入れられる短い文字にする（圧縮できる端末では圧縮。Z…＝圧縮、J…＝そのまま） */
+  const b64u = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64u = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+  async function packShare(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (window.CompressionStream) { try { const z = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); return 'Z' + b64u(z); } catch (e) { /* 圧縮できなければそのまま */ } }
+    return 'J' + b64u(bytes);
+  }
+  async function unpackShare(code) {
+    code = String(code || '').trim();
+    let bytes = unb64u(code.slice(1));
+    if (code[0] === 'Z') { if (!window.DecompressionStream) throw new Error('この端末ではこのリンクを開けません'); bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); }
+    else if (code[0] !== 'J') throw new Error('リンクを読めません');
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  /* 見るだけのリンク（このツールのページのアドレス ＋ #v=中身） */
+  const shareUrl = async (slug, obj) => pageUrl(slug) + '#v=' + await packShare(obj);
+  /* 開いたアドレスが見るだけのリンクなら、中身を返す（ちがえば null） */
+  async function readShare() { const m = location.hash.match(/^#v=([A-Za-z0-9_-]+)$/); if (!m) return null; return unpackShare(m[1]); }
+  function qrSVG(text, size = 180) {
+    const q = qrcode(0, text.length > 900 ? 'L' : 'M'); q.addData(unescape(encodeURIComponent(text))); q.make();
+    const n = q.getModuleCount(), m = 4;
+    let d = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c + m} ${r + m}h1v1h-1z`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + m * 2} ${n + m * 2}" shape-rendering="crispEdges" width="${size}" height="${size}" role="img" aria-label="QRコード"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+  }
+  /* リンクを配る画面：リンク（コピー・送る）と、入りきればQRコード */
+  function shareSheet({ title = '見るだけのリンク', url, note = '' }) {
+    let qr = '';
+    if (url.length <= 2300) { try { qr = qrSVG(url, 180); } catch (e) { qr = ''; } }
+    return sheet({ title, content: `${note ? `<p class="lead">${note}</p>` : ''}<div class="gky-share">${qr ? `<div class="qr">${qr}</div>` : ''}<div class="url"><textarea readonly aria-label="リンク">${esc(url)}</textarea><p class="note">${qr ? 'QRコードをスマホのカメラで読むと開けます。' : '中身が多いので、QRコードには入りきりません。リンクをコピーして、LINEなどで送ってください。'}受け取った人の端末には保存されません（見るだけ）。</p></div></div>`,
+      actions: [...(navigator.share ? [{ label: '送る', keep: true, onClick: () => { navigator.share({ title, url }).catch(() => {}); return false; } }] : []), { label: '閉じる' }, { label: 'リンクをコピー', primary: true, keep: true, onClick: () => { copyText(url, 'リンクをコピーしました'); return false; } }] });
+  }
+  /* 見るだけのページ：上のタブとふだんの画面をかくし、受け取った中身だけを出す。中身を入れる要素を返す */
+  function viewer({ title, sub = '', note = '' }) {
+    const nav = $('.gky-tabs'); if (nav) nav.hidden = true;
+    const acts = $('.gky-top-actions'); if (acts) acts.hidden = true;
+    const main = $('.gky-main');
+    [...main.children].forEach(c => { c.hidden = true; });
+    const box = h(`<div id="gkyView"><div class="gky-viewer"><span class="tape">見るだけ</span><div><b>${esc(title)}</b>${sub ? `<div class="muted">${esc(sub)}</div>` : ''}</div><span class="sp"></span><a class="btn sm" href="${esc(location.pathname)}">ふだんの画面へ</a></div><div id="gkyViewBody"></div><p class="note">${esc(note || 'このページは、送られてきた内容を見るだけです。この端末には保存しません。')}</p></div>`);
+    main.prepend(box);
+    return $('#gkyViewBody', box);
+  }
+
+  /* ---------- このツールについて ---------- */
+  function about({ name, what, version, changelog = [], feedback = '' }) {
+    const fb = feedback || FEEDBACK_URL;
+    const log = changelog.map(c => `<li><b class="mono">v${esc(c.v)}</b> <span class="muted mono">${esc(c.d)}</span><ul>${c.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`).join('');
+    const sh = sheet({ title: name + 'について', content: `<p style="margin:0 0 10px">${what}</p>
+      <ul style="margin:0 0 12px;padding-left:1.2em;font-size:13px">
+        <li>入力した内容は、この端末のブラウザの中だけに保存されます。どこのサーバーにも送られません。AIも使っていません。</li>
+        <li>ブラウザの履歴やサイトのデータを消すと、保存した内容も消えます。ときどき楽屋の「バックアップ」でファイルに保存してください。</li>
+        <li>同じ場所（例：bamiriunei-arch.github.io）に置いたツールどうしは、楽屋に入れた部員・曲・楽器のデータを共有します。</li>
+      </ul>
+      <label class="chk" style="margin:0 0 12px"><input type="checkbox" id="gkyBig" ${pref('big', false) ? 'checked' : ''}> 文字を大きくする（この端末の全部のツール）</label>
+      <p class="muted" style="font-size:12px;margin:0 0 6px">版 <span class="mono">${esc(version)}</span>（共通部品 v${VERSION}）　<a href="${esc(fb)}" target="_blank" rel="noopener">ご意見・ご要望</a>　<a href="${esc(linkTo('gakuya'))}" target="${targetOf('gakuya')}" rel="noopener">楽屋（ツールの一覧）</a></p>
+      <details data-keep-words><summary style="cursor:pointer;font-size:13px">更新の記録</summary><ul style="font-size:12.5px;padding-left:1.2em">${log}</ul></details>` });
+    $('#gkyBig', sh.body).onchange = e => setPref('big', e.target.checked);
+    return sh;
+  }
+
+  /* ---------- バックアップのお知らせ（ツールの画面でも） ----------
+     このツールにデータがあって、最後のバックアップから日がたっているとき（学校は7日、ほかは30日）、1日に1回だけ知らせる。
+     学校のChromebook・iPadは、サインアウトでデータが消える設定のこともあるため */
+  function backupNag() {
+    try {
+      const s = store.get(SLUG + '.v1'); if (!s || s.sample) return;
+      const today = ymd(); if (pref('bkNagDay', '') === today) return;
+      const last = +pref('lastBackup', 0), days = last ? Math.floor((Date.now() - last) / 86400000) : null, lim = isSchool() ? 7 : 30;
+      if (days != null && days < lim) return;
+      setPref('bkNagDay', today);
+      toast(days == null ? 'まだバックアップを保存していません。楽屋の「バックアップ」でファイルに保存しておくと安心です' : `最後のバックアップから${days}日たちました。楽屋の「バックアップ」で保存しておくと安心です`, '楽屋を開く', () => { location.href = linkTo('gakuya') + '#backup'; }, 9000);
+    } catch (e) { /* 知らせなくても動く */ }
+  }
+
+  /* ---------- 一般の団体・地域クラブの呼び方 ----------
+     ツールの画面は学校の言葉（部員・休部・退部・顧問）で書いてあるので、一般の団体・地域クラブでは、画面に出た文字を
+     団員・休団・退団・団長（代表）にそろえる。入力欄の中身・data-keep-words の中（更新の記録など）はそのまま */
+  function adultWords() {
+    const t = orgType(); if (t !== 'ippan' && t !== 'chiiki') return;
+    const w = words(t), SKIP = 'textarea,script,style,[contenteditable],[data-keep-words]';
+    const has = s => /部員|休部|退部|顧問/.test(s);
+    const fix = s => s.replace(/部員/g, w.member).replace(/休部/g, w.leave).replace(/退部/g, '退団').replace(/顧問/g, w.staff);
+    const text = n => { if (has(n.data) && !(n.parentElement && n.parentElement.closest(SKIP))) n.data = fix(n.data); };
+    const attrs = el => { ['placeholder', 'title', 'aria-label'].forEach(a => { const v = el.getAttribute(a); if (v && has(v)) el.setAttribute(a, fix(v)); }); };
+    const doNode = n => {
+      if (n.nodeType === 3) { text(n); return; }
+      if (n.nodeType !== 1 || n.closest(SKIP)) return;
+      attrs(n);
+      const tw = document.createTreeWalker(n, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+      for (let x = tw.nextNode(); x; x = tw.nextNode()) { if (x.nodeType === 3) text(x); else attrs(x); }
+    };
+    doNode(document.body);
+    new MutationObserver(ms => ms.forEach(m => { if (m.type === 'characterData') text(m.target); else if (m.type === 'attributes') attrs(m.target); else m.addedNodes.forEach(doNode); }))
+      .observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title', 'aria-label'] });
+  }
+  if (document.body && !IN_VIEWER) adultWords();
+
+  /* ---------- ホーム画面に追加したとき・ネットがないときに開けるようにする ---------- */
+  function offline() {
+    if (!IN_VIEWER && !TEST && SLUG && SLUG !== 'gakuya' && !/^#v=/.test(location.hash)) { try { setPref('lastTool', SLUG); } catch (e) { /* 保存できなくても動く */ } setTimeout(backupNag, 1500); }
+    if (IN_VIEWER || TEST || !('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* なくても動く */ }));
+  }
+
+  return {
+    VERSION, IN_VIEWER, TEST, FEEDBACK_URL, $, $$, esc, uid, clone, norm, kata, key, clamp, debounce, h, pad, clock, dur, parseDur, ymd, parseYmd, jpDate, mdDate, addDays, daysBetween, fiscalYear, stamp, WD,
+    store, usage, LIMIT, guard, pref, setPref, applyUI,
+    SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, readPart,
+    ORG_TYPES, GRADES, GRADE_ORDER, gradeRank, gradesOf, gradeLabel, orgType, words, isSchool, STATUS, statusName, setStatus, PLAYS, nextGrade, nextGradeOf, yearsLeft,
+    readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
+    ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
+    identify, APP_NAMES, stagemane, bamiri,
+    saveFile, saveJSON, openFile, openJSON, decodeText, csv, parseCSV,
+    toast, sheet, arm, copyText, tabs, fitTop, linkTo, targetOf, pageUrl, ARTIFACT_URLS, STANDALONE, SLUG, doc, about, offline, loadScript,
+    packShare, unpackShare, shareUrl, readShare, qrSVG, shareSheet, viewer,
+  };
+})();
+/* ==== 楽屋シリーズ 共通部品（しくみ） ここまで ==== */
+</script>
+<script>
+/* ==== 楽屋本体 ==== */
+(() => {
+'use strict';
+const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
+const APP_VERSION = '4', APP_DATE = '2026-10-06';
+const CHANGELOG = [
+  { v: '4', d: '2026-10-06', items: [
+    '団体の種類（中学校・高校・中高一貫・大学・一般・地域クラブ）を選べるようにしました。学年の選び方・進級・呼び方（部員／団員）が種類に合わせて変わります',
+    '部員に「状態」（在籍・休部・引退・エキストラ・賛助・卒業）、役職、入団した年、指導者メモを足しました',
+    'まとめて足す・CSVの読み込みで、足す前に確かめる表を出すようにしました。「パーカス」「ペット」「コンバス」「1年生」「2回生」「大3」「院1」「OG」「トラ」なども読み、読めなかった言葉は名前にくっつけずに知らせます',
+    'WindowsのExcelで保存したCSV（Shift_JIS）を、文字化けせずに読めるようにしました',
+    '部員の表に、さがす・しぼる・並べ替えるを足しました。スマホでは1人1枚の札で出します',
+    '進級：年度を入れていないときに年度が1つずれるのを直しました。何年度から何年度にするかを出し、同じ年度に2回進級させそうなときは確かめます。中高一貫・地域クラブは中3を高1に上げられます',
+    '学年ごとに引退させる・この端末で団体を切りかえる・引き継ぎファイル・保存している量・はじめにやること・バックアップのお知らせを足しました',
+    'ツールの一覧に出欠と会計を足しました。同じツールは同じタブで開きます。スマホでは一覧を2列にしました。ステマネの札を直しました',
+    '置き方のタブは、アドレスに ?dev をつけたときだけ出すようにしました（手順はREADMEに）。「ご意見」のリンクを足しました',
+    'バックアップのお知らせを、ツールの画面でも1日1回出すようにしました（「楽屋を開く」でバックアップのタブへ）',
+    '一般の団体・地域クラブでは、全部のツールの画面の「部員」「休部」「顧問」を「団員」「休団」「団長（代表）」にそろえるようにしました',
+    'ホーム画面に追加すると、どのツールの画面から追加しても「楽屋」という1つのアプリになり、アプリの中ではツールを同じ画面のまま行き来できるようにしました（「つづきから」で前のツールへ）',
+  ] },
+  { v: '3', d: '2026-10-05', items: ['置き方を、全部のツールを1つのリポジトリ（bamiriunei-arch.github.io）に入れる形に書き直しました。フォルダと公開ページ・上げる回の表つき'] },
+  { v: '2', d: '2026-10-04', items: ['ツールの一覧の、合奏ノートの説明を新しくしました（ノートが入ったため）'] },
+  { v: '1', d: '2026-10-04', items: ['はじめての版：ツールの一覧、部員（CSV・進級）、団体と年度、つながりの説明、まとめてバックアップ、GitHub Pages への置き方'] },
+];
+const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（GKY.FEEDBACK_URL・バミリと同じ）を使います
+const DEV = /[?&]dev\b/.test(location.search);
+
+/* ---------- ツールの一覧（楽屋シリーズ＋前からあるツール） ---------- */
+const TOOLS = [
+  { slug: 'gyakusan', name: '本番逆算', color: '#44539E', phase: '本番までの準備', desc: '本番の日から、会場予約・チラシ・プログラム・運搬などの締め切りを逆算', key: 'gyakusan.v1', count: s => s && s.plans ? Object.keys(s.plans).length + '本番' : '' },
+  { slug: 'gakufu', name: '楽譜ライブラリ', color: '#2F6CC8', phase: '本番までの準備', desc: '所蔵楽譜の台帳。パート譜の欠け・レンタル期限・演奏の記録・今の部員でできる曲', key: 'gakufu.v1', count: s => s && s.songs ? s.songs.length + '曲' : '' },
+  { slug: 'tempomap', name: 'テンポマップ', color: '#2B9457', phase: '本番までの準備', desc: '小節数・拍子・テンポ・くり返しから演奏時間。カット案と制限時間、練習用クリック', key: 'tempomap.v1', count: s => s && s.maps ? Object.keys(s.maps).length + '曲' : '' },
+  { slug: 'kouban', name: 'コウバン', color: '#D23B45', phase: '本番までの準備', desc: '香盤表。曲ごとに誰がどのパートを受け持つか、空き・二重・休み・人数の上限を確かめる', key: 'kouban.v1', count: s => s && s.projects ? Object.keys(s.projects).length + '演奏会' : '' },
+  { slug: 'gakkigime', name: '楽器決め・編成計画', color: '#C43F7D', phase: '本番までの準備', desc: '新入部員の楽器の割り振り案（理由つき）と、来年・再来年のパートの人数', key: 'gakkigime.v1', count: s => s && s.newbies ? s.newbies.length + '人' : '' },
+  { slug: 'stagemane', name: 'ステマネ', color: '#A3192B', phase: '本番の資料', desc: '司会原稿・進行表・タイムスケジュールを1つの入力から', old: true, viewer: true },
+  { slug: 'bamiri', name: 'バミリ', color: '#E3B23C', phase: '本番の資料', desc: '吹奏楽・オーケストラ・バンドの舞台配置図', old: true, key: 'bamiri.current', count: s => s && s.items ? s.items.length + '個の部品' : '' },
+  { slug: 'shikomi', name: '仕込み図', color: '#7A50C7', phase: '本番の資料', desc: '音響・照明の打合せ資料。インプットリスト・仕込み図・きっかけ表', key: 'shikomi.v1', count: s => s && s.events ? Object.keys(s.events).length + '本番' : '' },
+  { slug: 'drillboard', name: 'ドリルボード', color: '#A26A00', phase: '本番の資料', desc: 'マーチングの隊形と動きを作って確かめる', old: true, key: 'drillboard.v1', count: s => s && s.sets ? s.sets.length + 'セット' : '' },
+  { slug: 'gakki', name: '楽器台帳', color: '#DD7A2B', phase: '楽器と運搬', desc: '楽器・備品の状態、1年間使う人、修理・貸し出しの記録、写真、QRラベル、消耗品', key: 'gakki.v1', count: s => s && s.items ? s.items.length + '台' : '' },
+  { slug: 'hannyu', name: '搬入出リスト', color: '#178A86', phase: '楽器と運搬', desc: '運ぶもの・車・積む順。行き帰りのチェックと照合', key: 'hannyu.v1', count: s => s && s.trips ? Object.keys(s.trips).length + '本番' : '' },
+  { slug: 'gassou', name: '合奏ノート', color: '#A8612A', phase: 'ふだんの練習', desc: '合奏ごとに自由に書けるノート。録音に小節の目印と時刻つきコメントをつけ、パートごとに配る', key: 'gassou.v1', count: s => s && s.notes ? Object.keys(s.notes).length + '回' : '' },
+  { slug: 'shukketsu', name: '出欠', color: '#5B7A1B', phase: 'ふだんの練習', desc: '練習・本番ごとの出欠と理由。だれもいないパート、出席率、記入用の出欠表', key: 'shukketsu.v1', count: s => s && Array.isArray(s.events) ? s.events.length + '回' : '' },
+  { slug: 'kaikei', name: '会計', color: '#506070', phase: '団体の運営', desc: '団費の集金、収入と支出の帳簿、演奏会ごとの予算と実績、会計報告', key: 'kaikei.v1', count: s => s && Array.isArray(s.ledger) ? s.ledger.length + '件' : '' },
+];
+const urlOf = slug => slug === 'bamiri' || slug === 'drillboard' ? (GKY.IN_VIEWER ? 'https://bamiriunei-arch.github.io/' + slug + '/' : GKY.linkTo(slug)) : GKY.linkTo(slug);
+const T = slug => TOOLS.find(t => t.slug === slug);
+const tn = slug => { const t = T(slug); return t ? `<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>` : esc(slug); };
+/* バックアップ・団体の切りかえで扱うデータ（ログインの記録・表示の好み・団体の切りかえの記録は入れかえない） */
+const PREFIX = ['gakuya.', 'kouban.', 'gakufu.', 'tempomap.', 'shikomi.', 'gakki.', 'gakkigime.', 'hannyu.', 'gassou.', 'gyakusan.', 'shukketsu.', 'kaikei.', 'bamiri.', 'drillboard.'];
+const NOT_DATA = new Set(['bamiri.auth', 'bamiri.survey', 'gakuya.ui', 'gakuya.profiles']);
+const myKeys = () => GKY.store.keys().filter(k => PREFIX.some(p => k.startsWith(p)) && k !== 'bamiri.auth').sort();
+const isDataKey = k => PREFIX.some(p => k.startsWith(p)) && !NOT_DATA.has(k) && !k.startsWith('gakuya.profile.');
+
+/* ---------- 画面 ---------- */
+let tab = 'tools';
+const showTab = GKY.tabs($('#tabs'), id => { tab = id; renderTab(); });
+const ty = () => GKY.orgType();
+const W = () => GKY.words(ty());
+function renderAll() {
+  const o = GKY.org(), w = GKY.words(o.org.type);
+  $('#orgTop').textContent = o.org.name ? o.org.name + (o.org.year ? '　' + o.org.year + '年度' : '') : '';
+  $('#wMember').textContent = w.member;
+  const act = o.members.filter(m => m.status === 'active').length;
+  $('#cntM').textContent = act ? String(act) : '';
+  const d = bkDays(), need = hasData() && (d == null || d >= remindDays());
+  $('#cntBk').textContent = need ? '!' : ''; $('#cntBk').title = need ? 'バックアップのお知らせ' : '';
+  $('#viewerNote').innerHTML = GKY.IN_VIEWER ? '<div class="intro"><p>Claudeの画面の中では、ツールどうしがデータを共有できません（それぞれ別の場所として開くため）。部員・曲・楽器を全部のツールで使うには、公開ページ（bamiriunei-arch.github.io）に置いて開いてください。ここでは、各ツールをためしに開いたり、楽屋のデータをファイルに保存したりできます。</p></div>' : '';
+  renderTab();
+}
+function renderTab() { ({ tools: renderTools, members: renderMembers, org: renderOrg, links: renderLinks, backup: renderBackup, setup: renderSetup })[tab](); }
+
+/* --- バックアップのお知らせ --- */
+const bkDays = () => { const t = +GKY.pref('lastBackup', 0); return t ? Math.floor((Date.now() - t) / 86400000) : null; };
+const remindDays = () => GKY.isSchool(ty()) ? 7 : 30;
+const hasData = () => !GKY.IN_VIEWER && GKY.store.keys().some(k => isDataKey(k) && !k.startsWith('bamiri.') && !k.startsWith('drillboard.'));
+
+/* --- ツール --- */
+function firstSteps(o) {
+  const st = k => GKY.IN_VIEWER ? null : GKY.store.get(k);
+  const gf = st('gakufu.v1'), kb = st('kouban.v1'), w = GKY.words(o.org.type);
+  return [
+    { done: !!(o.org.type && o.org.name), t: '団体の種類と名前を入れる', s: '学年の選び方・進級・呼び方（部員・団員）が、団体の種類に合わせて変わります', b: '団体・年度へ', go: () => showTab('org') },
+    { done: o.members.length > 0, t: `${w.member}を入れる`, s: '1行に1人で「まとめて足す」か、Excelの名簿（CSV）から読み込めます', b: w.member + 'へ', go: () => showTab('members') },
+    { done: !!(gf && !gf.sample && o.songs.some(s => s.parts.length)), t: '楽譜ライブラリで、例を消して自分の曲と編成を入れる', s: '編成（パート）を入れた曲が、コウバンの「楽屋の曲から」に出ます', b: '楽譜ライブラリ', slug: 'gakufu' },
+    { done: !!(kb && kb.projects && Object.values(kb.projects).some(p => p && !p.sample)), t: 'コウバンで演奏会を作る', s: '「演奏会の設定」→「楽屋の部員で作る」。曲は「曲と編成」→「楽屋の曲から」', b: 'コウバン', slug: 'kouban' },
+    { done: !!GKY.pref('lastBackup', 0), t: 'バックアップを保存する', s: 'データはこの端末の中だけにあります。ときどきファイルに残してください', b: 'バックアップへ', go: () => showTab('backup') },
+  ];
+}
+function renderTools() {
+  const o = GKY.org(), w = GKY.words(o.org.type);
+  $('#orgName').innerHTML = o.org.name ? esc(o.org.name) : '<button class="btn sm" id="setOrg">団体の名前を入れる</button>';
+  const so = $('#setOrg'); if (so) so.onclick = () => showTab('org');
+  $('#helloP').textContent = `${w.member}・曲・楽器のデータをここ（楽屋）に入れておくと、同じ場所に置いた全部のツールで使えます。データはこの端末のブラウザの中だけに保存され、どこにも送られません。`;
+  // 団体の種類をまだ選んでいないとき
+  $('#typeAsk').innerHTML = o.org.type || GKY.IN_VIEWER ? '' : `<div class="sec"><h2>団体の種類を選んでください<small>あとから「団体・年度」で変えられます</small></h2><div class="types">${typeButtons('')}</div></div>`;
+  wireTypes($('#typeAsk'));
+  // バックアップのお知らせ
+  const d = bkDays();
+  $('#bkRemind').innerHTML = hasData() && (d == null || d >= remindDays()) ? `<div class="issue warn" style="margin-bottom:14px"><span class="dot warn"></span><div class="main"><div>${d == null ? 'まだバックアップを保存していません' : `最後のバックアップから${d}日たちました`}</div><div class="sub">データはこの端末の中だけにあります。${GKY.isSchool(o.org.type) ? '学校のChromebook・iPadは、サインアウトでデータが消える設定のこともあります。' : ''}ファイルに保存しておくと、消えても戻せます。</div></div><button class="btn sm primary" id="bkNow">いま保存する</button></div>` : '';
+  const bn = $('#bkNow'); if (bn) bn.onclick = () => backupSave();
+  // はじめにやること
+  const fs = firstSteps(o), n = fs.filter(x => x.done).length;
+  $('#firstBox').innerHTML = GKY.IN_VIEWER || GKY.pref('firstHide', false) || n === fs.length ? '' : `<div class="sec"><h2>はじめにやること<small>${n} / ${fs.length}</small><span style="flex:1"></span><button class="btn sm ghost" id="firstHide">もう出さない</button></h2><div class="firsts">${fs.map((x, i) => `<div class="first${x.done ? ' done' : ''}"><span class="ck" aria-label="${x.done ? 'すんだ' : 'まだ'}">✓</span><div><div class="t">${i + 1}. ${esc(x.t)}</div><div class="s">${esc(x.s)}</div></div>${x.slug ? `<a class="btn sm" href="${esc(urlOf(x.slug))}" target="${GKY.targetOf(x.slug)}">${esc(x.b)}</a>` : `<button class="btn sm" data-first="${i}">${esc(x.b)}</button>`}</div>`).join('')}</div></div>`;
+  $$('[data-first]').forEach(b => b.onclick = () => fs[+b.dataset.first].go());
+  const fh = $('#firstHide'); if (fh) fh.onclick = () => { GKY.setPref('firstHide', true); renderTools(); };
+  // ツールの一覧
+  const phases = [...new Set(TOOLS.map(t => t.phase))];
+  const sOf = t => !GKY.IN_VIEWER && t.key ? GKY.store.get(t.key) : null;
+  // ホーム画面のアプリで開いたときは、前に開いていたツールへの近道
+  const last = GKY.STANDALONE ? T(GKY.pref('lastTool', '')) : null;
+  $('#toolGrid').innerHTML = (last ? `<div class="btnrow" style="margin-bottom:10px"><span class="muted" style="font-size:13px">つづきから</span><a class="btn sm primary" href="${esc(urlOf(last.slug))}" id="lastTool">${esc(last.name)}を開く</a></div>` : '') + `<div class="sums"><span class="sum">${esc(w.member)} <b>${o.members.filter(m => m.status === 'active').length}</b>人</span><span class="sum">曲 <b>${o.songs.length}</b>曲</span><span class="sum">楽器 <b>${o.instruments.length}</b>台</span></div>` + phases.map(ph => `<div class="phase"><h2>${esc(ph)}</h2><div class="tools">${TOOLS.filter(t => t.phase === ph).map(t => {
+    const s = sOf(t), cnt = t.count ? t.count(s) : '', sample = s && s.sample;
+    const chip = t.viewer ? '<span class="chip">Claudeの画面で開きます</span>' : cnt ? `<span class="chip ${sample ? 'warn' : 'ok'}">${esc(cnt)}${sample ? '（例）' : ''}</span>` : GKY.IN_VIEWER ? '' : '<span class="chip">まだ使っていません</span>';
+    return `<a class="tool" href="${esc(urlOf(t.slug))}" target="${GKY.targetOf(t.slug)}" style="--c:${t.color}" data-slug="${esc(t.slug)}"><span class="tp"><i></i><b>${esc(t.name)}</b></span><p>${esc(t.desc)}</p><span class="st">${chip}</span></a>`;
+  }).join('')}</div></div>`).join('');
+}
+const TYPE_DESC = { chu: '中1〜中3。3年生は夏に引退', koko: '高1〜高3', chuko: '中1〜高3。中3から高1へ続ける', daigaku: '1〜4回生・院生', ippan: '学年のかわりに入団した年。団員・団長', chiiki: '小学生〜大人。団員・代表' };
+const typeButtons = cur => Object.entries(GKY.ORG_TYPES).map(([k, v]) => `<button type="button" data-type="${k}" aria-pressed="${cur === k}"><b>${esc(v)}</b><span>${esc(TYPE_DESC[k])}</span></button>`).join('');
+function wireTypes(root) {
+  $$('[data-type]', root).forEach(b => b.onclick = () => {
+    const before = GKY.org().org.type, k = b.dataset.type;
+    if (!GKY.saveOrg('org', { type: k })) { toast('保存できませんでした'); return; }
+    renderAll();
+    toast(`団体の種類を「${GKY.ORG_TYPES[k]}」にしました`, '元に戻す', () => { GKY.saveOrg('org', { type: before }); renderAll(); });
+  });
+}
+
+/* --- 部員 --- */
+function saveMembers(list) { if (!GKY.saveOrg('members', list)) toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); renderAll(); }
+let mq = '', mfs = 'cur', mfp = '', mfg = '', mfr = '', msort = 'part';
+const gradeOk = (g, t) => !g || GKY.GRADE_ORDER.includes(g) || (t === 'ippan');
+function filteredMembers(o) {
+  const k = GKY.key(mq);
+  let ms = o.members.filter(m => mfs === 'all' ? true : mfs === 'cur' ? m.status !== 'gone' : m.status === mfs);
+  if (k) ms = ms.filter(m => [m.name, m.kana, m.note, m.roles.join(' '), m.staffNote].some(v => GKY.key(v).includes(k)));
+  if (mfp) ms = ms.filter(m => (GKY.familyOf(m.part) || '') === (mfp === '-' ? '' : mfp));
+  if (mfg) ms = ms.filter(m => (m.grade || '') === (mfg === '-' ? '' : mfg));
+  if (mfr) ms = ms.filter(m => m.roles.includes(mfr));
+  const so = { active: 0, extra: 1, support: 2, leave: 3, retired: 4, gone: 5 };
+  const byPart = (a, b) => GKY.partOrder(a.part || 'zz') - GKY.partOrder(b.part || 'zz');
+  const byGrade = (a, b) => GKY.gradeRank(b.grade) - GKY.gradeRank(a.grade);
+  const byKana = (a, b) => (a.kana || a.name).localeCompare(b.kana || b.name, 'ja');
+  const cmp = { part: (a, b) => byPart(a, b) || byGrade(a, b) || byKana(a, b), grade: (a, b) => byGrade(a, b) || byPart(a, b) || byKana(a, b), kana: byKana, joined: (a, b) => (a.joined || 9999) - (b.joined || 9999) || byPart(a, b), status: (a, b) => so[a.status] - so[b.status] || byPart(a, b) }[msort] || byKana;
+  return ms.sort((a, b) => (so[a.status] >= 5) - (so[b.status] >= 5) || cmp(a, b));
+}
+function renderMembers() {
+  const o = GKY.org(), t = o.org.type, w = GKY.words(t), ippan = t === 'ippan';
+  $('#mTitle').textContent = w.member;
+  $('#mLead').textContent = `ここに入れた${w.member}は、コウバン（パート割り）・楽譜ライブラリ（できる曲）・楽器決め（編成計画）・楽器台帳（使う人・貸し出し先）・搬入出リスト（担当）・出欠・会計で使えます。`;
+  $('#mStaffL').textContent = `${w.staff}・指導者のメモを出す`;
+  const cnt = st => o.members.filter(m => m.status === st).length;
+  $('#mSum').textContent = Object.keys(GKY.STATUS).filter(st => cnt(st)).map(st => `${GKY.statusName(st, t)} ${cnt(st)}人`).join('・');
+  // しぼり方
+  const opt = (v, l, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`;
+  $('#mFSt').innerHTML = opt('cur', '卒業・退部の人をのぞく', mfs) + opt('all', '全員', mfs) + Object.keys(GKY.STATUS).map(st => opt(st, GKY.statusName(st, t) + 'だけ', mfs)).join('');
+  const fams = [...new Set(o.members.map(m => GKY.familyOf(m.part) || ''))].sort((a, b) => GKY.partOrder(a || 'zz') - GKY.partOrder(b || 'zz'));
+  $('#mFPart').innerHTML = opt('', '楽器：すべて', mfp) + fams.map(f => opt(f || '-', f ? GKY.partName(f) : '楽器が未定', mfp)).join('');
+  const grs = [...new Set(o.members.map(m => m.grade || ''))].sort((a, b) => GKY.gradeRank(a) - GKY.gradeRank(b));
+  $('#mFGrade').innerHTML = opt('', ippan ? '学年：すべて' : '学年：すべて', mfg) + grs.map(g => opt(g || '-', g ? GKY.gradeLabel(g) : '学年なし', mfg)).join('');
+  $('#mFGrade').hidden = ippan && grs.length <= 1;
+  const roles = [...new Set(o.members.flatMap(m => m.roles))];
+  $('#mFRole').innerHTML = opt('', '役職：すべて', mfr) + roles.map(r => opt(r, r, mfr)).join('');
+  $('#mFRole').hidden = !roles.length;
+  $('#mSort').innerHTML = opt('part', 'パートの順', msort) + (ippan ? opt('joined', '入団した年の順', msort) : opt('grade', '学年の順', msort)) + opt('kana', 'よみの順', msort) + opt('status', '状態の順', msort);
+  // パート・学年の人数（在籍の人）
+  const act = o.members.filter(m => m.status === 'active');
+  const byPart = {}; act.forEach(m => { const f = GKY.familyOf(m.part) || '未定'; byPart[f] = (byPart[f] || 0) + 1; });
+  const byGrade = {}; act.forEach(m => { const g = m.grade || '学年なし'; byGrade[g] = (byGrade[g] || 0) + 1; });
+  $('#mCnts').innerHTML = Object.entries(byPart).sort((a, b) => GKY.partOrder(a[0]) - GKY.partOrder(b[0])).map(([p, n]) => `<span class="chip">${esc(GKY.partName(p))} ${n}</span>`).join('') + (ippan ? '' : '<span style="width:12px"></span>' + Object.entries(byGrade).sort((a, b) => GKY.gradeRank(a[0]) - GKY.gradeRank(b[0])).map(([g, n]) => `<span class="chip tp">${esc(g)} ${n}</span>`).join(''));
+  // 表
+  const staff = $('#mStaff').checked;
+  const ms = filteredMembers(o);
+  const partOpts = cur => `<option value="">（未定）</option>` + GKY.PARTS.map(p => `<option value="${esc(p[0])}"${cur === p[0] ? ' selected' : ''}>${esc(p[1])}</option>`).join('') + (cur && !GKY.PARTS.some(p => p[0] === cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : '');
+  const stOpts = cur => Object.keys(GKY.STATUS).map(st => `<option value="${st}"${st === cur ? ' selected' : ''}>${esc(GKY.statusName(st, t))}</option>`).join('');
+  const head = `<thead><tr><th>名前</th><th>よみ</th><th>${ippan ? '入団した年' : '学年'}</th><th>いつもの楽器</th><th>持ち替えできる楽器</th><th>役職</th><th>状態</th><th>メモ</th>${staff ? `<th>${esc(w.staff)}・指導者のメモ</th>` : ''}<th></th></tr></thead>`;
+  $('#mTable').innerHTML = !o.members.length ? `<tbody><tr><td class="wide"><div class="empty" style="border:0"><b>まだ${esc(w.member)}がいません</b>「＋ 1人足す」「まとめて足す」、またはExcelの名簿をCSVで読み込んでください。</div></td></tr></tbody>`
+    : !ms.length ? `<tbody><tr><td class="wide"><div class="empty" style="border:0"><b>見つかりませんでした</b>さがす言葉やしぼり方を変えてみてください。</div></td></tr></tbody>`
+    : head + `<tbody>${ms.map(m => `<tr data-id="${esc(m.id)}" class="${m.active ? '' : 'off'}">
+    <td data-l="名前"><input type="text" data-k="name" value="${esc(m.name)}" aria-label="名前"></td><td data-l="よみ"><input type="text" data-k="kana" value="${esc(m.kana)}" aria-label="よみ"></td>
+    <td data-l="${ippan ? '入団した年' : '学年'}">${ippan ? `<input type="number" data-k="joined" value="${m.joined || ''}" min="1950" max="2100" style="width:6.5em" aria-label="入団した年">` : `<input type="text" data-k="grade" value="${esc(m.grade)}" list="grades" style="min-width:4.5em;width:5.5em" aria-label="学年" class="${gradeOk(m.grade, t) ? '' : 'warn'}" title="${gradeOk(m.grade, t) ? '' : 'この書き方では進級で学年が上がりません（例：中2・高1・大3）'}">`}</td>
+    <td data-l="いつもの楽器"><select data-k="part" aria-label="いつもの楽器">${partOpts(m.part)}</select></td>
+    <td data-l="持ち替え"><input type="text" data-k="subs" value="${esc(m.subs.join('、'))}" placeholder="例：Pic、Timp" aria-label="持ち替えできる楽器"></td>
+    <td data-l="役職"><input type="text" data-k="roles" class="roles" value="${esc(m.roles.join('、'))}" list="roleList" placeholder="例：パートリーダー" aria-label="役職"></td>
+    <td data-l="状態"><select data-k="status" aria-label="状態">${stOpts(m.status)}</select></td>
+    <td data-l="メモ"><input type="text" data-k="note" value="${esc(m.note)}" aria-label="メモ"></td>
+    ${staff ? `<td data-l="${esc(w.staff)}・指導者のメモ" class="wide"><input type="text" data-k="staffNote" value="${esc(m.staffNote)}" aria-label="指導者のメモ"></td>` : ''}
+    <td class="end"><button class="ibtn del" data-del aria-label="消す">×</button></td></tr>`).join('')}</tbody>`;
+  $('#mTable').insertAdjacentHTML('beforeend', `<datalist id="grades">${GKY.gradesOf(t).map(g => `<option value="${g}">${esc(GKY.gradeLabel(g))}</option>`).join('')}</datalist><datalist id="roleList">${GKY.roleHints(t).map(r => `<option value="${esc(r)}">`).join('')}</datalist>`);
+  $('#mNote').textContent = o.members.some(m => !gradeOk(m.grade, t)) ? '黄色の学年は、進級で上がらない書き方です（「中2」「高1」「大3」のように直してください）。' : (ms.length < o.members.length ? `${o.members.length}人のうち${ms.length}人を出しています。` : '');
+  $$('#mTable tr[data-id]').forEach(tr => {
+    const id = tr.dataset.id;
+    $$('[data-k]', tr).forEach(i => i.onchange = () => {
+      const lst = GKY.org().members, m = lst.find(x => x.id === id), k = i.dataset.k;
+      if (!m) return;
+      if (k === 'status') GKY.setStatus(m, i.value);
+      else if (k === 'roles') m.roles = i.value.split(/[、,・\/／]+/).map(norm).filter(Boolean);
+      else if (k === 'subs') m.subs = i.value;
+      else if (k === 'joined') m.joined = Math.round(+i.value) || null;
+      else if (k === 'grade') {
+        let v = norm(i.value); const r = GKY.readGrade(v, t);
+        if (r && r.sure && r.grade) v = r.grade;
+        else if (r && !r.sure) toast(`「${v}」だけでは学年が決まりません。「中${r.n || 2}」「高${r.n || 2}」のように入れてください`, null, null, 6000);
+        else if (v && !r) toast(`「${v}」は学年として読めないので、進級で上がりません`, null, null, 5000);
+        m.grade = v; i.value = v;
+      }
+      else m[k] = k === 'note' || k === 'staffNote' ? i.value : i.value.trim();
+      if (!GKY.saveOrg('members', lst)) toast('保存できませんでした');
+      if (['status', 'part', 'grade'].includes(k)) renderAll(); else $('#cntM').textContent = String(GKY.org().members.filter(x => x.status === 'active').length || '');
+    });
+    GKY.arm($('[data-del]', tr), () => { const before = GKY.org().members; saveMembers(before.filter(x => x.id !== id)); toast('消しました', '元に戻す', () => saveMembers(before)); }, '消す？');
+  });
+}
+$('#mQ').oninput = GKY.debounce(() => { mq = $('#mQ').value; renderMembers(); }, 150);
+$('#mFSt').onchange = e => { mfs = e.target.value; renderMembers(); };
+$('#mFPart').onchange = e => { mfp = e.target.value; renderMembers(); };
+$('#mFGrade').onchange = e => { mfg = e.target.value; renderMembers(); };
+$('#mFRole').onchange = e => { mfr = e.target.value; renderMembers(); };
+$('#mSort').onchange = e => { msort = e.target.value; renderMembers(); };
+$('#mStaff').onchange = renderMembers;
+$('#mAdd').onclick = () => {
+  const lst = GKY.org().members, name = '新しい' + W().member;
+  lst.push(GKY.normMember({ name, status: 'active' })); saveMembers(lst);
+  mq = ''; $('#mQ').value = ''; if (mfs !== 'all' && mfs !== 'cur') { mfs = 'cur'; } renderMembers();
+  setTimeout(() => { const l = $$('#mTable [data-k="name"]').find(i => i.value === name); if (l) { l.scrollIntoView({ block: 'center' }); l.focus(); l.select(); } }, 60);
+};
+const addMembers = (add, src) => { const lst = GKY.org().members; saveMembers(lst.concat(add)); toast(`${add.length}人を足しました${src ? '（' + src + '）' : ''}`, '元に戻す', () => saveMembers(lst)); };
+$('#mMany').onclick = () => {
+  const t = ty(), ex = t === 'ippan' ? '山田 花子 2015 クラリネット&#10;鈴木 太郎 トラ ラッパ' : t === 'daigaku' ? '山田 花子 2回生 クラリネット&#10;鈴木 太郎 大1 ラッパ 学指揮' : '山田 花子 中2 クラリネット&#10;鈴木 太郎 1年 ラッパ';
+  sheet({ title: 'まとめて足す', content: `<p class="lead">1行に1人、「名前　学年　楽器」の順に、空白で区切って書きます（学年と楽器はなくてもかまいません）。「パーカス」「ペット」「1年生」「2回生」「OG」「トラ」「パートリーダー」なども読みます。<b>足す前に、読んだ結果を表で確かめます。</b></p><textarea id="mmIn" style="min-height:200px" placeholder="${ex}"></textarea>`,
+    actions: [{ label: 'やめる' }, { label: '読んで確かめる', primary: true, onClick: body => {
+      const lines = $('#mmIn', body).value.split('\n').map(norm).filter(Boolean);
+      if (!lines.length) { toast('名前を書いてください'); return false; }
+      const recs = lines.map(l => GKY.parseMemberLine(l, ty()));
+      setTimeout(() => GKY.previewMembers(recs, { existing: GKY.org().members, type: ty(), source: '書いた' + lines.length + '行', onAdd: add => addMembers(add) }), 0);
+    } }] });
+};
+$('#mCsv').onclick = async () => {
+  const f = await GKY.openFile({ accept: '.csv,.tsv,.txt,text/csv' }); if (!f) return;
+  const rows = GKY.parseCSV(f.data); if (!rows.length) { toast('読み込める行がありませんでした'); return; }
+  const recs = GKY.membersFromRows(rows, ty());
+  if (!recs.length) { toast('名前が読めませんでした。1行目に「名前,学年,パート」と書いてください'); return; }
+  GKY.previewMembers(recs, { existing: GKY.org().members, type: ty(), source: `「${f.name}」（文字コード ${f.enc}）`, onAdd: add => addMembers(add, f.name) });
+};
+const CSV_HEAD = ['名前', 'よみ', '学年', 'パート', '持ち替え', '役職', '状態', '入団した年', 'メモ'];
+$('#mCsvOut').onclick = () => {
+  const o = GKY.org(), t = o.org.type, staff = $('#mStaff').checked;
+  GKY.saveFile(`${GKY.words(t).member}_${o.org.name || '楽屋'}_${GKY.stamp()}.csv`, GKY.csv([CSV_HEAD.concat(staff ? ['指導者メモ'] : []), ...o.members.map(m => [m.name, m.kana, m.grade, m.part, m.subs.join('、'), m.roles.join('、'), GKY.statusName(m.status, t), m.joined || '', m.note].concat(staff ? [m.staffNote] : []))]), 'text/csv');
+};
+$('#mTpl').onclick = () => GKY.saveFile('名簿_見本.csv', GKY.csv([CSV_HEAD, ['山田 花子', 'やまだ はなこ', '中2', 'クラリネット', 'バスクラ', 'パートリーダー', '在籍', '', ''], ['鈴木 太郎', 'すずき たろう', '中1', 'トランペット', '', '', '在籍', '', '']]), 'text/csv');
+
+/* --- 団体・年度 --- */
+/* 進級：いまの名簿が何年度のものか（年度を入れていなければ今日から決める）と、何年度にするか */
+function promoInfo(o, cont) {
+  const t = o.org.type, now = new Date(), mon = now.getMonth() + 1, fy = GKY.fiscalYear(now);
+  const from = o.org.year || ((mon >= 4 && mon <= 6) ? fy - 1 : fy);
+  const to = from + 1;
+  const early = to > fy + (mon <= 3 ? 1 : 0);
+  const again = o.org.promoted && o.org.promoted.to >= to ? o.org.promoted : null;
+  const last = o.org.promoted && o.org.promoted.to === from ? o.org.promoted : null;   // いまの年度への進級（済んでいる）
+  const ms = o.members.filter(m => m.status !== 'gone');
+  const up = [], leave = [], same = [], unread = [];
+  ms.forEach(m => {
+    if (!m.grade) { same.push(m); return; }
+    if (!GKY.GRADE_ORDER.includes(m.grade)) { unread.push(m); return; }
+    const n = GKY.nextGradeOf(m.grade, t, { cont });
+    if (n === m.grade) same.push(m); else if (n) up.push({ m, n }); else leave.push(m);
+  });
+  return { from, to, fy, early, again, last, up, leave, same, unread, guessed: !o.org.year };
+}
+const contDefault = t => t === 'chuko';
+const lastGrades = (t, cont) => t === 'chu' ? '中3' : t === 'koko' ? '高3' : t === 'daigaku' ? '4回生・院2' : cont ? '高3' : '中3・高3';
+function renderOrg() {
+  const o = GKY.org(), t = o.org.type, w = GKY.words(t);
+  $('#oTypes').innerHTML = typeButtons(t); wireTypes($('#oTypes'));
+  $('#oTypeNote').textContent = t ? `「${GKY.ORG_TYPES[t]}」：学年は ${GKY.gradesOf(t).length ? GKY.gradesOf(t).map(GKY.gradeLabel).join('・') : 'なし（入団した年を使います）'}。呼び方は「${w.member}」「${w.staff}」。` : 'まだ選んでいません。選ぶと、学年の選び方・進級・呼び方が団体に合わせて変わります。';
+  if (document.activeElement !== $('#oName')) $('#oName').value = o.org.name;
+  const fy = GKY.fiscalYear();
+  if (document.activeElement !== $('#oYear')) $('#oYear').value = o.org.year || '';
+  const pi0 = promoInfo(o, false);
+  $('#oYear').placeholder = String(pi0.from);
+  $('#oYearHint').textContent = o.org.year ? '' : `まだ入れていません（いまは${pi0.from}年度の名簿として扱います）`;
+  $('#oRetireF').hidden = t !== 'daigaku'; $('#oRetire').value = o.org.retire || '大3';
+  $('#oBig').checked = !!GKY.pref('big', false);
+  renderProfiles(o);
+  // 進級
+  const showCont = t === 'chuko' || t === 'chiiki';
+  const cont = showCont ? ($('#pCont') ? $('#pCont').checked : contDefault(t)) : false;
+  const pi = promoInfo(o, cont);
+  if (t === 'ippan') { $('#promote').innerHTML = '<p class="lead">一般の団体には学年がないので、進級はありません。団員の「入団した年」で並べられます。</p>'; }
+  else {
+    $('#promote').innerHTML = `<div class="arrow"><span class="yr">${pi.from}年度</span><span class="muted">→</span><span class="yr">${pi.to}年度</span><span class="muted" style="font-size:12px">${pi.guessed ? '（年度を入れていないので、今日の日付から決めています）' : ''}</span></div>
+      <p class="lead">全員の学年を1つ上げます。${esc(lastGrades(t, cont))}の人は「${esc(w.gone)}」にします（消しません。在籍していない人として残ります）。${t === 'chiiki' || !t ? '小6は中1になります。' : ''}${(t === 'chuko' || t === 'chiiki') && cont ? '中3は高1に上がります。' : ''}</p>
+      ${showCont ? `<label class="chk" style="margin:0 0 10px"><input type="checkbox" id="pCont" ${cont ? 'checked' : ''}> 中3の人を高1に上げる（続けて入る）</label>` : ''}
+      ${o.members.length ? `<div class="sums"><span class="sum">学年が上がる <b>${pi.up.length}</b>人</span><span class="sum warn">${esc(w.gone)}にする <b>${pi.leave.length}</b>人</span><span class="sum">そのまま（学年なし・一般など） <b>${pi.same.length}</b>人</span>${pi.unread.length ? `<span class="sum bad">学年が読めない <b>${pi.unread.length}</b>人</span>` : ''}</div>
+      ${pi.leave.length ? `<p class="note" style="margin:0 0 6px">${esc(w.gone)}：${pi.leave.map(m => esc(m.name)).join('、')}（メモに「${pi.from}年度 卒業」と入れます）</p>` : ''}
+      ${pi.unread.length ? `<p class="note" style="margin:0 0 6px;color:var(--bad)">学年の書き方が読めないので上がらない人：${pi.unread.map(m => `${esc(m.name)}（${esc(m.grade)}）`).join('、')}。「${esc(w.member)}」で「中2」「高1」のように直してください。</p>` : ''}
+      ${pi.again ? `<div class="issue warn" style="margin:6px 0"><span class="dot warn"></span><div class="main">${pi.again.to}年度への進級は、${esc(pi.again.at)}にもう済んでいます。</div></div>` : pi.early ? `<div class="issue warn" style="margin:6px 0"><span class="dot warn"></span><div class="main">まだ${pi.fy}年度の途中です。ふつうは3月〜4月に進級させます。${pi.last ? `（${pi.last.to}年度への進級は、${esc(pi.last.at)}に済んでいます）` : ''}</div></div>` : ''}
+      <button class="btn primary" id="doPromote" style="margin-top:6px">${pi.to}年度にする（進級させる）</button>` : '<p class="muted" style="font-size:13px">まだだれもいません。</p>'}`;
+    const pc = $('#pCont'); if (pc) pc.onchange = renderOrg;
+    const dp = $('#doPromote'); if (dp) dp.onclick = () => askPromote(cont);
+  }
+  // 引退させる
+  const actG = [...new Set(o.members.filter(m => m.status === 'active' && m.grade).map(m => m.grade))].sort((a, b) => GKY.gradeRank(a) - GKY.gradeRank(b));
+  const def = t === 'daigaku' ? (o.org.retire || '大3') : t === 'chu' ? '中3' : '高3';
+  $('#rtGrade').innerHTML = actG.length ? actG.map(g => `<option value="${esc(g)}"${g === def ? ' selected' : ''}>${esc(GKY.gradeLabel(g))}</option>`).join('') : '<option value="">（在籍の人がいません）</option>';
+  $('#rtLead').textContent = `引退した人は在籍したまま（消さずに）、パート割りの候補や「今の${w.member}でできる曲」の人数から外れます。${GKY.isSchool(t) ? '3年生が夏に引退しても、卒業までは名簿に残せます。' : ''}卒業・退部は、進級のときに自動でつきます。`;
+  $('#doRetire').disabled = !actG.length;
+  $('#undoRetire').disabled = !o.members.some(m => m.status === 'retired');
+}
+function askPromote(cont) {
+  const o = GKY.org(), pi = promoInfo(o, cont);
+  const go = () => doPromote(cont);
+  if (pi.again || pi.early) {
+    sheet({ title: '進級させますか', content: `<p>${pi.again ? `${pi.again.to}年度への進級は、${esc(pi.again.at)}にもう済んでいます。もう一度押すと、学年がさらに1つ上がり、${pi.to}年度になります。` : `まだ${pi.fy}年度の途中です。${pi.last ? `${pi.last.to}年度への進級は、${esc(pi.last.at)}にもう済んでいます。` : ''}いま進級させると、学年がさらに1つ上がり、名簿は${pi.to}年度になります。`}</p><p class="note">まちがえたときは、すぐあとに出る「元に戻す」で戻せます。</p>`,
+      actions: [{ label: 'やめる' }, { label: 'それでも進級させる', primary: true, danger: true, onClick: go }] });
+    return;
+  }
+  sheet({ title: `${pi.to}年度にする`, content: `<p>${pi.up.length}人の学年を1つ上げ、${pi.leave.length}人を「${esc(GKY.words(o.org.type).gone)}」にします。名簿は${pi.to}年度になります。</p>`, actions: [{ label: 'やめる' }, { label: '進級させる', primary: true, onClick: go }] });
+}
+function doPromote(cont) {
+  const before = GKY.org(), t = before.org.type, pi = promoInfo(before, cont);
+  const lst = before.members.map(m => {
+    if (m.status === 'gone' || !m.grade || !GKY.GRADE_ORDER.includes(m.grade)) return m;
+    const n = GKY.nextGradeOf(m.grade, t, { cont });
+    if (n === m.grade) return m;
+    const x = Object.assign({}, m);
+    if (n) { x.grade = n; return x; }
+    if (m.status === 'extra' || m.status === 'support') return x;   // エキストラ・賛助の人は、学年が終わってもそのまま
+    GKY.setStatus(x, 'gone');
+    x.note = (m.note ? m.note + '　' : '') + `${pi.from}年度 卒業`;
+    return x;
+  });
+  GKY.saveOrg('members', lst); GKY.saveOrg('org', { year: pi.to, promoted: { to: pi.to, at: GKY.ymd() } }); renderAll();
+  toast(`${pi.to}年度にしました（${pi.up.length}人の学年を上げました）`, '元に戻す', () => { GKY.saveOrg('members', before.members); GKY.saveOrg('org', before.org); renderAll(); });
+}
+$('#oName').onchange = e => { GKY.saveOrg('org', { name: norm(e.target.value) }); renderAll(); toast('団体の名前を保存しました'); };
+$('#oYear').onchange = e => { const v = Math.round(+e.target.value); GKY.saveOrg('org', { year: v >= 2000 && v <= 2100 ? v : null }); renderAll(); };
+$('#oRetire').onchange = e => { GKY.saveOrg('org', { retire: e.target.value }); renderAll(); };
+$('#oBig').onchange = e => GKY.setPref('big', e.target.checked);
+$('#doRetire').onclick = () => {
+  const g = $('#rtGrade').value, before = GKY.org().members;
+  const lst = before.map(m => m.status === 'active' && m.grade === g ? GKY.setStatus(Object.assign({}, m), 'retired') : m);
+  const n = lst.filter((m, i) => m !== before[i]).length;
+  if (!n) { toast('引退にする人がいません'); return; }
+  saveMembers(lst); toast(`${g}の${n}人を引退にしました`, '元に戻す', () => saveMembers(before));
+};
+GKY.arm($('#undoRetire'), () => { const before = GKY.org().members; const lst = before.map(m => m.status === 'retired' ? GKY.setStatus(Object.assign({}, m), 'active') : m); saveMembers(lst); toast('引退の人を在籍にもどしました', '元に戻す', () => saveMembers(before)); }, 'もう一度押すともどします');
+
+/* --- この端末の団体（切りかえ） --- */
+/* いまの団体のデータはそのまま使い、ほかの団体のデータは gakuya.profile.〈id〉 にしまっておく。切りかえるときに入れかえる */
+const PKEY = 'gakuya.profiles';
+function profiles() {
+  let p = GKY.store.get(PKEY);
+  if (!p || !Array.isArray(p.list) || !p.list.length || !p.list.some(x => x.id === p.current)) p = { current: 'p1', list: [{ id: 'p1', name: '', type: '' }] };
+  return p;
+}
+function renderProfiles(o) {
+  const p = profiles();
+  $('#profList').innerHTML = p.list.map(x => {
+    const on = x.id === p.current, name = on ? (o.org.name || '名前のない団体') : (x.name || '名前のない団体'), typ = on ? o.org.type : x.type;
+    return `<div class="prof${on ? ' on' : ''}" data-p="${esc(x.id)}"><div><div class="t1">${esc(name)}</div><div class="t2">${typ ? esc(GKY.ORG_TYPES[typ]) : '種類はまだ'}${on ? '　いま使っている団体' : x.at ? '　' + esc(new Date(x.at).toLocaleDateString('ja-JP')) + 'まで使っていた' : ''}</div></div><div class="btnrow">${on ? '' : '<button class="btn sm primary" data-sw>切りかえる</button><button class="btn sm danger" data-pdel>消す</button>'}</div></div>`;
+  }).join('');
+  $$('#profList [data-sw]').forEach(b => b.onclick = () => switchTo(b.closest('[data-p]').dataset.p));
+  $$('#profList [data-pdel]').forEach(b => GKY.arm(b, () => { const id = b.closest('[data-p]').dataset.p; const pp = profiles(); pp.list = pp.list.filter(x => x.id !== id); GKY.store.set(PKEY, pp); GKY.store.del('gakuya.profile.' + id); renderOrg(); toast('その団体のデータを消しました'); }, 'もう一度押すと、その団体のデータを消します'));
+}
+function switchTo(id) {
+  const p = profiles(), o = GKY.org();
+  if (id === p.current) return;
+  const cur = p.list.find(x => x.id === p.current);
+  if (cur) Object.assign(cur, { name: o.org.name, type: o.org.type, at: Date.now() });
+  // 1) いまの団体のデータをしまう（しまえなければ、何も変えずにやめる）
+  const keys = {}; GKY.store.keys().filter(isDataKey).forEach(k => { keys[k] = GKY.store.raw(k); });
+  if (!GKY.store.setRaw('gakuya.profile.' + p.current, JSON.stringify({ keys, at: Date.now() }))) { toast('切りかえられませんでした（保存の容量がいっぱいかもしれません。先にバックアップを保存してください）', null, null, 7000); return; }
+  // 2) いまのデータを消して、3) 切りかえる先のデータを出す
+  Object.keys(keys).forEach(k => GKY.store.del(k));
+  const tgt = GKY.store.get('gakuya.profile.' + id);
+  let bad = 0;
+  if (tgt && tgt.keys) Object.entries(tgt.keys).forEach(([k, v]) => { if (!GKY.store.setRaw(k, v)) bad++; });
+  if (!bad) GKY.store.del('gakuya.profile.' + id);
+  p.current = id; GKY.store.set(PKEY, p);
+  renderAll();
+  const n = GKY.org();
+  toast(bad ? `${bad}つのデータを出せませんでした（容量がいっぱいかもしれません）` : `「${n.org.name || '名前のない団体'}」に切りかえました`, null, null, 5000);
+}
+$('#profNew').onclick = () => sheet({ title: '新しい団体を作る', content: `<label class="fld"><span>団体の名前</span><input type="text" id="pnName" placeholder="例：〇〇地域クラブ"></label><p class="note">いまの団体のデータはこの端末にしまわれ、空の楽屋になります。あとから「切りかえる」でいつでも戻れます。</p>`,
+  actions: [{ label: 'やめる' }, { label: '作って切りかえる', primary: true, onClick: body => {
+    const p = profiles(), id = uid('p');
+    p.list.push({ id, name: norm($('#pnName', body).value), type: '' }); GKY.store.set(PKEY, p);
+    switchTo(id);
+    const nm = norm($('#pnName', body).value); if (nm) { GKY.saveOrg('org', { name: nm }); renderAll(); }
+    showTab('org');
+  } }] });
+
+/* --- つながり --- */
+function renderLinks() {
+  const o = GKY.org(), w = GKY.words(o.org.type);
+  const card = (title, color, rows) => `<div class="flowc"><h3><span class="tape" style="--tc:${color};--ti:${['#E3B23C', '#DD7A2B'].includes(color) ? '#1B1A14' : '#fff'}">${esc(title)}</span></h3>${rows.map(r => `<div class="row"><span>${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')}</div>`;
+  $('#flow').innerHTML = [
+    card(`${w.member}（${o.members.filter(m => m.status === 'active').length}人）`, '#2B2F36', [['入れる所', '<span class="tn">楽屋（この画面）</span>' + tn('gakkigime')], ['使う所', ['kouban', 'gakufu', 'gakkigime', 'gakki', 'hannyu', 'shukketsu', 'kaikei', 'gassou'].map(tn).join('')], ['使い方', 'パート割りの候補、できる曲の判定、来年の人数の予測、楽器を使う人・貸し出し先、運搬の担当、出欠の名簿、団費の名簿、合奏ノートのパート']]),
+    card(`曲（${o.songs.length}曲）`, '#2F6CC8', [['入れる所', tn('gakufu')], ['使う所', ['kouban', 'tempomap'].map(tn).join('')], ['使い方', '楽譜に入れた編成が、コウバンの受け持ちになります。テンポマップで新しい曲を作るときに選べます']]),
+    card(`楽器（${o.instruments.length}台）`, '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', ['hannyu', 'gakkigime'].map(tn).join('')], ['使い方', '運ぶ楽器を台帳から選べます。楽器決めでは、学校・団体の楽器の台数を募集人数の目安にします']]),
+    card('ステマネのファイル', '#A3192B', [['作る所', tn('stagemane')], ['使う所', ['kouban', 'shikomi', 'gakufu'].map(tn).join('')], ['使い方', '曲の順番（コウバン）、きっかけ表（仕込み図）、演奏の記録と曲目一覧（楽譜ライブラリ）']]),
+    card('バミリの配置図', '#E3B23C', [['作る所', tn('bamiri')], ['使う所', ['kouban', 'shikomi', 'hannyu'].map(tn).join('')], ['使い方', '席に名前を入れて返す（コウバン）、仕込み図の下絵（仕込み図）、運ぶ打楽器と譜面台の数（搬入出リスト）。同じ場所なら、バミリで開いている配置図をそのまま使えます']]),
+    card('テンポマップの共有コード', '#2B9457', [['作る所', tn('tempomap')], ['使う所', tn('gassou')], ['使い方', '録音に小節の目印をつける（テンポや拍子が変わる曲、くり返しやカットのある曲も）']]),
+    card('見るだけのリンク・QRコード', '#5B7A1B', [['作る所', ['kouban', 'hannyu', 'gyakusan', 'shukketsu'].map(tn).join('')], ['使う所', '<span class="tn">部員・保護者のスマホ</span>'], ['使い方', '香盤表と自分の出番・積み込みの担当・本番までのスケジュール・練習の予定を、LINEやQRコードで配れます。受け取った人が見ても、こちらのデータは変わりません（積み込みのチェックはその人の端末の中だけ、出欠は「返事」の文を送ってもらって取り込みます）']]),
+    card('引き継ぎファイル', '#506070', [['作る所', '<span class="tn">楽屋（バックアップ）</span>'], ['使う所', '<span class="tn">次の人の端末の楽屋</span>'], ['使い方', '全部のツールのデータと引き継ぎのメモを1つのファイルで渡します。次の人は「バックアップから戻す」で開きます']]),
+  ].join('');
+}
+
+/* --- バックアップ --- */
+function renderBackup() {
+  const d = bkDays();
+  $('#bkLast').innerHTML = GKY.IN_VIEWER ? '' : d == null ? '<span style="color:var(--warn)">まだ保存していません。</span>' : `最後に保存したのは${d === 0 ? '今日' : d + '日前'}です。`;
+  if (document.activeElement !== $('#hoMemo')) $('#hoMemo').value = GKY.pref('handoverMemo', '');
+  const w = W();
+  ['#hoStaffL', '#orgStaffL'].forEach(s => $(s).textContent = `${w.staff}・指導者のメモも入れる`);
+  if (GKY.IN_VIEWER) { $('#bkList').innerHTML = '<p class="muted" style="font-size:13px">Claudeの画面の中では、ほかのツールのデータが見えないので、まとめてのバックアップはできません。公開ページで使ってください。</p>'; ['#bkSave', '#bkLoad', '#hoSave'].forEach(s => $(s).disabled = true); $('#usage').innerHTML = ''; return; }
+  const ks = myKeys();
+  const size = k => k.length + (GKY.store.raw(k) || '').length;
+  const groups = {}; ks.forEach(k => { const g = k.startsWith('gakuya.profile.') ? 'profile' : PREFIX.find(x => k.startsWith(x)); (groups[g] = groups[g] || []).push(k); });
+  const label = g => g === 'profile' ? '<span class="tn">ほかの団体（しまってあるデータ）</span>' : g === 'gakuya.' ? '<span class="tn">楽屋</span>' : tn(g.slice(0, -1));
+  $('#bkList').innerHTML = ks.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ツール</th><th class="num">大きさ</th></tr></thead><tbody>${Object.entries(groups).map(([g, xs]) => `<tr><td>${label(g)}<div class="keys muted">${xs.map(esc).join('・')}</div></td><td class="num">${Math.ceil(xs.reduce((s, k) => s + size(k), 0) / 1024)} KB</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted" style="font-size:13px">この端末には、まだ楽屋シリーズのデータがありません。</p>';
+  // 保存している量
+  const u = GKY.usage(), pct = Math.min(100, u.ratio * 100);
+  const by = Object.entries(u.by).filter(([k]) => PREFIX.some(p => p.startsWith(k + '.'))).sort((a, b) => b[1] - a[1]);
+  $('#usage').innerHTML = `<p style="margin:0">この場所（bamiriunei-arch.github.io）で保存できる量のうち、<b>${pct < 1 ? '1%未満' : Math.round(pct) + '%'}</b>ほどを使っています（${(u.used / 10000).toFixed(1)}万字 ／ およそ${u.limit / 10000}万字）。</p>
+    <div class="gky-meter ${pct >= 85 ? 'bad' : pct >= 60 ? 'warn' : ''}"><i style="width:${Math.max(1, pct).toFixed(1)}%"></i></div>
+    ${by.length ? `<p class="note" style="margin:0">多い順：${by.slice(0, 6).map(([k, n]) => `${esc(T(k) ? T(k).name : k === 'gakuya' ? '楽屋' : k)} ${(n / u.limit * 100).toFixed(1)}%`).join('・')}</p>` : ''}
+    <p class="note">${pct >= 85 ? '<b style="color:var(--bad)">残りが少なくなっています。</b>バックアップを保存してから、使わなくなった演奏会・曲などを消してください。' : '楽屋シリーズ・バミリ・ドリルボードで、この量を分け合っています。いっぱいになると保存できなくなります。'}楽器台帳の写真は別の場所（IndexedDB）なので、ここには入りません。</p>`;
+}
+function idbAll(name, store) {
+  return new Promise(res => { try { const r = indexedDB.open(name); r.onsuccess = () => { const db = r.result; if (!db.objectStoreNames.contains(store)) { db.close(); return res({}); } const out = {}; const tx = db.transaction(store, 'readonly'); const st = tx.objectStore(store); const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; tx.oncomplete = () => { db.close(); res(out); }; tx.onerror = () => res({}); }; r.onerror = () => res({}); r.onupgradeneeded = () => { r.transaction.abort(); res({}); }; } catch (e) { res({}); } });
+}
+function idbPutAll(name, store, obj) {
+  return new Promise(res => { try { const r = indexedDB.open(name, 1); r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(store)) r.result.createObjectStore(store); }; r.onsuccess = () => { const db = r.result; const tx = db.transaction(store, 'readwrite'); const st = tx.objectStore(store); for (const k in obj) st.put(obj[k], k); tx.oncomplete = () => { db.close(); res(true); }; tx.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } });
+}
+/* 指導者メモを外した楽屋データ（文字のまま） */
+const stripStaff = raw => { try { const o = JSON.parse(raw); (o.members || []).forEach(m => { m.staffNote = ''; }); return JSON.stringify(o); } catch (e) { return raw; } };
+async function buildBackup({ photos = true, staff = true, handover = null } = {}) {
+  const keys = {}; myKeys().forEach(k => { const v = GKY.store.raw(k); keys[k] = !staff && k === GKY.ORG_KEY ? stripStaff(v) : v; });
+  if (!staff) Object.keys(keys).filter(k => k.startsWith('gakuya.profile.')).forEach(k => { try { const p = JSON.parse(keys[k]); if (p.keys && p.keys[GKY.ORG_KEY]) p.keys[GKY.ORG_KEY] = stripStaff(p.keys[GKY.ORG_KEY]); keys[k] = JSON.stringify(p); } catch (e) { /* そのまま */ } });
+  const idb = {}; if (photos) { const ph = await idbAll('gakki', 'photos'); if (Object.keys(ph).length) idb.gakki = { photos: ph }; }
+  return Object.assign({ app: 'gakuya-backup', format: 1, exportedAt: new Date().toISOString(), org: GKY.org().org.name, keys, idb }, handover ? { handover } : {});
+}
+async function backupSave() {
+  const ok = await GKY.saveJSON(`楽屋バックアップ_${GKY.org().org.name || ''}_${GKY.stamp()}.json`, await buildBackup({ photos: $('#bkPhotos').checked }));
+  if (ok) { GKY.setPref('lastBackup', Date.now()); renderAll(); }
+}
+$('#bkSave').onclick = backupSave;
+$('#bkLoad').onclick = async () => {
+  const f = await GKY.openJSON(); if (!f) return;
+  if (f.data.app !== 'gakuya-backup' || !f.data.keys) { toast('楽屋の「バックアップを保存」「引き継ぎファイルを保存」で作ったファイルを選んでください'); return; }
+  const ks = Object.keys(f.data.keys).filter(k => PREFIX.some(p => k.startsWith(p)) && k !== 'bamiri.auth');
+  const ho = f.data.handover;
+  sheet({ title: ho ? '引き継ぎファイルから戻す' : 'バックアップから戻す', content: `<p>「${esc(f.name)}」（${esc(String(f.data.exportedAt || '').slice(0, 10))}${f.data.org ? '・' + esc(f.data.org) : ''}）から、${ks.length}つのデータを戻します。<b>この端末の同じツールのデータは入れかわります。</b>先にこの端末のバックアップを保存しておくと安心です。</p><div class="keys muted" style="max-height:160px;overflow:auto">${ks.map(esc).join('<br>')}</div>`,
+    actions: [{ label: 'やめる' }, { label: '戻す', primary: true, danger: true, onClick: async () => {
+      let bad = 0; ks.forEach(k => { if (!GKY.store.setRaw(k, f.data.keys[k])) bad++; });
+      if (f.data.idb && f.data.idb.gakki && f.data.idb.gakki.photos) await idbPutAll('gakki', 'photos', f.data.idb.gakki.photos);
+      renderAll(); toast(bad ? `${bad}つ戻せませんでした（容量がいっぱいかもしれません）` : `${ks.length}つのデータを戻しました。開いているほかのツールも新しくなります`, null, null, 5000);
+      if (ho && ho.memo) setTimeout(() => sheet({ title: '引き継ぎのメモ', content: `<p class="muted" style="margin:0 0 6px;font-size:12.5px">${esc(ho.from || '')}${ho.at ? '（' + esc(ho.at) + '）' : ''}から</p><div style="white-space:pre-wrap;line-height:1.8">${esc(ho.memo)}</div>`, actions: [{ label: '閉じる', primary: true }] }), 300);
+    } }] });
+};
+$('#hoMemo').addEventListener('input', GKY.debounce(() => GKY.setPref('handoverMemo', $('#hoMemo').value), 400));
+$('#hoSave').onclick = async () => {
+  const o = GKY.org(), memo = $('#hoMemo').value; GKY.setPref('handoverMemo', memo);
+  const ok = await GKY.saveJSON(`引き継ぎ_${o.org.name || '楽屋'}_${GKY.stamp()}.json`, await buildBackup({ photos: true, staff: $('#hoStaff').checked, handover: { memo, from: o.org.name, at: GKY.ymd() } }));
+  if (ok) { GKY.setPref('lastBackup', Date.now()); renderAll(); }
+};
+$('#hoPrint').onclick = () => {
+  const o = GKY.org(), w = GKY.words(o.org.type), memo = $('#hoMemo').value;
+  const d = GKY.doc({ title: '引き継ぎのしおり', sub: `${o.org.name || ''}　${GKY.jpDate(GKY.ymd())}`, foot: o.org.name, file: '引き継ぎのしおり' });
+  d.block(`<h3>団体</h3><p>${esc(o.org.name || '（名前なし）')}　${o.org.type ? esc(GKY.ORG_TYPES[o.org.type]) : ''}　${o.org.year ? o.org.year + '年度' : ''}</p>`);
+  const cnt = Object.keys(GKY.STATUS).map(st => [st, o.members.filter(m => m.status === st).length]).filter(x => x[1]);
+  d.block(`<h3>${esc(w.member)}</h3><p>${cnt.map(([st, n]) => `${esc(GKY.statusName(st, o.org.type))} ${n}人`).join('　') || 'なし'}</p>`);
+  d.block('<h3>ツールごとのデータ</h3>', { keep: true });
+  d.table({ cols: [{ h: 'ツール', w: '30%' }, { h: '入っているもの', w: '25%' }, { h: '開くところ', w: '45%' }], rows: TOOLS.filter(t => !t.viewer).map(t => { const s = GKY.store.get(t.key); return [esc(t.name), esc(t.count ? (t.count(s) || 'なし') : '—'), esc('https://bamiriunei-arch.github.io/' + t.slug + '/')]; }) });
+  d.block(`<h3>引き継ぎのメモ</h3><div class="box" style="white-space:pre-wrap;min-height:120px">${esc(memo || '（なし）')}</div>`);
+  d.block('<h3>データの移し方</h3><p>1. 前の人が楽屋の「バックアップ」→「引き継ぎファイルを保存」でファイルを作り、次の人に渡す（メール・USBメモリ・共有ドライブなど）。<br>2. 次の人は自分の端末で楽屋を開き、「バックアップ」→「バックアップから戻す」でそのファイルを選ぶ。<br>3. データは端末の中だけにあるので、次の人もときどきバックアップを保存する。</p>');
+  d.show();
+};
+$('#orgSave').onclick = () => { const f = GKY.orgFile(GKY.org()); if (!$('#orgStaff').checked) f.members.forEach(m => { m.staffNote = ''; }); GKY.saveJSON(`楽屋データ_${GKY.org().org.name || ''}_${GKY.stamp()}.json`, f); };
+$('#orgLoad').onclick = async () => {
+  const f = await GKY.openJSON(); if (!f) return;
+  if (f.kind !== 'gakuya') { toast('「楽屋のデータを保存」で作ったファイルを選んでください'); return; }
+  const n = GKY.normOrg(f.data), cur = GKY.org(), w = W();
+  sheet({ title: '楽屋のデータを読み込む', content: `<p>${esc(w.member)} ${n.members.length}人・曲 ${n.songs.length}曲・楽器 ${n.instruments.length}台が入っています。今の楽屋（${esc(w.member)} ${cur.members.length}人・曲 ${cur.songs.length}曲・楽器 ${cur.instruments.length}台）と入れかえます。</p>`,
+    actions: [{ label: 'やめる' }, { label: '入れかえる', primary: true, danger: true, onClick: () => { GKY.saveOrg('all', n); renderAll(); toast('楽屋のデータを読み込みました', '元に戻す', () => { GKY.saveOrg('all', cur); renderAll(); }); } }] });
+};
+
+/* --- 置き方（開発する人向け。?dev のときだけ） --- */
+/* GitHub の画面から1回に上げられるのは100ファイルまで。フォルダのファイルの数：README・index.html・sw.js・manifest・アイコン4つ・テストの設定・tests の4つまで（多めに数える）
+   いちばん上：index.html・README.md・.nojekyll・.gitignore・package.json・test-all.js・sync-common.js */
+const FILES_PER_TOOL = 13, TOP_FILES = 7;
+function renderSetup() {
+  const lst = [{ slug: 'gakuya', name: '楽屋', color: 'var(--ink)' }].concat(TOOLS.filter(t => !t.old));
+  let n = TOP_FILES, batch = 1;
+  const rows = lst.map(t => { if (n + FILES_PER_TOOL > 100) { batch++; n = 0; } n += FILES_PER_TOOL; return { t, batch }; });
+  const row = (name, folder, b, path) => `<tr><td>${name}</td><td class="mono">${folder}</td><td class="c">${b}</td><td class="mono">${path}</td></tr>`;
+  $('#repoTable').innerHTML = `<thead><tr><th>ツール</th><th>フォルダ</th><th class="c">上げる回</th><th>公開ページ</th></tr></thead><tbody>`
+    + row('いちばん上のファイル', 'index.html ほか', '1回目', '/')
+    + rows.map(({ t, batch: b }) => row(`<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>`, esc(t.slug) + '/', b + '回目', '/' + esc(t.slug) + '/')).join('')
+    + row('自動テストの設定', '.github/workflows/test.yml', '別に作る', '—')
+    + '</tbody>';
+}
+
+/* ---------- はじまり ---------- */
+$('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: '楽屋', what: '吹奏楽の団体のためのツール集「楽屋シリーズ」の入口です。部員・曲・楽器のデータを楽屋に入れておくと、同じ場所に置いた全部のツールで使えます。各ツールは1つずつ独立していて、別々に直したり更新したりできます。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
+$('#fbTop').href = FEEDBACK_URL || GKY.FEEDBACK_URL;
+$('[data-tab="setup"]').hidden = !DEV;
+GKY.onOrgChange(renderAll);
+window.addEventListener('storage', e => { if (e.key && e.key !== GKY.ORG_KEY && tab !== 'members') renderAll(); });
+window.addEventListener('focus', () => { if (tab === 'tools' || tab === 'backup') renderTab(); });
+GKY.fitTop(); GKY.offline();
+// ツールの画面の「バックアップのお知らせ」から来たときは、バックアップのタブを開く
+showTab(location.hash === '#backup' ? 'backup' : 'tools');
+renderAll();
+if (GKY.TEST) window.__app = { ready: true, TOOLS, renderAll, promoInfo, profiles, switchTo, showTab, buildBackup };
+})();
+</script>
+</body>
+</html>

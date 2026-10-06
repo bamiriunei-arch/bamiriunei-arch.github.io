@@ -1,9 +1,14 @@
 name: 自動テスト
+# GitHub に上げるたびに、全ツールの自動テストを動かす（Actions のタブで結果が見られます）
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+# 続けて上げたときは、前の分を止めて新しい分だけ動かす
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
