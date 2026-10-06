@@ -1,28 +1,29 @@
 {
-  "name": "合奏ノート",
-  "short_name": "合奏ノート",
-  "description": "合奏ごとに自由に書けるノートと、合奏の録音への小節の目印・時刻つきコメント。コメントはパートごとに書き出せる。録音は端末の中だけで扱う",
+  "id": "/gakuya/",
+  "name": "楽屋",
+  "short_name": "楽屋",
+  "description": "吹奏楽の団体のためのツール集「楽屋シリーズ」の入口。部員・曲・楽器のデータを入れておくと、全部のツールで使える",
   "lang": "ja",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "../gakuya/",
+  "scope": "../",
   "display": "standalone",
   "background_color": "#ECEFEC",
   "theme_color": "#ECEFEC",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "../gakuya/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "../gakuya/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512-maskable.png",
+      "src": "../gakuya/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

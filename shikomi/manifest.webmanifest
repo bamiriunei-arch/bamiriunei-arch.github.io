@@ -1,28 +1,29 @@
 {
-  "name": "仕込み図",
-  "short_name": "仕込み図",
-  "description": "演奏会の音響・照明の打合せ資料を作る。使うものを選ぶとインプットリストができ、配置図にマイクを置き、きっかけ表を作れる",
+  "id": "/gakuya/",
+  "name": "楽屋",
+  "short_name": "楽屋",
+  "description": "吹奏楽の団体のためのツール集「楽屋シリーズ」の入口。部員・曲・楽器のデータを入れておくと、全部のツールで使える",
   "lang": "ja",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "../gakuya/",
+  "scope": "../",
   "display": "standalone",
   "background_color": "#ECEFEC",
   "theme_color": "#ECEFEC",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "../gakuya/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "../gakuya/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512-maskable.png",
+      "src": "../gakuya/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

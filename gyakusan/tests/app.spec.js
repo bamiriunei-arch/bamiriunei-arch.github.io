@@ -57,7 +57,8 @@ test('自分のひな形にして、来年の本番を作れる', async ({ page 
   await page.click('#btnPlan');
   await page.click('#sNew');
   await page.locator('#nT').fill('来年の演奏会');
-  await page.locator('#nK').selectOption({ index: 5 });
+  // ひな形の数がふえても、自分のひな形（mine:…）を選ぶ
+  await page.locator('#nK').selectOption(await page.locator('#nK option[value^="mine:"]').getAttribute('value'));
   await page.click('.gky-sheet footer .btn.primary');
   const r = await page.evaluate(() => ({ title: __app.P().title, n: __app.P().tasks.length, mine: __app.S.mine.length }));
   expect(r.title).toBe('来年の演奏会');

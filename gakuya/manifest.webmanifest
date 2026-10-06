@@ -1,10 +1,11 @@
 {
+  "id": "/gakuya/",
   "name": "楽屋",
   "short_name": "楽屋",
   "description": "吹奏楽の団体のためのツール集「楽屋シリーズ」の入口。部員・曲・楽器のデータを入れておくと、全部のツールで使える",
   "lang": "ja",
   "start_url": "./",
-  "scope": "./",
+  "scope": "../",
   "display": "standalone",
   "background_color": "#ECEFEC",
   "theme_color": "#ECEFEC",

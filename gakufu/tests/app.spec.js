@@ -38,7 +38,8 @@ test('今の部員でできるか：持ち替えも数え、足りないパー�
     return { a: a.miss, b: b.miss };
   });
   expect(r.a).toEqual([]);
-  expect(r.b.sort()).toEqual(['B.D.', 'Cl1', 'Fl2'].sort());
+  // 打楽器は楽器ごとではなく人数で数える（2パート → 2人。1人足りない）
+  expect(r.b.sort()).toEqual(['Cl1', 'Fl2', '打楽器'].sort());
   await page.click('[data-tab="can"]');
   await page.click('[data-src="manual"]');
   await expect(page.locator('#canSums')).toContainText('部員 32人');
