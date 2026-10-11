@@ -431,6 +431,68 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .gky-survey p{margin:0; font-size:13px; line-height:1.6}
 @media (max-width:520px){ .gky-survey{left:16px; right:16px; max-width:none} }
 @media (max-width:600px){ .crow{grid-template-columns:3.6em minmax(0,1fr)} .crow .act{grid-column:2} }
+/* 本番当日の案内 */
+.day{display:flex; flex-direction:column; gap:12px}
+.day .dhead{display:flex; flex-direction:column; gap:2px; align-items:flex-start}
+.day .dhead h2{font-size:20px; font-weight:900; margin:4px 0 0; line-height:1.3}
+.day .dhead p{margin:0; font-size:13px}
+.day .dmeet{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px}
+.day .dmeet>div{display:flex; flex-direction:column; padding:10px 12px; border-radius:10px; background:var(--surface-2); border:1px solid var(--line)}
+.day .dmeet small{font-size:12px; color:var(--muted); font-weight:700}
+.day .dmeet b{font-family:var(--f-mono); font-size:26px; line-height:1.2}
+.day .dmeet span{font-size:13px}
+.day .dsec h3{font-size:13px; margin:0 0 6px; color:var(--muted); letter-spacing:.04em}
+.day .dsec p{margin:0}
+.dtt{list-style:none; margin:0; padding:0; border-left:3px solid var(--line); display:flex; flex-direction:column}
+.dtt li{display:grid; grid-template-columns:4.2em minmax(0,1fr); gap:8px; padding:6px 10px; position:relative}
+.dtt li time{font-family:var(--f-mono); font-weight:600}
+.dtt li.past{color:var(--muted)}
+.dtt li.now{background:var(--tape-soft); border-radius:0 8px 8px 0; font-weight:700}
+.dtt li.now::before{content:"いま"; position:absolute; left:-3px; top:0; bottom:0; width:3px; background:var(--tape); font-size:0}
+.ditems{display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:2px 12px}
+.ditems .chk{margin:0; padding:4px 0}
+.ditems label:has(input:checked){color:var(--muted); text-decoration:line-through}
+.djobs th{width:34%; text-align:left; font-weight:700; background:var(--surface-2)}
+.dsoon{margin:0 0 10px}
+/* 年間カレンダー */
+.callegend{display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin:0 0 10px; font-size:12.5px}
+.callegend span,.callegend label{display:inline-flex; align-items:center; gap:5px; margin:0}
+.callegend i,.calg .dots i{display:inline-block; width:10px; height:10px; border-radius:2px}
+.k-concert{background:var(--tape)} .k-att{background:var(--line-strong)} .k-due{background:var(--warn)}
+.calwrap{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px}
+.calm>h3{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin:0 0 4px}
+.calm>h3 small{font-weight:700; color:var(--ink)}
+table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:var(--surface); border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.calg th{font-size:11px; font-weight:700; color:var(--muted); padding:3px 0; border-bottom:1px solid var(--line)}
+.calg td{vertical-align:top; height:58px; padding:2px 3px; border-top:1px solid var(--line); border-left:1px solid var(--line); font-size:11px; overflow:hidden}
+.calg td:first-child{border-left:0}
+.calg td.o{background:var(--surface-2)}
+.calg td.has{cursor:pointer}
+.calg td.has:hover{background:var(--surface-2)}
+.calg .n{display:block; font-family:var(--f-mono); font-size:11px; font-weight:600; line-height:1.3}
+.calg .sun,.calg td.sun .n{color:var(--bad)} .calg .sat,.calg td.sat .n{color:#2E6BCB}
+.calg td.today{box-shadow:inset 0 0 0 2px var(--tape)}
+.calg .ev{display:block; margin-top:1px; padding:0 3px; border-radius:3px; font-size:10.5px; line-height:1.45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.calg .ev.k-concert{color:var(--tape-ink); font-weight:700}
+.calg .ev.k-att{background:var(--surface-2); color:var(--ink); border:1px solid var(--line)}
+.calg .ev.k-due{background:var(--warn-soft); color:var(--warn)}
+.calg .more{display:block; font-size:10px; color:var(--muted)}
+@media (max-width:600px){ .calwrap{grid-template-columns:minmax(0,1fr)} .calg td{height:50px; padding:1px 2px} .calg .ev{font-size:9.5px; padding:0 2px} }
+.crow.cal-att .d,.crow.cal-due .d{font-size:13px}
+/* 年度末のチェックリスト */
+.yeck{margin:0; font-size:12px; white-space:nowrap}
+#yeBox .first{grid-template-columns:auto minmax(0,1fr) auto}
+@media (max-width:600px){ #yeBox .first{grid-template-columns:auto minmax(0,1fr)} #yeBox .first .btnrow{grid-column:2} }
+/* お知らせ（見るだけのリンク） */
+.ntview .ntdoc{font-size:14px; line-height:1.8}
+.ntdoc .ntd,.ntdoc .ntfr{text-align:right; margin:0}
+.ntdoc .ntto{margin:0 0 4px}
+.ntdoc .ntti{text-align:center; font-size:18px; margin:12px 0}
+.ntdoc .ntb{white-space:pre-wrap; margin:0 0 10px}
+.ntdoc .ntt{width:100%; border-collapse:collapse; margin:6px 0}
+.ntdoc .ntt th,.ntdoc .ntt td{border:1px solid var(--line-strong); padding:5px 8px; text-align:left; vertical-align:top}
+.ntdoc .ntt th{width:30%; background:var(--surface-2)}
+.ntdoc .ntcap{margin:6px 0 0; font-size:12px; color:var(--muted)}
 </style>
 </head>
 <body>
@@ -444,6 +506,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
     <button data-tab="concerts">本番<span class="count ok" id="cntC"></span></button>
     <button data-tab="members"><span id="wMember">部員</span><span class="count ok" id="cntM"></span></button>
     <button data-tab="org">団体・年度</button>
+    <button data-tab="notice" data-staff>お知らせ</button>
     <button data-tab="links" data-staff>つながり</button>
     <button data-tab="backup">バックアップ<span class="count" id="cntBk"></span></button>
   </nav>
@@ -455,6 +518,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
       <div id="memberNote"></div>
       <div id="typeAsk" data-staff></div>
       <div id="bkRemind"></div>
+      <div id="yeBanner" data-staff></div>
       <div id="firstBox" data-staff></div>
       <div id="nextBox"></div>
       <div id="toolGrid"></div>
@@ -471,7 +535,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
         <p class="lead" id="cLead"></p>
         <div class="btnrow" style="margin-bottom:10px">
           <button class="btn primary" id="cAdd" data-staff>＋ 本番を足す</button>
-          <div class="seg" role="group" aria-label="見かた" id="cView"><button data-v="month">月ごと</button><button data-v="year">年度ごと</button></div>
+          <div class="seg" role="group" aria-label="見かた" id="cView"><button data-v="month">月ごと</button><button data-v="year">年度ごと</button><button data-v="cal">カレンダー</button></div>
           <select id="cYear" aria-label="どの年度を出すか"></select>
           <select id="cStart" aria-label="年度の区切り"><option value="4">4月はじまり（年度）</option><option value="1">1月はじまり（年）</option></select>
         </div>
@@ -513,6 +577,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
             <h2>この端末<small id="meOrg"></small></h2>
             <div id="meBox"></div>
           </div>
+          <div class="sec" id="yeBox" data-staff></div>
           <div class="sec" data-staff>
             <h2>団体</h2>
             <h3 style="font-size:13px;margin:0 0 6px">団体の種類</h3>
@@ -563,6 +628,16 @@ a.gky-cchip:hover{border-color:var(--tape)}
       </div>
     </section>
 
+    <section data-panel="notice" hidden>
+      <div class="sec">
+        <h2>お知らせ<small>保護者向けの手紙・連絡</small></h2>
+        <p class="lead">送迎のお願い・当番・集金などのお知らせを作ります。本番を選ぶと、日付・会場と「当日の案内」の集合・解散が入ります。印刷すると返事の切り取り欄がつき、見るだけのリンクやLINEなどに貼る文にもできます。</p>
+        <div class="btnrow" id="ntNew" style="margin-bottom:10px"><button class="btn primary" data-nk="ride">＋ 送迎のお願い</button><button class="btn" data-nk="duty">＋ 当番のお知らせ</button><button class="btn" data-nk="fee">＋ 集金のお知らせ</button><button class="btn" data-nk="general">＋ ふつうのお知らせ</button><button class="btn" id="ntFee" hidden>会計の集金から作る</button></div>
+        <div id="ntList"></div>
+        <p class="note">お知らせは、この端末の楽屋に保存します（バックアップ・同期ファイルにも入ります）。名前や電話番号などは、配る相手を考えて書いてください。</p>
+      </div>
+    </section>
+
     <section data-panel="links" hidden>
       <p class="lead">楽屋のデータを、どのツールが入れて、どのツールが使うかです。ステマネ・バミリ・テンポマップのファイル（共有コード）や、見るだけのリンクでも、ツールどうし・人どうしがつながります。</p>
       <div class="flow" id="flow"></div>
@@ -579,6 +654,13 @@ a.gky-cchip:hover{border-color:var(--tape)}
             <label class="chk" style="margin:8px 0"><input type="checkbox" id="bkPhotos" checked> 楽器台帳の写真も入れる</label>
             <div class="btnrow"><button class="btn primary" id="bkSave">バックアップを保存</button><button class="btn" id="bkLoad">バックアップから戻す</button></div>
             <p class="note">録音（テンポマップ・合奏ノート）と楽譜のPDF（楽譜ライブラリ）は、この端末の「ファイル置き場」にあり、このバックアップには入りません。楽譜ライブラリの「PDFをまとめて保存」、合奏ノートの「録音とコメントのファイル」で、別に保存できます。</p>
+          </div>
+          <div class="sec">
+            <h2>端末どうしで合わせる<small>同期ファイル</small></h2>
+            <p class="lead">パソコンとスマホなど、2つの端末で使うときに。片方で「同期ファイルを保存」して、もう片方で「同期ファイルで合わせる」を押すと、ツールごと（楽屋のデータは部員・曲・楽器・本番ごと）に、新しく直したほうが残ります。反対の端末でも同じようにすると、両方がそろいます。</p>
+            <p class="note" id="syncLast" style="margin:0 0 8px"></p>
+            <div class="btnrow"><button class="btn primary" id="syncSave">同期ファイルを保存</button><button class="btn" id="syncLoad">同期ファイルで合わせる</button></div>
+            <p class="note">合わせる前に、何がどう変わるかを出します。同じツールを2つの端末で同時に直したときは、あとから直したほうが残ります（1つのツールの中は混ぜません）。録音・楽譜のPDF・写真は入りません。</p>
           </div>
           <div class="sec">
             <h2>保存している量</h2>
@@ -634,7 +716,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
 /* QR Code Generator for JavaScript — Copyright (c) 2009 Kazuhiko Arase — MIT License — https://github.com/kazuhikoarase/qrcode-generator （QR Code は株式会社デンソーウェーブの登録商標です） */
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
 const GKY = (() => {
-  const VERSION = '3';
+  const VERSION = '4';
   /* Claudeの画面の中で開いているか（そのときはファイル保存の方法と印刷のしかたが変わる） */
   const IN_VIEWER = !!(window.claude && typeof window.claude.use === 'function');
   const TEST = /[?&]test\b/.test(location.search);
@@ -710,16 +792,28 @@ const GKY = (() => {
     }
     try { localStorage.setItem(k, raw); } catch (e) { return false; }
     if (g) g.last = raw;
+    touch(k);
     watchUsage();
     return true;
+  }
+  /* キーごとの、最後に保存した時刻（gakuya.mtime。消したときはマイナス）。同期ファイルで、どちらの端末の内容が新しいかを決めるのに使う
+     表示の好み・見るだけのリンクの記録・しまってある団体・ログインの記録は数えない */
+  const MT_KEY = 'gakuya.mtime';
+  const noMtime = k => !/^[a-z]+\./.test(k) || k === MT_KEY || k === 'gakuya.ui' || k === 'gakuya.profiles' || /^gakuya\.(profile|view)\./.test(k) || /\.(ui|live|probe|auth|survey)$/.test(k) || /\.view\./.test(k);
+  function touch(k, t = Date.now()) {
+    if (noMtime(k)) return;
+    try { const m = JSON.parse(localStorage.getItem(MT_KEY) || '{}') || {}; m[k] = t; localStorage.setItem(MT_KEY, JSON.stringify(m)); } catch (e) { /* 数えなくても動く */ }
   }
   const store = {
     get(k, d = null) { const v = lsGet(k); if (v == null) return d; try { return JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { return setRaw(k, JSON.stringify(v)); },
-    del(k) { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } if (guards[k]) guards[k].last = null; },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } if (guards[k]) guards[k].last = null; touch(k, -Date.now()); },
     keys() { try { return Object.keys(localStorage); } catch (e) { return []; } },
     raw: lsGet,
     setRaw,
+    touch,
+    mtimes() { try { return JSON.parse(localStorage.getItem(MT_KEY) || '{}') || {}; } catch (e) { return {}; } },
+    noMtime,
   };
   /* 保存している量（文字の数）。by はキーの頭（gakuya・kouban など）ごと */
   function usage() {
@@ -1057,10 +1151,22 @@ const GKY = (() => {
      concert（本番の id）でつなぐ。つないでいない記録は、同じ日付の本番（1つだけのとき）に当たるものとして扱う */
   const CONCERT_KINDS = { concert: '演奏会', contest: 'コンクール・大会', event: '依頼演奏・イベント', school: '学校・地域の行事', other: 'その他' };
   const okTime = t => /^\d{1,2}:\d{2}$/.test(String(t || '')) ? String(t).padStart(5, '0') : '';
+  /* 本番当日の案内（楽屋の「本番」→「当日の案内」）。集合・解散・タイムテーブル・持ち物・服装・担当・連絡。何も入っていなければ null
+     tt・jobs は [時刻, すること]・[係, だれ] の組 */
+  function normDay(d) {
+    if (!d || typeof d !== 'object') return null;
+    const txt = (v, n) => String(v ?? '').replace(/\r\n?/g, '\n').trim().slice(0, n);
+    const pairs = a => (Array.isArray(a) ? a : []).filter(Array.isArray).map(x => [txt(x[0], 40), txt(x[1], 400)]).filter(x => x[0] || x[1]).slice(0, 80);
+    const n = { meet: okTime(d.meet), meetPlace: txt(d.meetPlace, 200), end: okTime(d.end), endPlace: txt(d.endPlace, 200), tt: pairs(d.tt),
+      items: (Array.isArray(d.items) ? d.items : []).map(x => txt(x, 200)).filter(Boolean).slice(0, 80), dress: txt(d.dress, 400), jobs: pairs(d.jobs), memo: txt(d.memo, 2000), contact: txt(d.contact, 400), at: txt(d.at, 30) };
+    return n.meet || n.meetPlace || n.end || n.endPlace || n.tt.length || n.items.length || n.dress || n.jobs.length || n.memo || n.contact ? n : null;
+  }
   const normConcert = c => {
     c = c && typeof c === 'object' ? c : {};
-    return { id: typeof c.id === 'string' && c.id ? c.id : uid('c'), title: norm(c.title) || '本番', date: /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : '', start: okTime(c.start),
+    const n = { id: typeof c.id === 'string' && c.id ? c.id : uid('c'), title: norm(c.title) || '本番', date: /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : '', start: okTime(c.start),
       venue: norm(c.venue), kind: CONCERT_KINDS[c.kind] ? c.kind : 'concert', note: String(c.note ?? ''), hide: !!c.hide };
+    const day = normDay(c.day); if (day) n.day = day;
+    return n;
   };
   const concertSort = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99') || a.title.localeCompare(b.title, 'ja');
   /* 部員用の端末で使うツールと、できること（代表者・顧問が決めて、部員用の設定リンクで配る） */
@@ -1611,7 +1717,7 @@ const GKY = (() => {
   /* 用紙（mm）。B4 は日本でふつうに使う JIS の B4 */
   const PAPERS = { A4: [210, 297], B4: [257, 364], A3: [297, 420] };
   const mmpx = mm => Math.round(mm / 25.4 * 96);
-  function doc({ title = '', sub = '', orient = 'portrait', foot = '', file = '', size = '', build = null } = {}) {
+  function doc({ title = '', sub = '', orient = 'portrait', foot = '', file = '', size = '', build = null, head = true } = {}) {
     const ops = [];
     const pkey = 'paper.' + (title || 'doc');
     let paper = PAPERS[size] ? size : pref(pkey, 'A4');
@@ -1625,7 +1731,7 @@ const GKY = (() => {
       scaler.innerHTML = ''; pages = [];
       let body = null;
       const newPage = () => {
-        const p = h(`<div class="gky-page${orient === 'landscape' ? ' landscape' : ''}" style="width:${W}px;height:${H}px"><div class="pg-head"><div class="pg-title">${esc(title)}</div><div class="pg-sub">${esc(sub)}</div></div><div class="pg-body"></div><div class="pg-foot"><span>${esc(foot)}</span><span class="pg-no">&nbsp;</span></div></div>`);
+        const p = h(`<div class="gky-page${orient === 'landscape' ? ' landscape' : ''}" style="width:${W}px;height:${H}px">${head ? `<div class="pg-head"><div class="pg-title">${esc(title)}</div><div class="pg-sub">${esc(sub)}</div></div>` : ''}<div class="pg-body"></div><div class="pg-foot"><span>${esc(foot)}</span><span class="pg-no">&nbsp;</span></div></div>`);
         body = $('.pg-body', p); scaler.appendChild(p); pages.push(p); return p;
       };
       // 最後の中身の下の端が、ページの書ける所の下の端（少しゆとりを残す）を越えたら「はみ出し」
@@ -1863,7 +1969,7 @@ const GKY = (() => {
     store, usage, LIMIT, guard, pref, setPref, applyUI,
     SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, readPart,
     ORG_TYPES, GRADES, GRADE_ORDER, gradeRank, gradesOf, gradeLabel, orgType, words, isSchool, STATUS, statusName, setStatus, PLAYS, nextGrade, nextGradeOf, yearsLeft,
-    CONCERT_KINDS, normConcert, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, watchConcertUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
+    CONCERT_KINDS, normConcert, normDay, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, watchConcertUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
     role, isMember, memberCfg, normMemberCfg, MEMBER_TOOLS, applyRole, myName,
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
@@ -1885,6 +1991,11 @@ const APP_VERSION = '6', APP_DATE = '2026-10-11';
 const CHANGELOG = [
   { v: '6', d: '2026-10-11', items: [
     'ステマネ（司会原稿・進行表・タイムスケジュール）も、ほかのツールと同じ公開ページ（stagemane/）で開くようにしました。楽屋の「本番」から、その本番の司会原稿・進行表を開く・作ることもできます',
+    '本番ごとの「当日の案内」：集合・解散・タイムテーブル・持ち物・服装・担当・連絡先を1つの画面にまとめ、部員にリンク（QRコード）で配れるようにしました。当日は今の時刻の行に印がつき、持ち物はチェックできます。ひな形と、ステマネのタイスケからも入れられます',
+    '「本番」に「カレンダー」の見かたを足しました。本番に、出欠の練習・予定と、本番逆算の準備の締め切りも重ねて見られます。1年を1枚・1か月を1ページで印刷でき、カレンダー（.ics）にも入ります',
+    '「団体・年度」に「年度末・年度はじめにやること」を足しました（バックアップ・会計報告・譜面の回収・楽器・引退と進級・次の年度の本番・設定リンク・引き継ぎ）。2月なかば〜4月は、ツールのタブの上でも知らせます',
+    '「お知らせ」のタブを足しました。送迎のお願い・当番・集金（会計の集金から）・ふつうのお知らせを作り、返事の切り取り欄つきで印刷、見るだけのリンク、文でコピーができます',
+    '「バックアップ」に「同期ファイル」を足しました。パソコンとスマホなど2つの端末で使うときに、ツールごと（楽屋のデータは部員・曲・楽器・本番ごと）に、新しく直したほうで合わせます',
   ] },
   { v: '5', d: '2026-10-11', items: [
     '「本番」のタブを足しました。演奏会・コンクール・行事を、月ごと・年度ごとに見られます。本番から、そのスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。印刷・カレンダー（.ics）・CSV・見るだけのリンクも',
@@ -1940,7 +2051,7 @@ const T = slug => TOOLS.find(t => t.slug === slug);
 const tn = slug => { const t = T(slug); return t ? `<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>` : esc(slug); };
 /* バックアップ・団体の切りかえで扱うデータ（ログインの記録・表示の好み・団体の切りかえの記録は入れかえない） */
 const PREFIX = ['gakuya.', 'kouban.', 'gakufu.', 'tempomap.', 'shikomi.', 'gakki.', 'gakkigime.', 'hannyu.', 'gassou.', 'gyakusan.', 'shukketsu.', 'kaikei.', 'stagemane.', 'bamiri.', 'drillboard.'];
-const NOT_DATA = new Set(['bamiri.auth', 'bamiri.survey', 'gakuya.ui', 'gakuya.profiles']);
+const NOT_DATA = new Set(['bamiri.auth', 'bamiri.survey', 'gakuya.ui', 'gakuya.profiles', 'gakuya.mtime']);
 /* 楽屋の本番とつなぐツール：記録の一覧（recs）と、本番の札に出す一言（info） */
 const LINKS = [
   { slug: 'gyakusan', what: '準備のスケジュール', recs: s => s && s.plans ? Object.values(s.plans).filter(Boolean) : [], info: r => { const t = r.tasks || []; return t.length ? `やること ${t.filter(x => x.done).length}/${t.length}` : ''; }, kind: r => ({ contest: 'contest', ensemble: 'contest', event: 'event', school: 'school', newcomer: 'school' })[r.kind] || 'concert' },
@@ -1953,7 +2064,7 @@ const LINKS = [
   { slug: 'kaikei', what: '予算', recs: s => s && !s.sample && Array.isArray(s.budgets) ? s.budgets.filter(Boolean).map(b => Object.assign({}, b, { title: b.name })) : [], info: r => r.lines && r.lines.length ? `科目 ${r.lines.length}` : '' },
 ];
 const loadStates = () => Object.fromEntries(LINKS.map(L => [L.slug, GKY.IN_VIEWER ? null : GKY.store.get(T(L.slug).key)]));
-const myKeys = () => GKY.store.keys().filter(k => PREFIX.some(p => k.startsWith(p)) && k !== 'bamiri.auth').sort();
+const myKeys = () => GKY.store.keys().filter(k => PREFIX.some(p => k.startsWith(p)) && k !== 'bamiri.auth' && k !== 'gakuya.mtime' && !k.startsWith('gakuya.view.')).sort();
 const isDataKey = k => PREFIX.some(p => k.startsWith(p)) && !NOT_DATA.has(k) && !k.startsWith('gakuya.profile.');
 
 /* ---------- 画面 ---------- */
@@ -1969,7 +2080,7 @@ function renderAll() {
   // 部員用の端末：決めたものだけ出す
   $('[data-tab="concerts"]').hidden = mem && !cfg.concerts;
   $('[data-tab="members"]').hidden = mem && !cfg.roster;
-  if ((tab === 'concerts' && mem && !cfg.concerts) || (tab === 'members' && mem && !cfg.roster) || (tab === 'links' && mem)) { showTab('tools'); return; }
+  if ((tab === 'concerts' && mem && !cfg.concerts) || (tab === 'members' && mem && !cfg.roster) || ((tab === 'links' || tab === 'notice') && mem)) { showTab('tools'); return; }
   const act = o.members.filter(m => m.status === 'active').length;
   $('#cntM').textContent = act && !mem ? String(act) : '';
   const up = o.concerts.filter(c => c.date && c.date >= GKY.ymd()).length;
@@ -1979,7 +2090,7 @@ function renderAll() {
   $('#viewerNote').innerHTML = GKY.IN_VIEWER ? '<div class="intro"><p>Claudeの画面の中では、ツールどうしがデータを共有できません（それぞれ別の場所として開くため）。部員・曲・楽器を全部のツールで使うには、公開ページ（bamiriunei-arch.github.io）に置いて開いてください。ここでは、各ツールをためしに開いたり、楽屋のデータをファイルに保存したりできます。</p></div>' : '';
   renderTab();
 }
-function renderTab() { ({ tools: renderTools, concerts: renderConcerts, members: renderMembers, org: renderOrg, links: renderLinks, backup: renderBackup })[tab](); }
+function renderTab() { ({ tools: renderTools, concerts: renderConcerts, members: renderMembers, org: renderOrg, notice: renderNotices, links: renderLinks, backup: renderBackup })[tab](); }
 
 /* --- バックアップのお知らせ --- */
 const bkDays = () => { const t = +GKY.pref('lastBackup', 0); return t ? Math.floor((Date.now() - t) / 86400000) : null; };
@@ -2004,8 +2115,11 @@ function renderTools() {
   $('#memberNote').innerHTML = mem ? `<div class="intro member-note"><span class="sample-flag">${esc(w.member)}用</span><div><p style="margin:0">この端末は${esc(o.org.name || '団体')}の${esc(w.member)}用です。${esc(w.staff)}・代表者が決めたツールだけを出しています${cfg.at ? `（${esc(cfg.at)}に受け取った設定）` : ''}。</p>${cfg.msg ? `<div class="msg"><b>お知らせ：</b>${esc(cfg.msg)}</div>` : ''}</div></div>` : '';
   // 次の本番
   const today = GKY.ymd(), nexts = mem && !cfg.concerts ? [] : o.concerts.filter(c => c.date && c.date >= today).slice(0, 2);
-  $('#nextBox').innerHTML = nexts.length ? `<div class="sec"><h2>次の本番<small><button class="btn sm ghost" id="goConcerts">本番の一覧へ</button></small></h2>${nexts.map(c => concertRow(c, mem ? null : loadStates())).join('')}</div>` : '';
+  const soon = nexts.filter(c => c.day && GKY.daysBetween(today, c.date) <= 1);
+  $('#nextBox').innerHTML = nexts.length ? `<div class="sec"><h2>次の本番<small><button class="btn sm ghost" id="goConcerts">本番の一覧へ</button></small></h2>${soon.map(c => `<div class="issue dsoon"><span class="dot ok"></span><div class="main"><div><b>${c.date === today ? '今日' : '明日'}は「${esc(c.title)}」</b></div><div class="sub">${esc(dayBrief(c))}</div></div><button class="btn sm primary" data-dayopen="${esc(c.id)}">当日の画面</button></div>`).join('')}${nexts.map(c => concertRow(c, mem ? null : loadStates())).join('')}</div>` : '';
   const gc = $('#goConcerts'); if (gc) gc.onclick = () => showTab('concerts');
+  $$('[data-dayopen]', $('#nextBox')).forEach(b => b.onclick = () => daySheet(b.dataset.dayopen));
+  yeBanner(o);
   wireRows($('#nextBox'));
   $('#fbGo').href = FEEDBACK_URL || GKY.FEEDBACK_URL;
   $('#orgName').innerHTML = o.org.name ? esc(o.org.name) : '<button class="btn sm" id="setOrg">団体の名前を入れる</button>';
@@ -2048,7 +2162,8 @@ function wireTypes(root) {
 }
 
 /* --- 本番 --- */
-let cy = null;   // 月ごとに出す年度
+let cy = null;   // 月ごと・カレンダーで出す年度
+const cViewOf = () => { const v = GKY.pref('cView', 'month'); return v === 'year' || v === 'cal' ? v : 'month'; };
 const cStart = () => +GKY.pref('cStart', 4) === 1 ? 1 : 4;
 const fyOf = (d, st = cStart()) => { const x = GKY.parseYmd(d); return !x ? null : x.getMonth() + 1 >= st ? x.getFullYear() : x.getFullYear() - 1; };
 const yLabel = (y, st = cStart()) => st === 1 ? `${y}年` : `${y}年度`;
@@ -2088,7 +2203,7 @@ function foundConcerts(states) {
   return [...by.values()].map(x => Object.assign(x, { title: x.title || '本番', kind: x.kind || 'concert' })).sort((a, b) => a.date.localeCompare(b.date));
 }
 function renderConcerts() {
-  const o = GKY.org(), mem = GKY.isMember(), w = GKY.words(o.org.type), st = cStart(), view = GKY.pref('cView', 'month') === 'year' ? 'year' : 'month', today = GKY.ymd(), cur = fyOf(today);
+  const o = GKY.org(), mem = GKY.isMember(), w = GKY.words(o.org.type), st = cStart(), view = cViewOf(), today = GKY.ymd(), cur = fyOf(today);
   const cs = mem ? o.concerts.filter(c => !c.hide) : o.concerts, states = mem ? null : loadStates();
   $('#cLead').textContent = mem ? `${o.org.name || '団体'}の本番の予定です（${w.staff}・代表者から受け取ったもの）。押すと、くわしく見られます。`
     : '演奏会・コンクール・行事などの本番を、ここにまとめて入れておきます。本番逆算・コウバン・搬入出リスト・仕込み図・楽譜ライブラリ（曲目一覧）・出欠・会計で「楽屋の本番」を選ぶと、ここからその本番の記録を開けます。本番を押すと、ツールごとの記録を開いたり作ったりできます。';
@@ -2102,6 +2217,7 @@ function renderConcerts() {
   $('#cSum').textContent = cs.length ? `全部で${cs.length}・これから${up}` : '';
   let html = '';
   if (!cs.length) html = `<div class="empty"><b>まだ本番がありません</b>${mem ? '' : '「＋ 本番を足す」から、演奏会・コンクール・行事を入れてください。'}</div>`;
+  else if (view === 'cal') html = renderCal(cy);
   else if (view === 'month') {
     const und = cs.filter(c => !c.date);
     if (und.length && cy === cur) html += `<div class="cmonth"><h3><span class="tape">日付はまだ</span></h3>${und.map(c => concertRow(c, states)).join('')}</div>`;
@@ -2118,7 +2234,10 @@ function renderConcerts() {
     }).join('') + (cs.some(c => !c.date) ? `<details class="cyear" open><summary>日付がまだの本番</summary><div class="crows">${cs.filter(c => !c.date).map(c => concertRow(c, states)).join('')}</div></details>` : '');
   }
   $('#cList').innerHTML = html;
+  $('#cList').classList.toggle('calview', view === 'cal');
+  if (view === 'cal') wireCal($('#cList'), cy);
   wireRows($('#cList'));
+  $('#cPrint').textContent = view === 'cal' ? 'カレンダーを印刷・PDF' : '一覧を印刷・PDF';
   // ほかのツールで見つけた本番
   const fs = mem ? [] : foundConcerts(states);
   $('#cFound').innerHTML = fs.length ? `<details class="found"${o.concerts.length ? '' : ' open'}><summary>ほかのツールで見つけた本番（${fs.length}）</summary><p class="note" style="margin:6px 0">ほかのツールにある本番のうち、楽屋の本番の一覧にまだないものです。入れると、楽屋からそのツールの記録を開けるようになります（同じ日付の記録が、その本番のものになります）。</p>${fs.map((f, i) => `<div class="frow"><div><b>${esc(GKY.jpDate(f.date))}</b>　${esc(f.title)}<div style="margin-top:2px">${f.tools.map(tn).join('')}</div></div><button class="btn sm" data-found="${i}">入れる</button></div>`).join('')}${fs.length > 1 ? '<div class="btnrow" style="margin-top:8px"><button class="btn sm primary" id="foundAll">全部入れる</button></div>' : ''}</details>` : '';
@@ -2138,9 +2257,11 @@ function concertSheet(id) {
   const sh = sheet({ title: c.title, content: `<p style="margin:0 0 4px"><b>${esc(c.date ? GKY.jpDate(c.date) : '日付はまだ')}</b>${c.start ? '　' + esc(c.start) + '〜' : ''}${left != null && left >= 0 ? `　<span class="chip${left <= 14 ? ' warn' : ''}">${left === 0 ? '今日' : 'あと' + left + '日'}</span>` : ''}</p>
     <p class="muted" style="margin:0 0 8px">${esc([GKY.CONCERT_KINDS[c.kind], c.venue].filter(Boolean).join('　'))}${c.hide && !mem ? '　<span class="chip warn">部員に見せない</span>' : ''}</p>
     ${c.note ? `<p style="white-space:pre-wrap;margin:0 0 8px">${esc(c.note)}</p>` : ''}
+    ${c.day || !mem ? `<h3 class="h3s">当日の案内</h3>${c.day ? `<p class="t2" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">${esc(dayBrief(c))}</p>` : `<p class="note" style="margin:0 0 6px">集合・タイムテーブル・持ち物・担当を1つの画面にまとめて、${esc(W().member)}にリンクで配れます。</p>`}<div class="btnrow" style="margin-bottom:6px">${c.day ? '<button class="btn sm primary" data-dy="open">当日の画面</button>' : ''}${mem ? '' : `<button class="btn sm${c.day ? '' : ' primary'}" data-dy="edit">${c.day ? '直す' : '当日の案内を作る'}</button>${c.day ? '<button class="btn sm" data-dy="share">リンクで配る</button><button class="btn sm" data-dy="print">印刷</button>' : ''}`}</div>` : ''}
     ${rows ? `<h3 class="h3s">ツールごとの記録</h3><div class="ctools">${rows}</div><p class="note">「作る」を押すと、そのツールが開いて、この本番の名前と日付で作れます。同じ日付の記録は、自動でこの本番のものになります。</p>` : ''}`,
     actions: mem ? [{ label: '閉じる', primary: true }] : [{ label: '直す', left: true, onClick: () => { setTimeout(() => editConcert(c.id), 0); } }, { label: '閉じる', primary: true }] });
   $$('a.btn', sh.body).forEach(a => a.addEventListener('click', () => setTimeout(sh.close, 50)));
+  $$('[data-dy]', sh.body).forEach(b => b.onclick = () => { const a = b.dataset.dy, cc = GKY.concertOf(id); if (a === 'edit') { sh.close(); editDay(id); } else if (a === 'open') { sh.close(); daySheet(id); } else if (a === 'share') dayShare(cc); else if (a === 'print') dayPrint(cc, cc.day, GKY.org().org.name); });
 }
 function editConcert(id, preset = {}) {
   const c = id ? GKY.concertOf(id) : GKY.normConcert(Object.assign({ kind: 'concert' }, preset));
@@ -2169,10 +2290,11 @@ function editConcert(id, preset = {}) {
 }
 /* 印刷・カレンダー・CSV・文 に使う本番（月ごと：選んだ年度、年度ごと：全部） */
 function concertsForOut() {
-  const o = GKY.org(), cs = GKY.isMember() ? o.concerts.filter(c => !c.hide) : o.concerts, year = GKY.pref('cView', 'month') === 'year' ? null : (cy == null ? fyOf(GKY.ymd()) : cy);
+  const o = GKY.org(), cs = GKY.isMember() ? o.concerts.filter(c => !c.hide) : o.concerts, year = cViewOf() === 'year' ? null : (cy == null ? fyOf(GKY.ymd()) : cy);
   return { year, xs: year == null ? cs : cs.filter(c => c.date && fyOf(c.date) === year) };
 }
 $('#cPrint').onclick = () => {
+  if (cViewOf() === 'cal') { calPrint(cy == null ? fyOf(GKY.ymd()) : cy); return; }
   const { year, xs } = concertsForOut(), o = GKY.org();
   if (!xs.length) { toast('印刷する本番がありません'); return; }
   const title = year == null ? '本番の一覧' : `${yLabel(year)}の本番`;
@@ -2195,7 +2317,7 @@ function icsOf(xs, name) {
   const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//gakuya//concerts//JA', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:' + e2(name)];
   xs.filter(c => c.date).forEach(c => {
     L.push('BEGIN:VEVENT', 'UID:' + c.id + '@gakuya.bamiriunei-arch.github.io', 'DTSTAMP:' + stamp);
-    if (c.start) { const [h, m] = c.start.split(':').map(Number), d0 = GKY.parseYmd(c.date); const s0 = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), h, m), e0 = new Date(s0.getTime() + 3 * 3600000); L.push('DTSTART:' + lt(s0), 'DTEND:' + lt(e0)); }
+    if (c.start) { const [h, m] = c.start.split(':').map(Number), d0 = GKY.parseYmd(c.date); const s0 = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), h, m), en = hmMin(c.end), e0 = en != null && en > h * 60 + m ? new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), Math.floor(en / 60), en % 60) : new Date(s0.getTime() + 3 * 3600000); L.push('DTSTART:' + lt(s0), 'DTEND:' + lt(e0)); }
     else L.push('DTSTART;VALUE=DATE:' + c.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + GKY.addDays(c.date, 1).replace(/-/g, ''));
     L.push('SUMMARY:' + e2(c.title));
     if (c.venue) L.push('LOCATION:' + e2(c.venue));
@@ -2205,7 +2327,7 @@ function icsOf(xs, name) {
   L.push('END:VCALENDAR');
   return L.map(fold).join('\r\n') + '\r\n';
 }
-$('#cIcs').onclick = () => { const { year, xs } = concertsForOut(), o = GKY.org(); if (!xs.some(c => c.date)) { toast('日付の入った本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'の本番'), 'text/calendar'); };
+$('#cIcs').onclick = () => { if (cViewOf() === 'cal') { calIcs(cy == null ? fyOf(GKY.ymd()) : cy); return; } const { year, xs } = concertsForOut(), o = GKY.org(); if (!xs.some(c => c.date)) { toast('日付の入った本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'の本番'), 'text/calendar'); };
 $('#cCsv').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}_${GKY.stamp()}.csv`, GKY.csv([['日付', '曜日', '開演', '本番', '種類', '会場', 'メモ', '部員に見せない'], ...xs.map(c => [c.date, c.date ? GKY.WD[GKY.parseYmd(c.date).getDay()] : '', c.start, c.title, GKY.CONCERT_KINDS[c.kind], c.venue, c.note, c.hide ? '○' : ''])]), 'text/csv'); };
 const concertText = (xs, head) => [head, ...xs.map(c => `${c.date ? GKY.mdDate(c.date) : '日付まだ'}${c.start ? ' ' + c.start + '〜' : ''}　${c.title}${c.venue ? '（' + c.venue + '）' : ''}`)].join('\n');
 $('#cCopy').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.copyText(concertText(xs, `【${year == null ? '本番の一覧' : yLabel(year) + 'の本番'}】${GKY.org().org.name ? '　' + GKY.org().org.name : ''}`), '本番の一覧をコピーしました'); };
@@ -2220,6 +2342,8 @@ $('#cShare').onclick = async () => {
 async function startViewer() {
   let v = null;
   try { v = await GKY.readShare(); } catch (e) { toast('リンクを開けませんでした：' + e.message, null, null, 6000); return false; }
+  if (v && v.k === 'day') return startDayViewer(v);
+  if (v && v.k === 'notice') return startNoticeViewer(v);
   if (!v || v.k !== 'concerts') return false;
   const xs = (v.c || []).map((a, i) => GKY.normConcert({ id: 'v' + i, date: a[0], start: a[1], title: a[2], kind: a[3], venue: a[4], note: a[5] })).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
   const body = GKY.viewer({ title: '本番の予定', sub: v.o || '', note: 'このページは、送られてきた本番の予定を見るだけです。この端末には保存しません。「カレンダーに入れる」で、自分のカレンダーに入れられます。' });
@@ -2231,13 +2355,30 @@ async function startViewer() {
   return true;
 }
 
+function startDayViewer(v) {
+  const a = v.c || [], c = GKY.normConcert({ id: a[0], title: a[1], date: a[2], start: a[3], venue: a[4], kind: a[5] }), d = GKY.normDay(v.d);
+  const body = GKY.viewer({ title: '当日の案内', sub: v.o || '', note: 'このページは、送られてきた当日の案内を見るだけです。持ち物のチェックだけ、この端末に残ります。' });
+  if (!d) { body.innerHTML = '<p>案内の中身がありません。</p>'; return true; }
+  body.innerHTML = dayHTML(c, d, v.o) + '<div class="btnrow"><button class="btn" id="vwDayPrint">印刷</button></div>';
+  wireDay(body, a[0] || c.title);
+  $('#vwDayPrint', body).onclick = () => dayPrint(c, d, v.o || '');
+  return true;
+}
+function startNoticeViewer(v) {
+  const n = normNotice(Object.assign({ id: 'v' }, v.n || {}));
+  const body = GKY.viewer({ title: 'お知らせ', sub: v.o || '', note: 'このページは、送られてきたお知らせを見るだけです。この端末には保存しません。' });
+  body.innerHTML = `<div class="sec ntview">${ntBlock(n)}</div><div class="btnrow"><button class="btn" id="vwNtCopy">文でコピー</button></div>`;
+  $('#vwNtCopy', body).onclick = () => GKY.copyText(ntText(n), 'コピーしました');
+  return true;
+}
+
 /* --- 部員用の設定リンク --- */
 $('#joinLink').onclick = async () => {
   const o = GKY.org(), cfg = o.org.member, w = W();
   if (!o.org.name) { toast('先に「団体」で団体の名前を入れてください'); return; }
   if (!cfg.tools.length) { toast(`${w.member}の端末に出すツールを、1つ以上えらんでください`); return; }
   const p = { k: 'join', v: 1, o: { name: o.org.name, type: o.org.type, year: o.org.year }, cfg: Object.assign({}, cfg, { at: GKY.ymd() }), at: GKY.ymd() };
-  if (cfg.concerts) p.c = o.concerts.filter(c => !c.hide).map(c => [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note]);
+  if (cfg.concerts) p.c = o.concerts.filter(c => !c.hide).map(c => c.day ? [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note, c.day] : [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note]);
   if (cfg.roster) p.m = o.members.filter(m => ['active', 'semi', 'extra'].includes(m.status)).map(m => [m.name, m.part, m.grade]);
   if (cfg.songs) p.s = o.songs.map(x => [x.title, x.composer, x.arranger, x.dur, x.parts]);
   try {
@@ -2266,7 +2407,7 @@ async function receiveJoin() {
   return true;
 }
 function applyJoin(p, mode) {
-  const cs = (p.c || []).map(a => ({ id: a[0], date: a[1], start: a[2], title: a[3], kind: a[4], venue: a[5], note: a[6] }));
+  const cs = (p.c || []).map(a => Object.assign({ id: a[0], date: a[1], start: a[2], title: a[3], kind: a[4], venue: a[5], note: a[6] }, a[7] ? { day: a[7] } : {}));
   if (mode === 'concerts') {
     const lst = GKY.org().concerts; let n = 0;
     cs.forEach(c => { const i = lst.findIndex(x => x.id === c.id); if (i >= 0) { lst[i] = Object.assign({}, lst[i], c); n++; } else if (!lst.some(x => x.date === c.date && GKY.key(x.title) === GKY.key(c.title))) { lst.push(c); n++; } });
@@ -2522,8 +2663,8 @@ function promoInfo(o, cont) {
 const contDefault = t => t === 'chuko';
 const lastGrades = (t, cont) => t === 'chu' ? '中3' : t === 'koko' ? '高3' : t === 'daigaku' ? '4回生・院2' : cont ? '高3' : '中3・高3';
 /* 部員の端末に出すツールの説明 */
-const MEMBER_DESC = { gassou: '自分のノートを書いて提出する。配られた録音とコメントを聞く', tempomap: '練習用のクリック・通しの録音', drillboard: '隊形と動きを見て確かめる', bamiri: '配置図を見る', shukketsu: '出欠の返事は、配る「見るだけのリンク」でもできます', kouban: '香盤表と自分の出番は「見るだけのリンク」でも配れます', gakufu: '楽譜の一覧（この端末に入れた分）', gyakusan: '本番までのスケジュールは「見るだけのリンク」でも配れます', hannyu: '積み込みのチェックは「見るだけのリンク」でもできます' };
-const MEMBER_FEATS = [['concerts', '本番の予定を見る', '楽屋の「本番」（部員に見せない本番はのぞく）'], ['roster', '名簿を見る', '名前・いつもの楽器・学年だけ（メモ・指導者メモは入れません）'], ['notes', '合奏ノートを提出する', '書いたノートを、リンクで代表者・顧問に送れる'], ['songs', '曲の一覧を使う', '楽譜ライブラリの曲（テンポマップで曲を選ぶとき）']];
+const MEMBER_DESC = { gassou: '自分のノートと個人練習の記録を書いて提出する。配られた録音とコメントを聞く', tempomap: '練習用のクリック・通しの録音', drillboard: '隊形と動きを見て確かめる', bamiri: '配置図を見る', shukketsu: '出欠の返事は、配る「見るだけのリンク」でもできます', kouban: '香盤表と自分の出番は「見るだけのリンク」でも配れます', gakufu: '楽譜の一覧（この端末に入れた分）', gyakusan: '本番までのスケジュールは「見るだけのリンク」でも配れます', hannyu: '積み込みのチェックは「見るだけのリンク」でもできます' };
+const MEMBER_FEATS = [['concerts', '本番の予定を見る', '楽屋の「本番」（部員に見せない本番はのぞく）'], ['roster', '名簿を見る', '名前・いつもの楽器・学年だけ（メモ・指導者メモは入れません）'], ['notes', '合奏ノート・個人練習を提出する', '書いたノートと個人練習の記録を、リンクで代表者・顧問に送れる'], ['songs', '曲の一覧を使う', '楽譜ライブラリの曲（テンポマップで曲を選ぶとき）']];
 function renderRole(o) {
   const cfg = o.org.member, w = GKY.words(o.org.type);
   $('#roleLead').textContent = `${w.member}の端末で使うツールと、できることを決めます。決めたら「${w.member}用の設定リンク」を${w.member}に送ってください。この端末は「代表者・顧問用」のままです。`;
@@ -2548,6 +2689,7 @@ function renderOrg() {
   $('#oBig').checked = !!GKY.pref('big', false);
   if (GKY.isMember()) { renderMe(o); renderProfiles(o); return; }
   renderRole(o);
+  renderYearEnd(o);
   $('#oTypes').innerHTML = typeButtons(t); wireTypes($('#oTypes'));
   $('#oTypeNote').textContent = t ? `「${GKY.ORG_TYPES[t]}」：学年は ${GKY.gradesOf(t).length ? GKY.gradesOf(t).map(GKY.gradeLabel).join('・') : 'なし（入団した年を使います）'}。呼び方は「${w.member}」「${w.staff}」。` : 'まだ選んでいません。選ぶと、学年の選び方・進級・呼び方が団体に合わせて変わります。';
   if (document.activeElement !== $('#oName')) $('#oName').value = o.org.name;
@@ -2686,15 +2828,19 @@ function renderLinks() {
     card('出欠', '#5B7A1B', [['入れる所', tn('shukketsu')], ['使う所', ['kouban', 'gassou'].map(tn).join('')], ['使い方', '本番の日に欠席の人を、コウバンの「休み」に入れられます。合奏ノートには、その日の欠席・遅刻の人を出します']]),
     card('楽器の修理代', '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', tn('kaikei')], ['使い方', '楽器台帳の修理の記録に入れた金額を、会計の帳簿にまとめて入れられます（二重には入りません）']]),
     card(`${w.member}用の設定リンク`, '#C43F7D', [['作る所', '<span class="tn">楽屋（団体・年度）</span>'], ['使う所', `<span class="tn">${esc(w.member)}のスマホの楽屋</span>`], ['使い方', `${w.member}の端末に、団体の名前・本番の予定・名簿（決めたとき）と、使うツールを入れます`]]),
-    card('合奏ノートの提出', '#A8612A', [['作る所', `${tn('gassou')}（${esc(w.member)}の端末）`], ['使う所', `${tn('gassou')}（代表者・顧問の端末）`], ['使い方', `${w.member}が書いたノートを、リンクで代表者・顧問に送ります。開くと「提出されたノート」に入ります。録音とコメントは、リンクとファイルでみんなに配れます`]]),
-    card('見るだけのリンク・QRコード', '#5B7A1B', [['作る所', '<span class="tn">楽屋（本番）</span>' + ['kouban', 'hannyu', 'gyakusan', 'shukketsu', 'gassou'].map(tn).join('')], ['使う所', '<span class="tn">部員・保護者のスマホ</span>'], ['使い方', '本番の予定・香盤表と自分の出番・積み込みの担当・本番までのスケジュール・練習の予定・合奏のコメントを、LINEやQRコードで配れます。受け取った人が見ても、こちらのデータは変わりません（積み込みのチェックはその人の端末の中だけ、出欠は「返事」の文を送ってもらって取り込みます）']]),
+    card('合奏ノートの提出', '#A8612A', [['作る所', `${tn('gassou')}（${esc(w.member)}の端末）`], ['使う所', `${tn('gassou')}（代表者・顧問の端末）`], ['使い方', `${w.member}が書いたノートを、リンクで代表者・顧問に送ります。開くと「提出されたノート」に入ります。個人練習の記録も同じように提出でき、人ごとの合計の時間と日数を見られます。録音とコメントは、リンクとファイルでみんなに配れます`]]),
+    card('見るだけのリンク・QRコード', '#5B7A1B', [['作る所', '<span class="tn">楽屋（本番・当日の案内・お知らせ）</span>' + ['kouban', 'hannyu', 'gyakusan', 'shukketsu', 'gassou'].map(tn).join('')], ['使う所', '<span class="tn">部員・保護者のスマホ</span>'], ['使い方', '本番の予定・当日の案内（集合・タイムテーブル・持ち物・担当）・保護者へのお知らせ・香盤表と自分の出番・積み込みの担当・本番までのスケジュール・練習の予定・合奏のコメントを、LINEやQRコードで配れます。受け取った人が見ても、こちらのデータは変わりません（積み込みのチェックはその人の端末の中だけ、出欠は「返事」の文を送ってもらって取り込みます）']]),
+    card('譜面の配布と回収', '#2F6CC8', [['入れる所', tn('gakufu') + tn('kouban')], ['使う所', tn('gakufu') + '<span class="tn">楽屋（年度末にやること）</span>'], ['使い方', 'コウバンの受け持ちから、だれにどのパートを配るかを一度に入れます。原本をなくしたときは、楽譜の台帳でそのパートを「欠けている」にします']]),
+    card('同期ファイル', '#506070', [['作る所', '<span class="tn">楽屋（バックアップ）</span>'], ['使う所', '<span class="tn">同じ人のもう1つの端末の楽屋</span>'], ['使い方', 'パソコンとスマホなどで、ツールごと（楽屋のデータは部員・曲・楽器・本番ごと）に新しく直したほうに合わせます']]),
     card('引き継ぎファイル', '#506070', [['作る所', '<span class="tn">楽屋（バックアップ）</span>'], ['使う所', '<span class="tn">次の人の端末の楽屋</span>'], ['使い方', '全部のツールのデータと引き継ぎのメモを1つのファイルで渡します。次の人は「バックアップから戻す」で開きます']]),
   ].join('');
 }
 
 /* --- バックアップ --- */
 function renderBackup() {
-  const d = bkDays();
+  const d = bkDays(), ls = +GKY.pref('lastSync', 0);
+  $('#syncLast').textContent = GKY.IN_VIEWER ? '' : ls ? `この端末で最後に同期ファイルを使ったのは ${when(ls)} です。` : '';
+  ['#syncSave', '#syncLoad'].forEach(s => { $(s).disabled = GKY.IN_VIEWER; });
   $('#bkLast').innerHTML = GKY.IN_VIEWER ? '' : d == null ? '<span style="color:var(--warn)">まだ保存していません。</span>' : `最後に保存したのは${d === 0 ? '今日' : d + '日前'}です。`;
   if (document.activeElement !== $('#hoMemo')) $('#hoMemo').value = GKY.pref('handoverMemo', '');
   const w = W();
@@ -2781,22 +2927,457 @@ $('#orgLoad').onclick = async () => {
     actions: [{ label: 'やめる' }, { label: '入れかえる', primary: true, danger: true, onClick: () => { GKY.saveOrg('all', n); renderAll(); toast('楽屋のデータを読み込みました', '元に戻す', () => { GKY.saveOrg('all', cur); renderAll(); }); } }] });
 };
 
+/* ---------- 本番当日の案内（集合・タイムテーブル・持ち物・服装・担当・連絡） ---------- */
+const hmMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '')); return m ? +m[1] * 60 + +m[2] : null; };
+const minHm = n => n == null ? '' : `${Math.floor(((n % 1440) + 1440) % 1440 / 60)}:${String(((n % 60) + 60) % 60).padStart(2, '0')}`;
+/* 「9:00 集合・音出し」「9時 集合」「09：30〜 リハーサル」→ [時刻, すること] */
+function parseTt(text) {
+  return String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => {
+    const l2 = GKY.norm(l).replace(/^(\d{1,2})\s*時\s*半/, '$1:30').replace(/^(\d{1,2})\s*時\s*(\d{1,2})\s*分?/, '$1:$2').replace(/^(\d{1,2})\s*時/, '$1:00');
+    const m = /^(\d{1,2}):(\d{1,2})\s*(.*)$/.exec(l2);
+    if (!m || +m[1] > 29 || +m[2] > 59) return ['', l];
+    return [`${+m[1]}:${String(+m[2]).padStart(2, '0')}`, m[3].replace(/^[〜~ー\-－]\s*(?=\D)/, '').trim()];
+  });
+}
+const ttText = tt => tt.map(([t, x]) => (t ? t + ' ' : '') + x).join('\n');
+/* 「受付：山田・佐藤」→ [係, だれ] */
+const parseJobs = text => String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => { const i = l.search(/[：:]/); return i > 0 ? [l.slice(0, i).trim(), l.slice(i + 1).trim()] : [l, '']; });
+const jobsText = js => js.map(([r, w]) => w ? `${r}：${w}` : r).join('\n');
+const lines = t => String(t || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+/* 本番の種類ごとのひな形（開演・出演の時刻 S から） */
+const DAY_TPL = {
+  concert: [[-300, '集合・楽器の搬入'], [-270, 'ステージの準備・音出し'], [-240, 'リハーサル'], [-150, '昼食・休憩'], [-90, '着替え・本番の準備'], [-30, '開場'], [0, '開演'], [120, '終演・片付け・搬出'], [180, '解散']],
+  contest: [[-180, '集合・楽器の積み込み'], [-150, '出発'], [-75, '会場着・受付'], [-50, '楽器をおろして準備'], [-25, 'チューニング室'], [0, '演奏（出演）'], [20, '写真撮影'], [40, '楽器の積み込み'], [120, '学校着・片付け・解散']],
+  event: [[-120, '集合・楽器の積み込み'], [-90, '出発'], [-50, '会場着・準備・音出し'], [0, '演奏'], [45, '片付け'], [90, '解散']],
+  school: [[-60, '集合・準備'], [-20, '音出し'], [0, '本番'], [60, '片付け・解散']],
+  other: [[-60, '集合・準備'], [-20, '音出し'], [0, '本番'], [60, '片付け・解散']],
+};
+const DAY_ITEMS = {
+  concert: ['楽器・マウスピース・リード', '楽譜（本番の曲）', '鉛筆・消しゴム', 'チューナー・メトロノーム', '本番の服（着替え）', '昼食・水筒', 'タオル'],
+  contest: ['楽器・マウスピース・リード', '楽譜（課題曲・自由曲）', 'チューナー', '本番の服（制服など）', '昼食・水筒', 'タオル', '交通費'],
+  event: ['楽器・マウスピース・リード', '楽譜', '譜面台（いる人）', '本番の服', '水筒', 'タオル'],
+  school: ['楽器', '楽譜', '上履き', '水筒'],
+  other: ['楽器', '楽譜', '水筒'],
+};
+function dayTemplate(c) {
+  const S = hmMin(c.start) ?? (c.kind === 'contest' ? 13 * 60 : 14 * 60), tpl = DAY_TPL[c.kind] || DAY_TPL.other;
+  return { meet: minHm(S + tpl[0][0]), tt: tpl.map(([o, x]) => [minHm(S + o), x]), end: minHm(S + tpl[tpl.length - 1][0]), items: (DAY_ITEMS[c.kind] || DAY_ITEMS.other).slice() };
+}
+/* つないだステマネの演奏会のタイスケ（生徒・部員の列）から、タイムテーブルを作る */
+function ttFromStagemane(c) {
+  const sm = GKY.stagemaneLocal().filter(x => !x.sample).find(x => x.concert === c.id) || (c.date ? GKY.stagemaneLocal().find(x => !x.sample && !x.concert && x.date === c.date) : null);
+  if (!sm) return null;
+  const raw = GKY.store.get('stagemane.v1.c.' + sm.id), tt = raw && raw.timetable;
+  if (!tt || !Array.isArray(tt.rows) || !Array.isArray(tt.cols)) return null;
+  const col = tt.cols.find(k => /生徒|部員|団員|奏者|出演/.test(k.name || '')) || tt.cols.find(k => tt.rows.some(r => r.cells && r.cells[k.id] && String(r.cells[k.id].t || '').trim())) || tt.cols[0];
+  if (!col) return null;
+  const rows = tt.rows.map(r => [okHm(r.time), String((r.cells && r.cells[col.id] && r.cells[col.id].t) || '').split(/\n+/).map(s => s.trim()).filter(Boolean).join('・')]).filter(r => r[1]);
+  return rows.length ? { title: sm.title, col: col.name, rows } : null;
+}
+const okHm = t => { const n = hmMin(GKY.norm(String(t || '')).replace(/：/g, ':')); return n == null ? '' : minHm(n); };
+function dayBrief(c) {
+  const d = c.day;
+  return [d.meet || d.meetPlace ? `集合 ${[d.meet, d.meetPlace].filter(Boolean).join(' ')}` : '', d.end || d.endPlace ? `解散 ${[d.end, d.endPlace].filter(Boolean).join(' ')}` : '', d.tt.length ? `タイムテーブル ${d.tt.length}` : '', d.items.length ? `持ち物 ${d.items.length}` : '', d.jobs.length ? `担当 ${d.jobs.length}` : ''].filter(Boolean).join('　');
+}
+function editDay(id) {
+  const c = GKY.concertOf(id); if (!c) return;
+  const d = c.day || { meet: '', meetPlace: '', end: '', endPlace: '', tt: [], items: [], dress: '', jobs: [], memo: '', contact: '' };
+  const sm = ttFromStagemane(c);
+  const sh = sheet({ title: `当日の案内：${c.title}`, wide: true, content: `<p class="note" style="margin:0 0 10px">${esc(c.date ? GKY.jpDate(c.date) : '日付はまだ')}${c.start ? '　開演・出演 ' + esc(c.start) : ''}${c.venue ? '　' + esc(c.venue) : ''}。ここに入れた内容を、${esc(W().member)}に「当日の画面」のリンクで配れます。</p>
+    <div class="grid">
+      <label class="fld"><span>集合の時刻</span><input type="time" id="dyMeet" value="${esc(d.meet)}"></label>
+      <label class="fld"><span>集合の場所</span><input type="text" id="dyMeetP" value="${esc(d.meetPlace)}" placeholder="例：音楽室・ホールの楽屋口"></label>
+      <label class="fld"><span>解散の時刻（予定）</span><input type="time" id="dyEnd" value="${esc(d.end)}"></label>
+      <label class="fld"><span>解散の場所</span><input type="text" id="dyEndP" value="${esc(d.endPlace)}" placeholder="例：学校（楽器を片付けてから）"></label>
+      <label class="fld wide"><span>タイムテーブル <small class="muted">1行に1つ。「9:00 集合・音出し」のように時刻から</small></span><textarea id="dyTt" style="min-height:150px" placeholder="9:00 集合・楽器の搬入&#10;9:30 音出し&#10;10:00 リハーサル">${esc(ttText(d.tt))}</textarea></label>
+      <div class="wide btnrow" style="margin-top:-4px"><button class="btn sm" id="dyTpl" type="button">ひな形を入れる（${esc(GKY.CONCERT_KINDS[c.kind])}）</button>${sm ? `<button class="btn sm" id="dySm" type="button" title="ステマネの「${esc(sm.title)}」のタイスケの「${esc(sm.col)}」の列">ステマネのタイスケから</button>` : ''}</div>
+      <label class="fld wide"><span>持ち物 <small class="muted">1行に1つ</small></span><textarea id="dyItems" style="min-height:110px">${esc(d.items.join('\n'))}</textarea></label>
+      <div class="wide btnrow" style="margin-top:-4px"><button class="btn sm" id="dyItemsTpl" type="button">いつもの持ち物を足す</button></div>
+      <label class="fld wide"><span>服装</span><input type="text" id="dyDress" value="${esc(d.dress)}" placeholder="例：制服（夏服）・黒の靴下・黒の靴"></label>
+      <label class="fld wide"><span>担当・係 <small class="muted">1行に1つ。「受付：山田・佐藤」のように</small></span><textarea id="dyJobs" style="min-height:90px" placeholder="楽器運搬：2年 男子&#10;受付：1年 山田・佐藤&#10;写真：保護者会">${esc(jobsText(d.jobs))}</textarea></label>
+      <label class="fld wide"><span>当日の連絡先（遅れるとき・休むとき）</span><input type="text" id="dyContact" value="${esc(d.contact)}" placeholder="例：顧問 山田（当日は 090-0000-0000）"></label>
+      <label class="fld wide"><span>ほかに伝えること</span><textarea id="dyMemo" style="min-height:70px" placeholder="例：雨のときは体育館に集合">${esc(d.memo)}</textarea></label>
+    </div>
+    ${c.day ? '<div class="btnrow" style="margin-top:10px"><span style="flex:1"></span><button class="btn danger sm" id="dyDel" type="button">当日の案内を消す</button></div>' : ''}`,
+    actions: [{ label: 'やめる' }, { label: '保存', primary: true, onClick: body => {
+      const nd = GKY.normDay({ meet: $('#dyMeet', body).value, meetPlace: $('#dyMeetP', body).value, end: $('#dyEnd', body).value, endPlace: $('#dyEndP', body).value, tt: parseTt($('#dyTt', body).value), items: lines($('#dyItems', body).value), dress: $('#dyDress', body).value, jobs: parseJobs($('#dyJobs', body).value), memo: $('#dyMemo', body).value, contact: $('#dyContact', body).value, at: GKY.ymd() });
+      const before = GKY.org().concerts, n = Object.assign({}, GKY.concertOf(id)); if (nd) n.day = nd; else delete n.day;
+      if (!GKY.saveConcert(n)) { toast('保存できませんでした（容量がいっぱいかもしれません）'); return false; }
+      renderAll(); toast(nd ? '当日の案内を保存しました' : '当日の案内は空なので、なしにしました', '元に戻す', () => { GKY.saveOrg('concerts', before); renderAll(); });
+      if (nd) setTimeout(() => concertSheet(id), 0);
+    } }] });
+  const b = sh.body;
+  $('#dyTpl', b).onclick = () => { const t = dayTemplate(c); if ($('#dyTt', b).value.trim() && !confirmReplace($('#dyTpl', b))) return; $('#dyTt', b).value = ttText(t.tt); if (!$('#dyMeet', b).value) $('#dyMeet', b).value = t.meet.padStart(5, '0'); if (!$('#dyEnd', b).value) $('#dyEnd', b).value = t.end.padStart(5, '0'); toast('ひな形を入れました。時刻とすることを直してください'); };
+  const sb = $('#dySm', b); if (sb) sb.onclick = () => { const r = ttFromStagemane(c); if (!r) return; if ($('#dyTt', b).value.trim() && !confirmReplace(sb)) return; $('#dyTt', b).value = ttText(r.rows); const f = r.rows.find(x => x[0]); if (f && !$('#dyMeet', b).value) $('#dyMeet', b).value = f[0].padStart(5, '0'); toast(`ステマネの「${r.title}」のタイスケ（${r.col}）を入れました`); };
+  $('#dyItemsTpl', b).onclick = () => { const cur = lines($('#dyItems', b).value), add = (DAY_ITEMS[c.kind] || DAY_ITEMS.other).filter(x => !cur.includes(x)); $('#dyItems', b).value = cur.concat(add).join('\n'); };
+  const del = $('#dyDel', b);
+  if (del) GKY.arm(del, () => { const before = GKY.org().concerts, n = Object.assign({}, GKY.concertOf(id)); delete n.day; GKY.saveConcert(n); sh.close(); renderAll(); toast('当日の案内を消しました', '元に戻す', () => { GKY.saveOrg('concerts', before); renderAll(); }); }, 'もう一度押すと消します');
+}
+/* すでに入っている欄を入れかえる前に、もう一度押してもらう */
+function confirmReplace(btn) {
+  if (btn.dataset.sure) { delete btn.dataset.sure; btn.classList.remove('armed'); return true; }
+  btn.dataset.sure = '1'; btn.classList.add('armed'); const t = btn.textContent; btn.textContent = 'もう一度押すと入れかえます';
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.classList.remove('armed'); btn.textContent = t; } }, 3500);
+  return false;
+}
+/* 当日の画面（楽屋の中・部員用の端末・見るだけのリンクで同じ形） */
+function dayHTML(c, d, orgName) {
+  const today = GKY.ymd(), isToday = c.date === today;
+  const box = (h, inner) => inner ? `<section class="dsec"><h3>${h}</h3>${inner}</section>` : '';
+  return `<div class="day" data-date="${esc(c.date || '')}">
+    <div class="dhead"><span class="tape">当日の案内</span><h2>${esc(c.title)}</h2><p>${esc([c.date ? GKY.jpDate(c.date) : '', c.start ? '開演・出演 ' + c.start : '', c.venue].filter(Boolean).join('　'))}${orgName ? `<br><span class="muted">${esc(orgName)}</span>` : ''}</p>${isToday ? '<span class="chip warn">今日</span>' : ''}</div>
+    ${d.meet || d.meetPlace || d.end || d.endPlace ? `<div class="dmeet">${d.meet || d.meetPlace ? `<div><small>集合</small><b>${esc(d.meet || '—')}</b><span>${esc(d.meetPlace)}</span></div>` : ''}${d.end || d.endPlace ? `<div><small>解散（予定）</small><b>${esc(d.end || '—')}</b><span>${esc(d.endPlace)}</span></div>` : ''}</div>` : ''}
+    ${box('タイムテーブル', d.tt.length ? `<ol class="dtt">${d.tt.map(([t, x], i) => `<li data-t="${esc(t)}" data-i="${i}"><time>${esc(t || '')}</time><span>${esc(x)}</span></li>`).join('')}</ol>` : '')}
+    ${box('持ち物', d.items.length ? `<div class="ditems">${d.items.map((x, i) => `<label class="chk"><input type="checkbox" data-ck="${i}"> ${esc(x)}</label>`).join('')}</div><p class="note" style="margin:4px 0 0">チェックは、この端末だけに残ります。</p>` : '')}
+    ${box('服装', d.dress ? `<p>${esc(d.dress)}</p>` : '')}
+    ${box('担当・係', d.jobs.length ? `<table class="tbl djobs"><tbody>${d.jobs.map(([r, w]) => `<tr><th>${esc(r)}</th><td>${esc(w)}</td></tr>`).join('')}</tbody></table>` : '')}
+    ${box('当日の連絡先', d.contact ? `<p>${esc(d.contact)}</p>` : '')}
+    ${box('ほかに', d.memo ? `<p style="white-space:pre-wrap">${esc(d.memo)}</p>` : '')}
+  </div>`;
+}
+/* 当日の画面を動かす：今の時刻の行に印、持ち物のチェックをこの端末に残す（ck は保存のかぎ） */
+function wireDay(root, ck) {
+  const key = 'gakuya.view.day.' + String(ck).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { saved = {}; }
+  $$('[data-ck]', root).forEach(x => { x.checked = !!saved[x.dataset.ck]; x.onchange = () => { saved[x.dataset.ck] = x.checked; try { localStorage.setItem(key, JSON.stringify(saved)); } catch (e) { /* 残せなくても動く */ } }; });
+  const day = $('.day', root); if (!day) return;
+  const mark = () => {
+    if (!day.isConnected) { clearInterval(tm); return; }
+    const isToday = day.dataset.date === GKY.ymd(), now = new Date(), nm = now.getHours() * 60 + now.getMinutes();
+    let cur = -1; $$('.dtt li', day).forEach((li, i) => { const t = hmMin(li.dataset.t); if (isToday && t != null && t <= nm) cur = i; });
+    $$('.dtt li', day).forEach((li, i) => { li.classList.toggle('past', isToday && i < cur); li.classList.toggle('now', isToday && i === cur); });
+  };
+  const tm = setInterval(mark, 30000); mark();
+}
+function dayPrint(c, d, orgName) {
+  const doc = GKY.doc({ title: '当日の案内', sub: `${c.title}　${c.date ? GKY.jpDate(c.date) : ''}`, foot: orgName, file: '当日の案内_' + c.title });
+  doc.block(`<h3 style="font-size:16px">${esc(c.title)}</h3><p>${esc([c.date ? GKY.jpDate(c.date) : '', c.start ? '開演・出演 ' + c.start : '', c.venue].filter(Boolean).join('　'))}</p>`);
+  if (d.meet || d.meetPlace || d.end || d.endPlace) doc.table({ cols: [{ h: '', w: '22%' }, { h: '時刻', w: '18%' }, { h: '場所', w: '60%' }], rows: [d.meet || d.meetPlace ? ['<b>集合</b>', `<b>${esc(d.meet)}</b>`, esc(d.meetPlace)] : null, d.end || d.endPlace ? ['<b>解散（予定）</b>', esc(d.end), esc(d.endPlace)] : null].filter(Boolean) });
+  if (d.tt.length) { doc.block('<h3>タイムテーブル</h3>', { keep: true }); doc.table({ cols: [{ h: '時刻', w: '16%' }, { h: 'すること', w: '84%' }], rows: d.tt.map(([t, x]) => [esc(t), esc(x)]) }); }
+  if (d.items.length) doc.block(`<h3>持ち物</h3><p>${d.items.map(x => '□ ' + esc(x)).join('　　')}</p>`);
+  if (d.dress) doc.block(`<h3>服装</h3><p>${esc(d.dress)}</p>`);
+  if (d.jobs.length) { doc.block('<h3>担当・係</h3>', { keep: true }); doc.table({ cols: [{ h: '係', w: '30%' }, { h: 'だれ', w: '70%' }], rows: d.jobs.map(([r, w]) => [esc(r), esc(w)]) }); }
+  if (d.contact) doc.block(`<h3>当日の連絡先</h3><p>${esc(d.contact)}</p>`);
+  if (d.memo) doc.block(`<h3>ほかに</h3><p style="white-space:pre-wrap">${esc(d.memo)}</p>`);
+  doc.show();
+}
+const dayPayload = (c, o) => ({ k: 'day', o: o.org.name, c: [c.id, c.title, c.date, c.start, c.venue, c.kind], d: c.day });
+async function dayShare(c) {
+  const o = GKY.org();
+  try { GKY.shareSheet({ title: `当日の画面のリンク：${c.title}`, url: await GKY.shareUrl('gakuya', dayPayload(c, o)), note: `集合・タイムテーブル・持ち物・担当を1つの画面で見られます。${esc(W().member)}のグループ（LINEなど）に送るか、QRコードを見せてください。直したときは、リンクを作り直して送り直してください。` }); }
+  catch (e) { toast('リンクを作れませんでした'); }
+}
+function daySheet(id) {
+  const c = GKY.concertOf(id); if (!c || !c.day) return;
+  const o = GKY.org(), mem = GKY.isMember();
+  const sh = sheet({ title: '当日の画面', wide: true, content: dayHTML(c, c.day, o.org.name), actions: [{ label: '印刷', left: true, onClick: () => { dayPrint(c, c.day, o.org.name); return false; } }, ...(mem ? [] : [{ label: 'リンクで配る', onClick: () => { dayShare(c); } }]), { label: '閉じる', primary: true }] });
+  wireDay(sh.body, c.id);
+}
+
+/* ---------- 年間カレンダー（本番に、出欠の予定と準備の締め切りも重ねる） ---------- */
+const CAL_KIND = { concert: '本番', att: '予定', due: '締め切り' };
+function calItems(y) {
+  const o = GKY.org(), mem = GKY.isMember(), st = cStart(), inY = d => d && fyOf(d, st) === y;
+  const cs = (mem ? o.concerts.filter(c => !c.hide) : o.concerts).filter(c => inY(c.date));
+  const out = cs.map(c => ({ date: c.date, k: 'concert', t: c.title, s: c.start, v: c.venue, ck: c.kind, id: c.id }));
+  if (!mem && !GKY.IN_VIEWER && GKY.pref('calAtt', true)) {
+    const s = GKY.store.get('shukketsu.v1');
+    if (s && !s.sample && Array.isArray(s.events)) s.events.filter(e => e && inY(e.date) && !(e.concert && cs.some(c => c.id === e.concert)) && !(e.kind === 'show' && cs.some(c => c.date === e.date))).forEach(e => out.push({ date: e.date, k: 'att', t: e.title || '予定', s: e.start || '', e: e.end || '', v: e.place || '' }));
+  }
+  if (!mem && !GKY.IN_VIEWER && GKY.pref('calDue', false)) {
+    const g = GKY.store.get('gyakusan.v1');
+    if (g && g.plans) Object.values(g.plans).filter(p => p && !p.sample && p.date).forEach(p => (p.tasks || []).filter(t => t && !t.done).forEach(t => { const d = t.due || GKY.addDays(p.date, +t.off || 0); if (inY(d)) out.push({ date: d, k: 'due', t: t.name, v: p.title }); }));
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date) || ['concert', 'att', 'due'].indexOf(a.k) - ['concert', 'att', 'due'].indexOf(b.k) || String(a.s || '').localeCompare(String(b.s || '')));
+}
+/* 1か月の表（楽屋の画面と印刷で同じ形。big は印刷の月ごと） */
+function monthGrid(y, m, items, { big = false, mini = false } = {}) {
+  const first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay(), today = GKY.ymd();
+  const cells = []; for (let i = 0; i < lead; i++) cells.push('<td class="o"></td>');
+  for (let dd = 1; dd <= days; dd++) {
+    const ds = `${y}-${GKY.pad(m)}-${GKY.pad(dd)}`, xs = items.filter(x => x.date === ds), wd = (lead + dd - 1) % 7;
+    const lim = big ? 6 : mini ? 0 : 3;
+    cells.push(`<td class="${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''}${ds === today ? ' today' : ''}${xs.length ? ' has' : ''}" data-day="${ds}"><span class="n">${dd}</span>${mini ? (xs.length ? `<span class="dots">${xs.slice(0, 3).map(x => `<i class="k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}"></i>`).join('')}</span>` : '') : xs.slice(0, lim).map(x => `<span class="ev k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}" title="${esc((x.s ? x.s + ' ' : '') + x.t)}">${x.k === 'due' ? '〆' : ''}${esc(x.t)}</span>`).join('') + (xs.length > lim ? `<span class="more">ほか${xs.length - lim}</span>` : '')}</td>`);
+  }
+  while (cells.length % 7) cells.push('<td class="o"></td>');
+  const rows = []; for (let i = 0; i < cells.length; i += 7) rows.push('<tr>' + cells.slice(i, i + 7).join('') + '</tr>');
+  return `<table class="calg${big ? ' big' : ''}${mini ? ' mini' : ''}"><thead><tr>${GKY.WD.map((w, i) => `<th class="${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+const calMonths = y => { const st = cStart(); return Array.from({ length: 12 }, (_, i) => { const m = (st - 1 + i) % 12 + 1; return [st === 1 || m >= st ? y : y + 1, m]; }); };
+function renderCal(y) {
+  const items = calItems(y), mem = GKY.isMember();
+  const leg = `<div class="callegend"><span><i class="k-concert"></i>本番</span>${mem ? '' : `<label class="chk"><input type="checkbox" id="calAtt"${GKY.pref('calAtt', true) ? ' checked' : ''}> <i class="k-att"></i>練習・予定（出欠）</label><label class="chk"><input type="checkbox" id="calDue"${GKY.pref('calDue', false) ? ' checked' : ''}> <i class="k-due"></i>準備の締め切り（本番逆算）</label>`}</div>`;
+  return leg + `<div class="calwrap">${calMonths(y).map(([yy, m]) => { const n = items.filter(x => x.k === 'concert' && x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`).length; return `<div class="calm"><h3><span class="tape">${m}月</span>${yy}年${n ? `<small>本番 ${n}</small>` : ''}</h3>${monthGrid(yy, m, items)}</div>`; }).join('')}</div>`;
+}
+function wireCal(root, y) {
+  const a = $('#calAtt', root), d = $('#calDue', root);
+  if (a) a.onchange = () => { GKY.setPref('calAtt', a.checked); renderConcerts(); };
+  if (d) d.onchange = () => { GKY.setPref('calDue', d.checked); renderConcerts(); };
+  $$('td.has', root).forEach(td => td.onclick = () => calDay(td.dataset.day, y));
+}
+function calDay(ds, y) {
+  const xs = calItems(y).filter(x => x.date === ds);
+  const sh = sheet({ title: GKY.jpDate(ds), content: xs.map(x => x.k === 'concert' ? concertRow(GKY.concertOf(x.id), null) : `<div class="crow cal-${x.k}" style="cursor:default"><div class="d">${esc(x.s || '')}<small>${esc(CAL_KIND[x.k])}</small></div><div><div class="t1">${esc(x.t)}</div>${x.v || x.e ? `<div class="t2">${esc([x.e ? '〜' + x.e : '', x.v].filter(Boolean).join('　'))}</div>` : ''}</div></div>`).join('') || '<p class="muted">予定はありません。</p>', actions: [{ label: '閉じる', primary: true }] });
+  $$('.crow[data-c]', sh.body).forEach(r => r.onclick = () => { sh.close(); concertSheet(r.dataset.c); });
+}
+function calPrint(y) {
+  const o = GKY.org(), items = calItems(y), ms = calMonths(y), name = o.org.name;
+  const sh = sheet({ title: `${yLabel(y)}のカレンダーを印刷`, content: `<div class="list">
+      <button class="item" data-cp="year"><div class="main"><div class="t1">1年を1枚に（A4 横）</div><div class="t2">12か月の小さなカレンダーと、月ごとの本番の一覧</div></div></button>
+      <button class="item" data-cp="month"><div class="main"><div class="t1">1か月を1ページに（A4 横・12ページ）</div><div class="t2">日ごとのマスに、本番${GKY.pref('calAtt', true) && !GKY.isMember() ? '・練習や予定' : ''}${GKY.pref('calDue', false) && !GKY.isMember() ? '・締め切り' : ''}の名前</div></div></button>
+    </div>`, actions: [{ label: 'やめる' }] });
+  $$('[data-cp]', sh.body).forEach(b => b.onclick = () => {
+    sh.close();
+    const yearOne = b.dataset.cp === 'year';
+    const d = GKY.doc({ title: `${yLabel(y)}のカレンダー`, sub: [name, ySpan(y)].filter(Boolean).join('　'), orient: 'landscape', foot: name, file: `カレンダー_${yLabel(y)}` });
+    const css = '<style>.calp{width:100%;border-collapse:collapse;table-layout:fixed}.calp th{font-size:9px;padding:1px;border:1px solid #999;background:#eee}.calp td{border:1px solid #999;vertical-align:top;padding:1px 2px;font-size:8px;overflow:hidden}.calp .sun{color:#B3261E}.calp .sat{color:#1F5FBF}.calp td.o{background:#f3f3f3}.calp .n{font-weight:700}.calp .ev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#000}.calp .k-concert{font-weight:700}.calp .k-due{color:#7A4A00}.calp .k-att{color:#333}.calp .more{display:block;color:#666}.calp.mini td{height:13px;font-size:8px;text-align:center;padding:0}.calp.mini td.has{background:#ddd}.calp.mini td.hc{background:#222;color:#fff}.calp.big td{height:84px;font-size:10px}.calp.big th{font-size:11px}.calp.big .n{font-size:12px}.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 10px}.mgrid h4{margin:0 0 2px;font-size:11px}.mgrid ul{margin:2px 0 0;padding:0;list-style:none;font-size:8.5px;line-height:1.35}</style>';
+    if (yearOne) {
+      const mm = ms.map(([yy, m]) => { const xs = items.filter(x => x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`); const g = monthGrid(yy, m, xs, { mini: true }).replace('class="calg mini"', 'class="calp mini"').replace(/<td class="([^"]*)has([^"]*)" data-day="([^"]+)">/g, (all, a, b, ds) => `<td class="${a}has${b}${xs.some(x => x.date === ds && x.k === 'concert') ? ' hc' : ''}">`).replace(/<span class="dots">.*?<\/span>/g, ''); return `<div><h4>${m}月 <span style="font-weight:400;color:#555">${yy}年</span></h4>${g}<ul>${xs.filter(x => x.k === 'concert').map(x => `<li>${+x.date.slice(8)}日 <b>${esc(x.t)}</b></li>`).join('')}</ul></div>`; }).join('');
+      d.block(css + `<div class="mgrid">${mm}</div><p style="font-size:9px;margin:6px 0 0">黒いマス：本番　灰色のマス：${GKY.pref('calAtt', true) && !GKY.isMember() ? '練習・予定' : ''}${GKY.pref('calDue', false) && !GKY.isMember() ? '・締め切り' : ''}</p>`);
+    } else {
+      ms.forEach(([yy, m], i) => { const xs = items.filter(x => x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`); if (i) d.page(); d.block(css + `<h3 style="font-size:18px;margin:0 0 6px">${m}月 <span style="font-size:13px;font-weight:400">${yy}年</span></h3>` + monthGrid(yy, m, xs, { big: true }).replace('class="calg big"', 'class="calp big"')); });
+    }
+    d.show();
+  });
+}
+/* カレンダーの見かたのときの .ics：出欠の予定・締め切りも入れる */
+function calIcs(y) {
+  const items = calItems(y), o = GKY.org();
+  const xs = items.map((x, i) => x.k === 'concert' ? GKY.concertOf(x.id) : { id: `${x.k}-${x.date}-${i}`, date: x.date, start: x.k === 'att' ? x.s : '', title: x.k === 'due' ? `〆 ${x.t}（${x.v}）` : x.t, venue: x.k === 'att' ? x.v : '', note: x.k === 'due' ? '本番逆算の締め切り' : x.e ? `〜${x.e}` : '', end: x.e }).filter(Boolean);
+  GKY.saveFile(`カレンダー_${yLabel(y)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'のカレンダー'), 'text/calendar');
+}
+
+/* ---------- 年度末・年度はじめにやること ---------- */
+const yeFy = (d = new Date()) => { const m = d.getMonth() + 1, fy = GKY.fiscalYear(d); return m === 4 ? fy - 1 : fy; };
+function yeSteps(o) {
+  const t = o.org.type, school = GKY.isSchool(t) || t === 'chiiki' || t === 'daigaku', y = yeFy(), w = GKY.words(t);
+  const lastBk = +GKY.pref('lastBackup', 0), from = new Date(y + 1, 1, 1).getTime();
+  return [
+    { id: 'backup', t: 'まとめてバックアップを保存する', s: 'まず今のデータをファイルに残します（進級・引退の前に）', b: 'バックアップへ', go: () => showTab('backup'), auto: lastBk >= from },
+    { id: 'kaikei', t: '会計：今年度の会計報告を作る', s: '会計の「会計報告」で、収入・支出・繰越を印刷します', b: '会計', slug: 'kaikei' },
+    { id: 'gakufu', t: '楽譜：配った譜面を回収し、借りている楽譜を返す', s: '楽譜ライブラリの「配布・回収」で、まだ返っていない譜面を確かめます', b: '楽譜ライブラリ', slug: 'gakufu' },
+    { id: 'gakki', t: '楽器：点検して、使う人を次の年度にする', s: '楽器台帳の「使う人をまとめて決める」で、卒業する人の楽器を空けます', b: '楽器台帳', slug: 'gakki' },
+    school ? { id: 'retire', t: `卒業する学年を「引退」にする`, s: '引退・仮引退は「団体・年度」の下で、学年ごとにできます', b: '引退させる', go: () => { showTab('org'); setTimeout(() => { const e = $('#rtGrade'); if (e) e.scrollIntoView({ block: 'center' }); }, 50); } } : null,
+    school ? { id: 'promote', t: `進級させる（名簿を${y + 1}年度にする）`, s: 'いちばん上の学年は卒業・退部になります', b: '進級へ', go: () => { showTab('org'); setTimeout(() => { const e = $('#promote'); if (e) e.scrollIntoView({ block: 'center' }); }, 50); }, auto: !!(o.org.promoted && o.org.promoted.to >= y + 1) } : null,
+    { id: 'concerts', t: `${y + 1}年度の本番を入れる`, s: '演奏会・コンクール・行事。カレンダーにして配れます', b: '本番へ', go: () => showTab('concerts'), auto: o.concerts.some(c => c.date && GKY.fiscalYear(GKY.parseYmd(c.date)) === y + 1) },
+    school ? { id: 'gakkigime', t: `新しい${w.member}の楽器を決める`, s: '楽器決め・編成計画で、希望と定員から割り振り案を作ります', b: '楽器決め', slug: 'gakkigime' } : null,
+    { id: 'role', t: `${w.member}用の設定リンクを作り直して配る`, s: '新しい名簿・本番を入れたあとに', b: '設定リンクへ', go: () => { showTab('org'); setTimeout(() => { const e = $('#roleSec'); if (e) e.scrollIntoView({ block: 'start' }); }, 50); } },
+    { id: 'handover', t: '係・幹部が変わるなら、引き継ぎファイルを渡す', s: '次の人へのメモをつけて保存します', b: '引き継ぎへ', go: () => { showTab('backup'); setTimeout(() => { const e = $('#hoMemo'); if (e) e.scrollIntoView({ block: 'center' }); }, 50); } },
+  ].filter(Boolean);
+}
+const yeDone = () => (GKY.pref('yearEnd', {}) || {})[yeFy()] || {};
+function yeSet(id, on) { const all = Object.assign({}, GKY.pref('yearEnd', {}) || {}), y = yeFy(), cur = Object.assign({}, all[y] || {}); if (on) cur[id] = GKY.ymd(); else delete cur[id]; all[y] = cur; GKY.setPref('yearEnd', all); }
+function yeCount(o) { const st = yeSteps(o), dn = yeDone(); return { n: st.filter(s => s.auto || dn[s.id]).length, all: st.length }; }
+function renderYearEnd(o) {
+  const el = $('#yeBox'); if (!el) return;
+  const st = yeSteps(o), dn = yeDone(), y = yeFy(), cnt = yeCount(o);
+  el.innerHTML = `<h2>年度末・年度はじめにやること<small>${y}年度 → ${y + 1}年度　${cnt.n} / ${cnt.all}</small></h2>
+    <p class="lead">上から順にすると、データを消さずに次の年度へ移れます。済んだものにはチェックを入れてください（自動で分かるものは、済むと「✓」がつきます）。</p>
+    <div class="firsts">${st.map((s, i) => { const done = s.auto || !!dn[s.id]; return `<div class="first${done ? ' done' : ''}"><span class="ck">✓</span><div><div class="t">${i + 1}. ${esc(s.t)}</div><div class="s">${esc(s.s)}${dn[s.id] ? `（${esc(dn[s.id])}に済み）` : s.auto ? '（済み）' : ''}</div></div><div class="btnrow" style="flex-wrap:nowrap">${s.slug ? `<a class="btn sm" href="${esc(urlOf(s.slug))}" target="${GKY.targetOf(s.slug)}">${esc(s.b)}</a>` : `<button class="btn sm" data-yego="${i}">${esc(s.b)}</button>`}${s.auto ? '' : `<label class="chk yeck" title="済んだ"><input type="checkbox" data-yeck="${esc(s.id)}"${dn[s.id] ? ' checked' : ''}> 済み</label>`}</div></div>`; }).join('')}</div>`;
+  $$('[data-yego]', el).forEach(b => b.onclick = () => st[+b.dataset.yego].go());
+  $$('[data-yeck]', el).forEach(x => x.onchange = () => { yeSet(x.dataset.yeck, x.checked); renderYearEnd(GKY.org()); });
+}
+/* ツールのタブの上：2月なかば〜4月に、まだ済んでいなければ知らせる */
+function yeBanner(o) {
+  const el = $('#yeBanner'); if (!el) return;
+  const now = new Date(), m = now.getMonth() + 1, dd = now.getDate(), season = (m === 2 && dd >= 15) || m === 3 || m === 4;
+  if (GKY.IN_VIEWER || GKY.isMember() || !season || !GKY.hasOrg() || GKY.pref('yeHide', 0) === yeFy()) { el.innerHTML = ''; return; }
+  const c = yeCount(o); if (c.n >= c.all) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="issue" style="margin-bottom:14px"><span class="dot"></span><div class="main"><div><b>年度末・年度はじめにやること</b>（${c.n} / ${c.all}）</div><div class="sub">バックアップ・会計報告・譜面の回収・引退と進級・次の年度の本番などを、順に案内します。</div></div><div class="btnrow" style="flex-wrap:nowrap"><button class="btn sm primary" id="yeGo">開く</button><button class="btn sm ghost" id="yeHide">今年は出さない</button></div></div>`;
+  $('#yeGo').onclick = () => { showTab('org'); setTimeout(() => { const e = $('#yeBox'); if (e) e.scrollIntoView({ block: 'start' }); }, 50); };
+  $('#yeHide').onclick = () => { GKY.setPref('yeHide', yeFy()); renderTools(); };
+}
+
+/* ---------- 保護者向けのお知らせ（送迎・当番・集金・ふつうのお知らせ） ---------- */
+const NT_KEY = 'gakuya.notices';
+const NT_KINDS = { ride: '送迎のお願い', duty: '当番のお知らせ', fee: '集金のお知らせ', general: 'お知らせ' };
+const NT_TABLE = { ride: ['', '時刻・場所'], duty: ['日付', '当番', '担当'], fee: ['項目', '金額'], general: ['', ''] };
+const ntState = () => { const s = GKY.store.get(NT_KEY); return { v: 1, list: (s && Array.isArray(s.list) ? s.list : []).filter(n => n && n.id).map(normNotice) }; };
+function normNotice(n) {
+  const kind = NT_KINDS[n.kind] ? n.kind : 'general', t = v => String(v ?? '');
+  return { id: t(n.id) || uid('n'), kind, title: t(n.title).trim() || NT_KINDS[kind], to: t(n.to), from: t(n.from), date: /^\d{4}-\d{2}-\d{2}$/.test(n.date) ? n.date : GKY.ymd(), concert: t(n.concert), body: t(n.body),
+    rows: (Array.isArray(n.rows) ? n.rows : []).filter(Array.isArray).map(r => r.slice(0, 3).map(t)), due: /^\d{4}-\d{2}-\d{2}$/.test(n.due) ? n.due : '', reply: n.reply !== false, qs: (Array.isArray(n.qs) ? n.qs : []).map(t).filter(Boolean), at: +n.at || Date.now() };
+}
+const ntSave = s => GKY.store.set(NT_KEY, { v: 1, list: s.list });
+const ntTo = () => { const t = ty(); return !t || GKY.isSchool(t) || t === 'chiiki' ? '保護者の皆様' : `${W().member}の皆様`; };
+const ntFrom = () => { const o = GKY.org(); return [o.org.name, GKY.isSchool(o.org.type) ? '顧問' : ''].filter(Boolean).join('　'); };
+/* 種類と本番から、ひな形を作る */
+function ntTemplate(kind, c, extra = {}) {
+  const o = GKY.org(), d = c && c.day, when = c ? `${c.date ? GKY.jpDate(c.date) : ''}${c.venue ? '　' + c.venue : ''}` : '', nm = o.org.name || '';
+  const base = { kind, to: ntTo(), from: ntFrom(), date: GKY.ymd(), concert: c ? c.id : '', reply: kind !== 'general', due: c && c.date ? GKY.addDays(c.date, -7) < GKY.ymd() ? '' : GKY.addDays(c.date, -7) : '' };
+  if (kind === 'ride') return Object.assign(base, { title: `${c ? c.title + 'の' : ''}送迎のお願い`, body: `日ごろより${nm}の活動にご理解とご協力をいただき、ありがとうございます。\n${c ? `下記の「${c.title}」で、` : ''}楽器の運搬と${W().member}の送迎にご協力をお願いいたします。ご都合を、下の返事でお知らせください。`,
+    rows: [c ? ['日時', `${when}`] : null, d && (d.meet || d.meetPlace) ? ['集合', [d.meet, d.meetPlace].filter(Boolean).join('　')] : ['集合', ''], d && (d.end || d.endPlace) ? ['解散（予定）', [d.end, d.endPlace].filter(Boolean).join('　')] : ['解散（予定）', '']].filter(Boolean),
+    qs: ['行き：　送迎できる　・　できない', '帰り：　送迎できる　・　できない', 'お子さんのほかに乗せられる人数：　　　人', '楽器も積めますか：　はい　・　いいえ'] });
+  if (kind === 'duty') return Object.assign(base, { title: `${c ? c.title + 'の' : ''}当番のお知らせ`, body: `日ごろより${nm}の活動にご協力をいただき、ありがとうございます。\n下記のとおり、当番をお願いいたします。ご都合が悪い日は、返事でお知らせください。`, rows: c ? [[c.date ? GKY.mdDate(c.date) : '', '受付', ''], [c.date ? GKY.mdDate(c.date) : '', '楽器の運搬', '']] : [['', '', '']], qs: ['都合が悪い日：', 'かわりにできる日：'] });
+  if (kind === 'fee') return Object.assign(base, { title: extra.title || '集金のお知らせ', body: `${nm}の活動のため、下記のとおり集金をお願いいたします。\n封筒に入れ、お子さんの名前と金額を書いて、締め切りまでに持たせてください。`, rows: extra.rows || [['', '']], due: extra.due || base.due, qs: ['金額：　　　　　　円', '受け取り（係）：　　　　　　印'] });
+  return Object.assign(base, { title: c ? `${c.title}のお知らせ` : 'お知らせ', body: `日ごろより${nm}の活動にご理解とご協力をいただき、ありがとうございます。\n`, rows: c ? [['日時', when]] : [], qs: ['ご意見・ご質問：'] });
+}
+function renderNotices() {
+  const el = $('#ntList'); if (!el) return;
+  const s = ntState(), o = GKY.org();
+  el.innerHTML = s.list.length ? s.list.slice().sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at).map(n => { const c = GKY.concertOf(n.concert); return `<div class="crow ntrow" data-nt="${esc(n.id)}" tabindex="0" role="button"><div class="d">${esc(GKY.mdDate(n.date).replace(/（.）/, ''))}<small>${esc(n.date.slice(0, 4))}</small></div><div style="min-width:0"><div class="t1">${esc(n.title)}<span class="chip">${esc(NT_KINDS[n.kind])}</span></div><div class="t2">${esc([c ? c.title : '', n.due ? '返事は ' + GKY.mdDate(n.due) + ' まで' : '', n.reply ? '返事欄あり' : ''].filter(Boolean).join('　'))}</div></div></div>`; }).join('') : `<div class="empty"><b>まだお知らせがありません</b>上の「送迎のお願い」「当番」「集金」などから作ると、印刷（返事の切り取り欄つき）・見るだけのリンク・文でコピーができます。</div>`;
+  $$('[data-nt]', el).forEach(r => { r.onclick = () => editNotice(r.dataset.nt); r.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editNotice(r.dataset.nt); } }; });
+  $('#ntFee').hidden = !feePlans().length;
+}
+const feePlans = () => { const k = GKY.IN_VIEWER ? null : GKY.store.get('kaikei.v1'); return k && !k.sample && k.fees && Array.isArray(k.fees.plans) ? k.fees.plans.filter(p => p && p.name) : []; };
+/* 新しく作る：種類と本番を選ぶ */
+function newNotice(kind) {
+  const o = GKY.org(), today = GKY.ymd(), cs = o.concerts.filter(c => !c.date || c.date >= GKY.addDays(today, -14));
+  const go = c => { const s = ntState(), n = normNotice(Object.assign({ id: uid('n') }, ntTemplate(kind, c))); s.list.push(n); ntSave(s); renderNotices(); editNotice(n.id, true); };
+  if (kind === 'general' || !cs.length) { go(null); return; }
+  const sh = sheet({ title: `${NT_KINDS[kind]}を作る`, content: `<p style="margin:0 0 8px">どの本番のお知らせですか？（本番の日付・会場・当日の案内の集合・解散が入ります）</p><div class="list">${cs.map(c => `<button class="item" data-pc="${esc(c.id)}"><div class="main"><div class="t1">${esc(c.title)}</div><div class="t2">${esc([c.date ? GKY.jpDate(c.date) : '日付はまだ', c.venue, c.day ? '当日の案内あり' : ''].filter(Boolean).join('　'))}</div></div></button>`).join('')}</div>`, actions: [{ label: '本番なしで作る', left: true, onClick: () => { setTimeout(() => go(null), 0); } }, { label: 'やめる' }] });
+  $$('[data-pc]', sh.body).forEach(b => b.onclick = () => { sh.close(); go(GKY.concertOf(b.dataset.pc)); });
+}
+function newFeeNotice() {
+  const ps = feePlans(); if (!ps.length) { toast('会計に集金がありません'); return; }
+  const sh = sheet({ title: '会計の集金から作る', content: `<div class="list">${ps.map((p, i) => `<button class="item" data-fp="${i}"><div class="main"><div class="t1">${esc(p.name)}</div><div class="t2">${esc([(+p.amount || 0).toLocaleString('ja-JP') + '円', p.due ? '締め切り ' + GKY.jpDate(p.due) : ''].filter(Boolean).join('　'))}</div></div></button>`).join('')}</div>`, actions: [{ label: 'やめる' }] });
+  $$('[data-fp]', sh.body).forEach(b => b.onclick = () => {
+    sh.close(); const p = ps[+b.dataset.fp], s = ntState();
+    const n = normNotice(Object.assign({ id: uid('n') }, ntTemplate('fee', null, { title: `${p.name}の集金のお知らせ`, rows: [[p.name, (+p.amount || 0).toLocaleString('ja-JP') + '円']], due: p.due || '' })));
+    s.list.push(n); ntSave(s); renderNotices(); editNotice(n.id, true);
+  });
+}
+const parseRows = (text, kind) => lines(text).map(l => { const n = kind === 'duty' ? 3 : 2, xs = l.split(/[｜|\t]/).map(x => x.trim()); if (xs.length === 1) { const i = l.search(/[：:]/); if (i > 0 && n === 2) return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; } while (xs.length < n) xs.push(''); return xs.slice(0, n); });
+function editNotice(id, fresh = false) {
+  const s0 = ntState(), n = s0.list.find(x => x.id === id); if (!n) return;
+  const o = GKY.org(), cols = n.kind === 'duty' ? '日付｜当番｜担当' : n.kind === 'fee' ? '項目｜金額' : '見出し｜中身';
+  const sh = sheet({ title: fresh ? `${NT_KINDS[n.kind]}を作る` : 'お知らせを直す', wide: true, content: `<div class="grid">
+      <label class="fld wide"><span>題名</span><input type="text" id="ntT" value="${esc(n.title)}"></label>
+      <label class="fld"><span>あて先</span><input type="text" id="ntTo" value="${esc(n.to)}"></label>
+      <label class="fld"><span>差出人</span><input type="text" id="ntFr" value="${esc(n.from)}"></label>
+      <label class="fld"><span>出す日</span><input type="date" id="ntD" value="${esc(n.date)}"></label>
+      <label class="fld"><span>本番</span><select id="ntC"><option value="">（本番なし）</option>${o.concerts.map(c => `<option value="${esc(c.id)}"${c.id === n.concert ? ' selected' : ''}>${esc(GKY.concertLabel(c))}</option>`).join('')}</select></label>
+      <label class="fld wide"><span>本文</span><textarea id="ntB" style="min-height:120px">${esc(n.body)}</textarea></label>
+      <label class="fld wide"><span>表 <small class="muted">1行に1つ。「${esc(cols)}」のように「｜」で区切ります（空にすると表は出ません）</small></span><textarea id="ntR" style="min-height:90px">${esc(n.rows.map(r => r.join('｜')).join('\n'))}</textarea></label>
+      <label class="fld"><span>返事の締め切り</span><input type="date" id="ntDue" value="${esc(n.due)}"></label>
+      <label class="chk" style="align-self:end"><input type="checkbox" id="ntRe"${n.reply ? ' checked' : ''}> 返事の切り取り欄をつける（印刷）</label>
+      <label class="fld wide"><span>返事の欄の項目 <small class="muted">1行に1つ</small></span><textarea id="ntQ" style="min-height:80px">${esc(n.qs.join('\n'))}</textarea></label>
+    </div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn sm" id="ntPrint" type="button">印刷・PDF</button><button class="btn sm" id="ntLink" type="button">見るだけのリンク</button><button class="btn sm" id="ntCopy" type="button">文でコピー</button><span style="flex:1"></span><button class="btn danger sm" id="ntDel" type="button">このお知らせを消す</button></div>
+    <p class="note">印刷すると、下に返事の切り取り欄がつきます。見るだけのリンクとコピーした文には、返事の欄は入りません（返事は紙か、連絡のとおりに）。</p>`,
+    actions: [{ label: '閉じる' }, { label: '保存', primary: true, onClick: body => { save(body); toast('お知らせを保存しました'); } }] });
+  const b = sh.body;
+  const read = body => normNotice(Object.assign({}, n, { title: $('#ntT', body).value, to: $('#ntTo', body).value, from: $('#ntFr', body).value, date: $('#ntD', body).value || GKY.ymd(), concert: $('#ntC', body).value, body: $('#ntB', body).value, rows: parseRows($('#ntR', body).value, n.kind), due: $('#ntDue', body).value, reply: $('#ntRe', body).checked, qs: lines($('#ntQ', body).value), at: Date.now() }));
+  const save = body => { const s = ntState(), i = s.list.findIndex(x => x.id === id), x = read(body); if (i >= 0) s.list[i] = x; else s.list.push(x); ntSave(s); renderNotices(); return x; };
+  $('#ntPrint', b).onclick = () => ntPrint(save(b));
+  $('#ntLink', b).onclick = () => ntShare(save(b));
+  $('#ntCopy', b).onclick = () => { const x = save(b); GKY.copyText(ntText(x), 'お知らせの文をコピーしました'); };
+  GKY.arm($('#ntDel', b), () => { const s = ntState(), before = s.list.slice(); s.list = s.list.filter(x => x.id !== id); ntSave(s); sh.close(); renderNotices(); toast('お知らせを消しました', '元に戻す', () => { ntSave({ list: before }); renderNotices(); }); }, 'もう一度押すと消します');
+}
+function ntText(n) {
+  return [`【${n.title}】`, n.to ? n.to : '', '', n.body, '', ...n.rows.map(r => r.filter(Boolean).join('　')), n.due ? `\n返事の締め切り：${GKY.jpDate(n.due)}` : '', '', [n.from, GKY.jpDate(n.date)].filter(Boolean).join('　')].filter((x, i, a) => !(x === '' && a[i - 1] === '')).join('\n').trim();
+}
+function ntBlock(n, { reply = true } = {}) {
+  const hd = NT_TABLE[n.kind], wide = n.rows.some(r => r.length > 2 && r[2]);
+  const table = n.rows.length ? `<table class="ntt"><tbody>${n.rows.map(r => `<tr><th>${esc(r[0])}</th><td>${esc(r[1] || '')}</td>${wide || n.kind === 'duty' ? `<td>${esc(r[2] || '')}</td>` : ''}</tr>`).join('')}</tbody></table>` : '';
+  return `<div class="ntdoc"><p class="ntd">${esc(GKY.jpDate(n.date, false))}</p><p class="ntto">${esc(n.to)}</p><p class="ntfr">${esc(n.from)}</p><h2 class="ntti">${esc(n.title)}</h2><div class="ntb">${esc(n.body)}</div>${n.kind === 'duty' && hd ? `<p class="ntcap">${esc(hd.filter(Boolean).join('・'))}</p>` : ''}${table}${n.due ? `<p class="ntdue">返事の締め切り：<b>${esc(GKY.jpDate(n.due))}</b></p>` : ''}</div>`;
+}
+function ntPrint(n) {
+  const o = GKY.org(), w = W();
+  const d = GKY.doc({ title: n.title, sub: '', foot: o.org.name, file: n.title, head: false });
+  const css = '<style>.ntdoc{font-size:12px;line-height:1.75}.ntd,.ntfr{text-align:right;margin:0}.ntto{margin:0 0 4px}.ntti{text-align:center;font-size:17px;margin:12px 0}.ntb{white-space:pre-wrap;margin:0 0 10px}.ntt{width:100%;border-collapse:collapse;margin:6px 0}.ntt th,.ntt td{border:1px solid #888;padding:4px 8px;text-align:left;vertical-align:top}.ntt th{width:28%;background:#f2f2f2}.ntdue{margin:8px 0 0}.ntcut{margin:18px 0 8px;border-top:1.5px dashed #555;text-align:center;font-size:10px;color:#444;padding-top:2px}.ntre h3{text-align:center;font-size:14px;margin:4px 0 8px}.ntre table{width:100%;border-collapse:collapse}.ntre td{border:1px solid #888;padding:7px 8px;font-size:12px}.ntre .l{width:24%;background:#f2f2f2}</style>';
+  d.block(css + ntBlock(n));
+  if (n.reply) d.block(css + `<div class="ntcut">✂ ここで切り取ってください ✂</div><div class="ntre"><h3>返事：${esc(n.title)}</h3><table><tbody><tr><td class="l">${esc(w.member)}の名前</td><td></td><td class="l">パート・学年</td><td></td></tr><tr><td class="l">保護者の名前</td><td colspan="3"></td></tr>${n.qs.map(q => `<tr><td colspan="4">${esc(q)}</td></tr>`).join('')}<tr><td colspan="4" style="height:44px">連絡など：</td></tr></tbody></table>${n.due ? `<p style="font-size:11px;margin:6px 0 0">${esc(GKY.jpDate(n.due))}までに、${esc(w.member)}にもたせてください。</p>` : ''}</div>`);
+  d.show();
+}
+async function ntShare(n) {
+  const o = GKY.org();
+  try { GKY.shareSheet({ title: `見るだけのリンク：${n.title}`, url: await GKY.shareUrl('gakuya', { k: 'notice', o: o.org.name, n: { kind: n.kind, title: n.title, to: n.to, from: n.from, date: n.date, body: n.body, rows: n.rows, due: n.due } }), note: '受け取った人は、お知らせを見るだけです（この端末には保存しません）。返事は、印刷した紙の切り取り欄か、連絡のとおりにもらってください。' }); }
+  catch (e) { toast('リンクを作れませんでした'); }
+}
+$('#ntNew').onclick = e => { const k = e.target.closest('[data-nk]'); if (k) newNotice(k.dataset.nk); };
+$('#ntFee').onclick = newFeeNotice;
+
+/* ---------- 同期ファイル（同じ人の2つの端末を、ツールごとに新しいほうで合わせる） ---------- */
+const SYNC_SECS = ['org', 'members', 'songs', 'instruments', 'concerts'];
+const SYNC_SEC_NAME = { org: '団体の設定', members: '部員', songs: '曲', instruments: '楽器', concerts: '本番' };
+const syncKeys = () => myKeys().filter(k => isDataKey(k) && !GKY.store.noMtime(k));
+function buildSync() {
+  const keys = {}, mt = GKY.store.mtimes(), mtimes = {};
+  syncKeys().forEach(k => { keys[k] = GKY.store.raw(k); mtimes[k] = mt[k] || 0; });
+  Object.entries(mt).forEach(([k, t]) => { if (t < 0 && !(k in keys) && isDataKey(k)) mtimes[k] = t; });   // 消したもの
+  return { app: 'gakuya-sync', format: 1, exportedAt: new Date().toISOString(), org: GKY.org().org.name, device: GKY.pref('deviceName', ''), keys, mtimes };
+}
+const keyLabel = k => { const p = k.split('.')[0], t = T(p); return k === GKY.ORG_KEY ? '楽屋' : k === NT_KEY ? '楽屋（お知らせ）' : t ? t.name + (k === t.key ? '' : `（${k.slice(p.length + 1)}）`) : k; };
+/* 同期ファイルと、この端末とを比べる。plan：[{ k, what, act:'take'|'keep'|'same'|'del'|'ask', ... }] */
+function syncPlan(f) {
+  const mt = GKY.store.mtimes(), plan = [], ks = new Set([...Object.keys(f.keys || {}), ...Object.keys(f.mtimes || {})].filter(k => isDataKey(k) && !GKY.store.noMtime(k)));
+  syncKeys().forEach(k => ks.add(k));
+  [...ks].sort().forEach(k => {
+    const lv = GKY.store.raw(k), rv = (f.keys || {})[k], lt = +mt[k] || 0, rt = +(f.mtimes || {})[k] || 0;
+    if (k === GKY.ORG_KEY) {
+      if (rv == null) { plan.push({ k, act: 'keep', what: '楽屋のデータ：同期ファイルにありません' }); return; }
+      let R; try { R = GKY.normOrg(JSON.parse(rv)); } catch (e) { plan.push({ k, act: 'keep', what: '楽屋のデータ：読めませんでした' }); return; }
+      const L = GKY.org(), take = SYNC_SECS.filter(s => R.updated[s] > L.updated[s]);
+      plan.push({ k, act: take.length ? 'org' : 'same', secs: take, R, what: take.length ? `楽屋：${take.map(s => SYNC_SEC_NAME[s]).join('・')}を同期ファイルのほうにする` : '楽屋：同じか、この端末のほうが新しい' });
+      return;
+    }
+    if (rv == null && lv == null) return;
+    if (rv == null) { plan.push(rt < 0 && -rt > lt ? { k, act: 'del', rt, what: 'あちらで消したので、こちらでも消す' } : { k, act: 'keep', what: 'この端末だけにある' }); return; }
+    if (lv == null) { plan.push(lt < 0 && -lt > rt ? { k, act: 'keep', what: 'この端末で消したので、入れない' } : { k, act: 'take', rv, rt, what: '同期ファイルだけにある（入れる）' }); return; }
+    if (lv === rv) { plan.push({ k, act: 'same', what: '同じ' }); return; }
+    if (rt && lt) { plan.push(rt > lt ? { k, act: 'take', rv, rt, what: `同期ファイルのほうが新しい（${when(rt)}）` } : { k, act: 'keep', what: `この端末のほうが新しい（${when(lt)}）` }); return; }
+    plan.push({ k, act: 'ask', rv, rt, what: 'どちらが新しいか分かりません' });
+  });
+  return plan;
+}
+const when = t => { const d = new Date(Math.abs(t)); return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${GKY.pad(d.getMinutes())}`; };
+function applySync(plan, choose) {
+  const undo = { keys: {}, org: null }, mt = GKY.store.mtimes();
+  let n = 0, bad = 0;
+  plan.forEach((p, i) => {
+    const act = p.act === 'ask' ? (choose[i] ? 'take' : 'keep') : p.act;
+    if (act === 'take') { undo.keys[p.k] = GKY.store.raw(p.k); if (GKY.store.setRaw(p.k, p.rv)) { GKY.store.touch(p.k, p.rt || Date.now()); n++; } else bad++; }
+    else if (act === 'del') { undo.keys[p.k] = GKY.store.raw(p.k); GKY.store.del(p.k); GKY.store.touch(p.k, p.rt); n++; }
+    else if (act === 'org') {
+      const L = GKY.org(); undo.org = JSON.parse(JSON.stringify(L));
+      // この端末の使い方（代表者・顧問用／部員用）は変えない。部員に出すツールの設定は、代表者・顧問用の端末どうしのときだけ合わせる
+      p.secs.forEach(s => { if (s === 'org') L.org = Object.assign({}, p.R.org, { role: L.org.role, member: L.org.role === 'staff' && p.R.org.role === 'staff' ? p.R.org.member : L.org.member }); else L[s] = p.R[s]; L.updated[s] = p.R.updated[s]; });
+      if (GKY.store.set(GKY.ORG_KEY, L)) n += p.secs.length; else bad++;
+    }
+  });
+  return { n, bad, undo, mt };
+}
+$('#syncSave').onclick = async () => {
+  const f = buildSync();
+  const ok = await GKY.saveJSON(`楽屋の同期ファイル_${GKY.org().org.name || ''}_${GKY.stamp()}.json`, f);
+  if (ok) { GKY.setPref('lastSync', Date.now()); renderBackup(); }
+};
+$('#syncLoad').onclick = async () => {
+  const f = await GKY.openJSON(); if (!f) return;
+  if (f.data.app !== 'gakuya-sync' || !f.data.keys) { toast(f.data.app === 'gakuya-backup' ? 'これはバックアップのファイルです。「バックアップから戻す」で使ってください' : '楽屋の「同期ファイルを保存」で作ったファイルを選んでください'); return; }
+  const plan = syncPlan(f.data), ch = plan.filter(p => p.act !== 'same' && p.act !== 'keep'), asks = plan.map((p, i) => [p, i]).filter(([p]) => p.act === 'ask');
+  const cur = GKY.org().org.name, other = f.data.org;
+  const sh = sheet({ title: '同期ファイルで合わせる', wide: true, content: `<p style="margin:0 0 6px">「${esc(f.name)}」（${esc(String(f.data.exportedAt || '').slice(0, 16).replace('T', ' '))}${other ? '・' + esc(other) : ''}）と、この端末を比べました。ツールごとに、新しく直したほうを残します。</p>
+    ${other && cur && other !== cur ? `<div class="issue warn" style="margin:6px 0"><span class="dot warn"></span><div class="main">団体の名前がちがいます（この端末：${esc(cur)}・ファイル：${esc(other)}）。別の団体のデータなら、合わせずに「団体・年度」の「この端末の団体」を使ってください。</div></div>` : ''}
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>データ</th><th>どうする</th></tr></thead><tbody>${plan.map((p, i) => `<tr class="${p.act === 'same' || p.act === 'keep' ? 'off' : ''}"><td>${esc(keyLabel(p.k))}</td><td>${p.act === 'ask' ? `<label class="chk"><input type="checkbox" data-sy="${i}"> 同期ファイルのほうにする</label><div class="muted" style="font-size:12px">${esc(p.what)}（チェックしなければ、この端末のまま）</div>` : `<span class="chip ${p.act === 'take' || p.act === 'org' ? 'ok' : p.act === 'del' ? 'warn' : ''}">${p.act === 'take' || p.act === 'org' ? '新しくする' : p.act === 'del' ? '消す' : p.act === 'same' ? '同じ' : 'このまま'}</span> <span class="muted" style="font-size:12px">${esc(p.what)}</span>`}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note">${ch.length ? `${ch.length}つ変わります${asks.length ? `（ほかに、どちらか選ぶものが${asks.length}つ）` : ''}。` : asks.length ? '' : '変わるものはありません。'}代表者・顧問用か部員用か（この端末の使い方）は変えません。録音・楽譜のPDF・楽器台帳の写真は入りません。反対の端末でも同じようにすると、両方がそろいます。</p>`,
+    actions: [{ label: 'やめる' }, { label: '合わせる', primary: true, onClick: body => {
+      const choose = {}; $$('[data-sy]', body).forEach(x => { choose[+x.dataset.sy] = x.checked; });
+      const r = applySync(plan, choose);
+      GKY.setPref('lastSync', Date.now()); renderAll();
+      toast(r.bad ? `${r.bad}つ合わせられませんでした（容量がいっぱいかもしれません）` : r.n ? `${r.n}つを新しくしました。開いているほかのツールも新しくなります` : '変わったものはありません', r.n ? '元に戻す' : null, r.n ? () => { Object.entries(r.undo.keys).forEach(([k, v]) => { if (v == null) GKY.store.del(k); else GKY.store.setRaw(k, v); }); if (r.undo.org) GKY.store.set(GKY.ORG_KEY, r.undo.org); Object.entries(r.mt).forEach(([k, t]) => GKY.store.touch(k, t)); renderAll(); toast('元に戻しました'); } : null, 9000);
+    } }] });
+  return sh;
+};
+
 /* ---------- はじまり ---------- */
 $('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: '楽屋', what: '吹奏楽の団体のためのツール集「楽屋シリーズ」の入口です。部員・曲・楽器のデータを楽屋に入れておくと、同じ場所に置いた全部のツールで使えます。各ツールは1つずつ独立していて、別々に直したり更新したりできます。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
 $('#fbTop').href = FEEDBACK_URL || GKY.FEEDBACK_URL;
 GKY.onOrgChange(renderAll);
-window.addEventListener('storage', e => { if (e.key && e.key !== GKY.ORG_KEY && tab !== 'members') renderAll(); });
+window.addEventListener('storage', e => { if (e.key && e.key !== GKY.ORG_KEY && e.key !== 'gakuya.mtime' && !e.key.startsWith('gakuya.view.') && tab !== 'members') renderAll(); });
 window.addEventListener('focus', () => { if (tab === 'tools' || tab === 'backup' || tab === 'concerts') renderTab(); });
 GKY.fitTop(); GKY.offline();
 // ツールの画面の「バックアップのお知らせ」・本番の札から来たときは、そのタブを開く
-const hashTab = () => ({ '#backup': 'backup', '#concerts': 'concerts' })[location.hash] || '';
+const hashTab = () => ({ '#backup': 'backup', '#concerts': 'concerts', '#notice': 'notice', '#yearend': 'org' })[location.hash] || '';
 window.addEventListener('hashchange', () => { const t = hashTab(); if (t) showTab(t); });
 showTab(hashTab() || 'tools');
 renderAll();
 (async () => {
   const viewing = await startViewer();
   if (!viewing) { await receiveJoin(); survey(); }
-  if (GKY.TEST) window.__app = { ready: true, TOOLS, LINKS, renderAll, promoInfo, profiles, switchTo, showTab, buildBackup, foundConcerts, loadStates, icsOf, applyJoin, msel };
+  if (GKY.TEST) window.__app = { ready: true, TOOLS, LINKS, renderAll, promoInfo, profiles, switchTo, showTab, buildBackup, foundConcerts, loadStates, icsOf, applyJoin, msel,
+    parseTt, parseJobs, dayTemplate, ttFromStagemane, dayPayload, calItems, yeSteps, yeFy, yeCount, ntState, ntTemplate, normNotice, ntText, buildSync, syncPlan, applySync };
 })();
 })();
 </script>

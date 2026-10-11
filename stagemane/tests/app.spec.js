@@ -149,3 +149,12 @@ test('書き出したデータに楽屋の本番が入り、読み込むと戻�
   expect(await page.evaluate(() => __app.C.info.concert)).toBe('c2');
   await noErrors(errors);
 });
+
+test('楽屋の同期ファイルのため、演奏会を保存した時刻を記録する（表示の好みは数えない）', async ({ page }) => {
+  const errors = await openApp(page);
+  await page.click('#btnNew');
+  await page.waitForTimeout(900);
+  const r = await page.evaluate(() => { const m = JSON.parse(localStorage.getItem('gakuya.mtime') || '{}'), id = __app.C.id; return { c: m['stagemane.v1.c.' + id] > 0, idx: m['stagemane.v1'] > 0, ui: 'stagemane.v1.ui' in m }; });
+  expect(r).toEqual({ c: true, idx: true, ui: false });
+  await noErrors(errors);
+});
