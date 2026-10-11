@@ -450,6 +450,7 @@ tr.low td{background:var(--warn-soft)}
           <h3 style="font-size:13px;margin:14px 0 6px">名簿の設定</h3>
           <label class="chk"><input type="checkbox" id="setExtra"> エキストラ・賛助の人も名簿に入れる</label>
           <label class="chk"><input type="checkbox" id="setLeave"> 休部（休団）中の人も名簿に入れる</label>
+          <label class="chk"><input type="checkbox" id="setSemi"> 仮引退の人も名簿に入れる</label>
           <div class="btnrow" style="margin-top:8px"><button class="btn" id="exAdd">この出欠だけの名簿に足す</button></div>
           <div id="exList" style="margin-top:8px"></div>
         </div>
@@ -1690,8 +1691,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '1', APP_DATE = '2026-10-06';
+const APP_VERSION = '2', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '2', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（予定の「楽屋の本番」）。楽屋の本番から開くと、その本番の出欠を開くか、予定を作ります', '仮引退の人も名簿に入れられるようにしました（印刷・ファイルの「名簿の設定」）', '出欠の記録は、コウバン（休み）と合奏ノート（その日の欠席）でも使えます'] },
   { v: '1', d: '2026-10-06', items: ['はじめての版：練習・本番の予定（くり返しで足せる）、○ × 遅刻 早退と理由、だれもいないパートの知らせ、出席率（人・パート）、見るだけのリンクと返事の取り込み、記入用の出欠表・記録の印刷、CSV'] },
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（バミリと同じ）を使います
@@ -1701,17 +1703,17 @@ const KINDS = { practice: '練習', show: '本番', other: 'その他' };
 const TITLES = ['合奏', '練習', 'パート練習', 'セクション練習', 'リハーサル', '本番', 'ミーティング'];
 
 /* ---------- データの形 ----------
-  S = { v:1, sample, events:[{ id, date, start, end, title, kind:'practice'|'show'|'other', place, note }],
+  S = { v:1, sample, events:[{ id, date, start, end, title, kind:'practice'|'show'|'other', place, note, concert(楽屋の本番の id) }],
         att:{ 予定id:{ 名前のかぎ:{ s:'p'|'a'|'l'|'e', r:理由 } } },
-        extra:[{ name, part, grade }]（楽屋にいない人。この出欠だけの名簿）, settings:{ withExtra, withLeave } }
+        extra:[{ name, part, grade }]（楽屋にいない人。この出欠だけの名簿）, settings:{ withExtra, withLeave, withSemi } }
   名前のかぎ＝名前から空白をとったもの（楽屋の名前を直すと、前の出欠とはつながりません） */
 const nameKey = n => norm(n).replace(/^\(例\)/, '').replace(/\s+/g, '');   // 「（例）」は norm で「(例)」になる
-const newEvent = (o = {}) => Object.assign({ id: uid('e'), date: GKY.ymd(), start: '', end: '', title: '練習', kind: 'practice', place: '', note: '' }, o);
+const newEvent = (o = {}) => Object.assign({ id: uid('e'), date: GKY.ymd(), start: '', end: '', title: '練習', kind: 'practice', place: '', note: '', concert: '' }, o);
 const okTime = t => /^\d{1,2}:\d{2}$/.test(t) ? t.padStart(5, '0') : '';
 function normalize(s) {
   s = s && typeof s === 'object' ? s : {};
-  const out = { v: 1, sample: !!s.sample, events: [], att: {}, extra: [], settings: Object.assign({ withExtra: false, withLeave: false }, s.settings || {}) };
-  out.events = (Array.isArray(s.events) ? s.events : []).filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date)).map(e => { const x = newEvent(e); x.id = typeof x.id === 'string' && x.id ? x.id : uid('e'); x.start = okTime(x.start); x.end = okTime(x.end); x.title = norm(x.title) || '練習'; if (!KINDS[x.kind]) x.kind = 'practice'; x.place = norm(x.place); x.note = String(x.note || ''); return x; });
+  const out = { v: 1, sample: !!s.sample, events: [], att: {}, extra: [], settings: Object.assign({ withExtra: false, withLeave: false, withSemi: false }, s.settings || {}) };
+  out.events = (Array.isArray(s.events) ? s.events : []).filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date)).map(e => { const x = newEvent(e); x.id = typeof x.id === 'string' && x.id ? x.id : uid('e'); x.start = okTime(x.start); x.end = okTime(x.end); x.title = norm(x.title) || '練習'; if (!KINDS[x.kind]) x.kind = 'practice'; x.place = norm(x.place); x.note = String(x.note || ''); x.concert = typeof x.concert === 'string' ? x.concert : ''; return x; });
   const ids = new Set(out.events.map(e => e.id));
   for (const id in (s.att || {})) { if (!ids.has(id)) continue; const a = s.att[id] || {}; out.att[id] = {}; for (const k in a) { const v = a[k] || {}; if (ST[v.s]) out.att[id][k] = { s: v.s, r: String(v.r || '') }; } }
   out.extra = (Array.isArray(s.extra) ? s.extra : []).filter(m => m && norm(m.name)).map(m => ({ name: norm(m.name), part: GKY.partOf(m.part), grade: norm(m.grade) }));
@@ -1737,7 +1739,7 @@ function load() { const s = GKY.store.get(KEY); return s && Array.isArray(s.even
 /* ---------- 名簿 ---------- */
 /* 楽屋の部員（在籍。設定でエキストラ・賛助・休部も）＋ この出欠だけの名簿。パート順・学年の上から */
 function roster() {
-  const want = new Set(['active']); if (S.settings.withExtra) { want.add('extra'); want.add('support'); } if (S.settings.withLeave) want.add('leave');
+  const want = new Set(['active']); if (S.settings.withExtra) { want.add('extra'); want.add('support'); } if (S.settings.withLeave) want.add('leave'); if (S.settings.withSemi) want.add('semi');
   const out = [], seen = new Set();
   GKY.org().members.filter(m => want.has(m.status) && m.name).forEach(m => { const k = nameKey(m.name); if (seen.has(k)) return; seen.add(k); out.push({ key: k, name: m.name, part: GKY.familyOf(m.part) || '', grade: m.grade, status: m.status, from: 'org' }); });
   S.extra.forEach(m => { const k = nameKey(m.name); if (seen.has(k)) return; seen.add(k); out.push({ key: k, name: m.name, part: GKY.familyOf(m.part) || '', grade: m.grade, status: 'active', from: 'extra' }); });
@@ -1827,7 +1829,7 @@ function renderAtt() {
       ${s.maybe.length ? `<div class="issue warn" style="margin:8px 0"><span class="dot warn"></span><div class="main">まだ返事がなく、だれもいないかもしれないパート：${s.maybe.map(p => esc(GKY.partName(p))).join('、')}</div></div>` : ''}
       <div class="parts-sum">${Object.entries(s.parts).map(([p, x]) => `<span class="chip ${x.here ? '' : x.none ? 'warn' : 'bad'}" title="${esc(GKY.partName(p))}：出席 ${x.here} / ${x.n}人">${esc(p)} ${x.here}/${x.n}</span>`).join('')}</div>
       <div class="btnrow" style="margin-bottom:10px"><button class="btn sm" id="aAll">未記入の人を全員「出席」にする</button><button class="btn sm ghost" id="aClear">この予定の出欠を消す</button></div>
-      ${ros.length ? `<div class="att-box">${parts.map(p => `<div class="att-part"><h4>${esc(p ? GKY.partName(p) : 'パートなし')}</h4>${ros.filter(m => m.part === p).map(m => { const a = A(e.id, m.key); return `<div class="arow" data-k="${esc(m.key)}"><span class="nm">${esc(m.name)}<small>${esc([m.grade, m.status === 'extra' ? 'エキストラ' : m.status === 'support' ? '賛助' : m.status === 'leave' ? GKY.words().leave : ''].filter(Boolean).join('・'))}</small></span><span class="seg" role="group" aria-label="${esc(m.name)}の出欠">${Object.entries(ST).map(([k, v]) => `<button class="${k}" data-s="${k}" aria-pressed="${!!a && a.s === k}" title="${v[0]}">${v[1]}</button>`).join('')}</span>${a && a.s !== 'p' ? `<span class="why"><input type="text" data-why value="${esc(a.r)}" placeholder="${esc(ST[a.s][0])}の理由（例：塾・体調不良）" aria-label="${esc(m.name)}の${esc(ST[a.s][0])}の理由"></span>` : ''}</div>`; }).join('')}</div>`).join('')}</div>` : '<div class="empty"><b>名簿がありません</b>楽屋に名前を入れてください。</div>'}
+      ${ros.length ? `<div class="att-box">${parts.map(p => `<div class="att-part"><h4>${esc(p ? GKY.partName(p) : 'パートなし')}</h4>${ros.filter(m => m.part === p).map(m => { const a = A(e.id, m.key); return `<div class="arow" data-k="${esc(m.key)}"><span class="nm">${esc(m.name)}<small>${esc([m.grade, m.status === 'extra' ? 'エキストラ' : m.status === 'support' ? '賛助' : m.status === 'leave' ? GKY.words().leave : m.status === 'semi' ? '仮引退' : ''].filter(Boolean).join('・'))}</small></span><span class="seg" role="group" aria-label="${esc(m.name)}の出欠">${Object.entries(ST).map(([k, v]) => `<button class="${k}" data-s="${k}" aria-pressed="${!!a && a.s === k}" title="${v[0]}">${v[1]}</button>`).join('')}</span>${a && a.s !== 'p' ? `<span class="why"><input type="text" data-why value="${esc(a.r)}" placeholder="${esc(ST[a.s][0])}の理由（例：塾・体調不良）" aria-label="${esc(m.name)}の${esc(ST[a.s][0])}の理由"></span>` : ''}</div>`; }).join('')}</div>`).join('')}</div>` : '<div class="empty"><b>名簿がありません</b>楽屋に名前を入れてください。</div>'}
       <div class="btnrow" style="margin-top:12px"><span style="flex:1"></span><button class="btn danger sm" id="aDel">この予定を消す</button></div>
     </div>`;
   $('#aBack').onclick = () => { sel = null; renderEv(); };
@@ -1845,10 +1847,11 @@ $('#evPast').checked = !!GKY.pref('shukketsu.past', false);
 $('#evPast').onchange = e => { GKY.setPref('shukketsu.past', e.target.checked); renderEv(); };
 
 /* 予定を足す・直す（足すときは、くり返しで何回分も） */
-function eventSheet(id) {
+function eventSheet(id, c = null) {
   const e = id ? S.events.find(x => x.id === id) : null;
   const last = S.events.slice().sort(evSort).pop();
-  const v = e || newEvent({ date: GKY.ymd(), start: last ? last.start : '16:00', end: last ? last.end : '18:00', title: last ? last.title : '練習', place: last ? last.place : '' });
+  const v = e || (c ? newEvent({ date: c.date || GKY.ymd(), start: c.start, end: '', title: c.title, kind: 'show', place: c.venue, concert: c.id })
+    : newEvent({ date: GKY.ymd(), start: last ? last.start : '16:00', end: last ? last.end : '18:00', title: last ? last.title : '練習', place: last ? last.place : '' }));
   const sh = sheet({ title: e ? '予定を直す' : '予定を足す', content: `<div class="grid">
       <label class="fld"><span>日付</span><input type="date" id="eD" value="${esc(v.date)}"></label>
       <label class="fld"><span>はじまり</span><input type="time" id="eS" value="${esc(v.start)}"></label>
@@ -1857,6 +1860,7 @@ function eventSheet(id) {
       <label class="fld"><span>種類</span><select id="eK">${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${v.kind === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
       <label class="fld"><span>場所</span><input type="text" id="eP" value="${esc(v.place)}" placeholder="例：音楽室"></label>
       <label class="fld wide"><span>メモ</span><input type="text" id="eN" value="${esc(v.note)}" placeholder="例：課題曲の通し。譜面台を持ってくる"></label>
+      ${GKY.IN_VIEWER ? '' : GKY.concertField(v, { label: '楽屋の本番（本番のとき）' })}
     </div><datalist id="eTs">${TITLES.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
     ${e ? '' : `<h3 style="font-size:13px;margin:14px 0 6px">くり返し</h3>
     <label class="chk"><input type="checkbox" id="eRep"> 毎週くり返して足す</label>
@@ -1867,6 +1871,7 @@ function eventSheet(id) {
     actions: [{ label: 'やめる' }, { label: e ? '直す' : '足す', primary: true, onClick: body => {
       const d = $('#eD', body).value; if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { $('#eD', body).classList.add('bad'); return false; }
       const base = { start: okTime($('#eS', body).value), end: okTime($('#eE', body).value), title: norm($('#eT', body).value) || '練習', kind: $('#eK', body).value, place: norm($('#eP', body).value), note: String($('#eN', body).value || '').trim() };
+      const cid = GKY.readConcertField(body, { title: base.title, date: d, start: base.start, venue: base.place }); if (cid !== undefined) base.concert = cid;
       if (e) { edit(st => Object.assign(st.events.find(x => x.id === e.id), base, { date: d })); toast('予定を直しました'); return; }
       const dates = repDates(body, d);
       if (!dates.length) { toast('くり返しの曜日と期間を確かめてください'); return false; }
@@ -1877,6 +1882,8 @@ function eventSheet(id) {
       sel = add[0].id;
       toast(add.length > 1 ? `${add.length}回分の予定を足しました${dates.length > add.length ? `（もう入っていた${dates.length - add.length}回はのぞきました）` : ''}` : '予定を足しました');
     } }] });
+  GKY.wireConcertField(sh.body, { title: '#eT', date: '#eD', venue: '#eP', start: '#eS' });
+  const cs = $('[data-gky-concert]', sh.body); if (cs) cs.addEventListener('change', () => { if (cs.value) $('#eK', sh.body).value = 'show'; });
   if (!e) {
     const upd = () => { const on = $('#eRep', sh.body).checked; $('#eRepBox', sh.body).hidden = !on; if (on) $('#eRepN', sh.body).textContent = `${repDates(sh.body, $('#eD', sh.body).value).length}回分を足します。`; };
     // 曜日をまだ自分で選んでいないときは、日付を変えると、その日の曜日にそろえる
@@ -1996,12 +2003,13 @@ function renderIO() {
   const ms = [...new Set(S.events.map(e => e.date.slice(0, 7)))].sort(), cur = $('#prMonth').value || GKY.ymd().slice(0, 7);
   if (!ms.includes(cur)) ms.push(cur); ms.sort();
   $('#prMonth').innerHTML = ms.map(m => `<option value="${m}"${m === cur ? ' selected' : ''}>${m.slice(0, 4)}年${+m.slice(5)}月</option>`).join('');
-  $('#setExtra').checked = S.settings.withExtra; $('#setLeave').checked = S.settings.withLeave;
+  $('#setExtra').checked = S.settings.withExtra; $('#setLeave').checked = S.settings.withLeave; $('#setSemi').checked = S.settings.withSemi;
   $('#exList').innerHTML = S.extra.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>名前</th><th>パート</th><th>学年</th><th></th></tr></thead><tbody>${S.extra.map((m, i) => `<tr><td>${esc(m.name)}</td><td>${esc(m.part)}</td><td>${esc(m.grade)}</td><td><button class="ibtn del" data-exdel="${i}" aria-label="名簿から消す">×</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted" style="font-size:13px;margin:0">この出欠だけの名簿には、まだだれもいません。</p>';
   $$('[data-exdel]').forEach(b => b.onclick = () => { const i = +b.dataset.exdel, n = S.extra[i].name; edit(st => st.extra.splice(i, 1)); toast(`${n}さんを名簿から消しました（出欠の記録は残っています）`, '元に戻す', undo); });
 }
 $('#setExtra').onchange = e => edit(st => { st.settings.withExtra = e.target.checked; });
 $('#setLeave').onchange = e => edit(st => { st.settings.withLeave = e.target.checked; });
+$('#setSemi').onchange = e => edit(st => { st.settings.withSemi = e.target.checked; });
 $('#exAdd').onclick = () => {
   sheet({ title: 'この出欠だけの名簿に足す', content: `<p class="lead">1行に1人、「名前 パート 学年」のように書きます。楽屋の名簿にも入れたいときは、楽屋で足してください。</p><textarea id="exIn" style="min-height:150px" placeholder="山田 花子 フルート 中2&#10;鈴木 太郎 トランペット"></textarea>`,
     actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => {
@@ -2075,7 +2083,11 @@ GKY.onOrgChange(() => renderAll());
 GKY.fitTop(); GKY.offline();
 showTab('ev');
 renderAll();
-startViewer().finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, roster, summary, rates, replyText, readReplies, sharePayload, nameKey, normalize, renderAll, holidays }; });
+startViewer().then(viewing => {
+  // 楽屋の「本番」から開いたとき：その本番の出欠を開く（なければ予定を作る）
+  if (!viewing && !GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '出欠', find: c => S.sample ? null : GKY.recForConcert(S.events.filter(e => e.kind === 'show' || e.concert), c), open: r => { sel = r.id; showTab('ev'); renderEv(); },
+    create: c => { if (S.sample) { edit(st => { st.events = []; st.att = {}; st.extra = st.extra.filter(m => !/^\(例\)/.test(norm(m.name))); st.sample = false; }); toast('例の予定を消しました'); } eventSheet(null, c); } }));
+}).finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, roster, summary, rates, replyText, readReplies, sharePayload, nameKey, normalize, renderAll, holidays }; });
 })();
 </script>
 </body>

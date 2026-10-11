@@ -378,6 +378,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
       <div class="tbl-wrap"><table class="tbl bk" id="bkTable"></table></div>
       <p class="note">色のついた行は「団費」のタブで受け取った分です（日ごとにまとめて出しています。直すときは「団費」のタブで）。行を押すと直せます。</p>
       <div class="sec" id="tateBox" style="margin-top:12px"></div>
+      <div id="gakkiBox"></div>
     </section>
 
     <section data-panel="fee" hidden>
@@ -1645,8 +1646,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '1', APP_DATE = '2026-10-06';
+const APP_VERSION = '2', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '2', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（予算の「楽屋の本番」）。楽屋の本番から開くと、その本番の予算を開くか作ります', '楽器台帳の修理・点検などの記録に入れた金額を、帳簿にまとめて入れられるようにしました（二重には入りません）'] },
   { v: '1', d: '2026-10-06', items: ['はじめての版：収入と支出の帳簿（残高つき・立替の管理）、団費・部費の集金（受け取り・免除・まだの人）、演奏会などの予算と実績、年度の会計報告（繰越・科目ごと・署名欄）、CSV'] },
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（バミリと同じ）を使います
@@ -1659,7 +1661,8 @@ const METHODS = ['現金', '振込', '立替'];
   S = { v:1, sample, start(年度のはじまりの月 1〜12), carry:{ 年度: 前年度からの繰越（円。ないときは前の年度の残りを使う） },
         ledger:[{ id, date, kind:'in'|'out', cat, title, amount, who(相手・立て替えた人), method:'現金'|'振込'|'立替', receipt(領収書の番号), budget(予算id), note, paidBack(立替を返した) }],
         fees:{ plans:[{ id, name, amount, due, budget }], paid:{ 集金id:{ 名前のかぎ:{ date, amount } } }, ex:{ 集金id:{ 名前のかぎ:true } } },
-        budgets:[{ id, name, date, lines:[{ id, kind, cat, plan }] }], extra:[{ name, part, grade }] }
+        budgets:[{ id, name, date, concert(楽屋の本番の id), lines:[{ id, kind, cat, plan }] }], extra:[{ name, part, grade }],
+        imported:{ 'gakki:楽器id:記録id': 帳簿の記録id | 'skip' }（楽器台帳から入れた・入れないことにした費用） }
   名前のかぎ＝名前から空白をとったもの（出欠と同じ） */
 const nameKey = n => norm(n).replace(/^\(例\)/, '').replace(/\s+/g, '');
 const toYen = v => { const s = norm(v).replace(/[,，円¥￥\s]/g, ''); if (s === '') return null; const n = Math.round(+s); return isFinite(n) && n >= 0 ? n : NaN; };
@@ -1668,9 +1671,10 @@ const okDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d);
 const newEntry = (o = {}) => Object.assign({ id: uid('k'), date: GKY.ymd(), kind: 'out', cat: '', title: '', amount: 0, who: '', method: '現金', receipt: '', budget: '', note: '', paidBack: false }, o);
 function normalize(s) {
   s = s && typeof s === 'object' ? s : {};
-  const out = { v: 1, sample: !!s.sample, start: Math.min(12, Math.max(1, Math.round(+s.start || 4))), carry: {}, ledger: [], fees: { plans: [], paid: {}, ex: {} }, budgets: [], extra: [] };
+  const out = { v: 1, sample: !!s.sample, start: Math.min(12, Math.max(1, Math.round(+s.start || 4))), carry: {}, ledger: [], fees: { plans: [], paid: {}, ex: {} }, budgets: [], extra: [], imported: {} };
+  for (const k in (s.imported || {})) if (/^gakki:/.test(k)) out.imported[k] = String(s.imported[k]);
   for (const y in (s.carry || {})) { const n = toYen(s.carry[y]); if (n != null && !isNaN(n) && /^\d{4}$/.test(y)) out.carry[y] = n; }
-  out.budgets = (Array.isArray(s.budgets) ? s.budgets : []).filter(b => b).map(b => ({ id: typeof b.id === 'string' && b.id ? b.id : uid('b'), name: norm(b.name) || '予算', date: okDate(b.date) ? b.date : '', lines: (Array.isArray(b.lines) ? b.lines : []).filter(l => l).map(l => ({ id: l.id || uid('l'), kind: l.kind === 'in' ? 'in' : 'out', cat: norm(l.cat) || '雑費', plan: toYen(l.plan) || 0 })) }));
+  out.budgets = (Array.isArray(s.budgets) ? s.budgets : []).filter(b => b).map(b => ({ id: typeof b.id === 'string' && b.id ? b.id : uid('b'), name: norm(b.name) || '予算', date: okDate(b.date) ? b.date : '', concert: typeof b.concert === 'string' ? b.concert : '', lines: (Array.isArray(b.lines) ? b.lines : []).filter(l => l).map(l => ({ id: l.id || uid('l'), kind: l.kind === 'in' ? 'in' : 'out', cat: norm(l.cat) || '雑費', plan: toYen(l.plan) || 0 })) }));
   const bids = new Set(out.budgets.map(b => b.id));
   out.ledger = (Array.isArray(s.ledger) ? s.ledger : []).filter(e => e && okDate(e.date)).map(e => { const x = newEntry(e); x.id = typeof x.id === 'string' && x.id ? x.id : uid('k'); x.kind = x.kind === 'in' ? 'in' : 'out'; x.cat = norm(x.cat) || (x.kind === 'in' ? '雑収入' : '雑費'); x.title = norm(x.title); x.amount = toYen(x.amount) || 0; x.who = norm(x.who); x.method = METHODS.includes(x.method) ? x.method : '現金'; x.receipt = norm(x.receipt); x.budget = bids.has(x.budget) ? x.budget : ''; x.note = String(x.note || ''); x.paidBack = !!x.paidBack; return x; });
   const f = s.fees || {};
@@ -1780,6 +1784,7 @@ $('#ySel').onchange = e => { Y = +e.target.value; renderAll(); };
 
 /* --- 帳簿 --- */
 function renderBook() {
+  renderGakki();
   const r = yearOf(Y), [a] = yRange(Y);
   const months = [...new Set(r.rows.map(x => x.date.slice(0, 7)))].sort();
   const keep = (sel, v) => { const o = $(sel).value; return o && v.includes(o) ? o : ''; };
@@ -1802,6 +1807,34 @@ function renderBook() {
   $$('[data-back]').forEach(b => b.onclick = () => edit(st => { const x = st.ledger.find(e => e.id === b.dataset.back); x.paidBack = true; x.note = (x.note ? x.note + '　' : '') + GKY.ymd() + ' 返した'; }));
 }
 ['fMonth', 'fCat', 'fBud'].forEach(id => $('#' + id).addEventListener('change', renderBook));
+/* 楽器台帳の修理・点検などの費用（帳簿にまだ入れていないもの） */
+const GAKKI_T = { repair: '修理', back: '修理から戻った', check: '点検', buy: '購入', memo: 'メモ' };
+function gakkiCosts() {
+  const g = GKY.IN_VIEWER ? null : GKY.store.get('gakki.v1');
+  if (!g || g.sample || !Array.isArray(g.items)) return [];
+  const out = [];
+  g.items.forEach(i => (Array.isArray(i.log) ? i.log : []).forEach(l => { const k = `gakki:${i.id}:${l.id}`; if (l && +l.cost > 0 && okDate(l.date) && !S.imported[k]) out.push({ k, date: l.date, amount: Math.round(+l.cost), title: `${[i.no, i.name].filter(Boolean).join(' ')}：${l.text || GAKKI_T[l.type] || '費用'}`, type: l.type }); }));
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+function renderGakki() {
+  const xs = S.sample ? [] : gakkiCosts();
+  $('#gakkiBox').innerHTML = xs.length ? `<div class="issue warn" style="margin-top:12px"><span class="dot warn"></span><div class="main"><div>楽器台帳の修理・点検などの費用が <b>${xs.length}件</b>（${yen(xs.reduce((t, x) => t + x.amount, 0))}）、まだ帳簿に入っていません</div><div class="sub">楽器台帳の記録に入れた金額です。帳簿に入れると、ここには出なくなります。</div></div><button class="btn sm primary" id="gkSee">見て入れる</button></div>` : '';
+  const b = $('#gkSee'); if (b) b.onclick = () => gakkiSheet(xs);
+}
+function gakkiSheet(xs) {
+  sheet({ title: '楽器台帳の費用を帳簿に入れる', wide: true, content: `<p class="lead">入れるものにチェックを入れてください。科目は「楽器の修理・購入」、払いかたは「現金」で入れます（あとで直せます）。入れないものは「入れない」にすると、もう出ません。</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>入れる</th><th>日付</th><th>内容</th><th class="num">金額</th><th>入れない</th></tr></thead><tbody>${xs.map((x, i) => `<tr data-i="${i}"><td><input type="checkbox" data-on checked aria-label="帳簿に入れる" style="width:18px;height:18px"></td><td class="mono">${esc(x.date)}</td><td>${esc(x.title)}</td><td class="num yen">${yen(x.amount)}</td><td><input type="checkbox" data-skip aria-label="入れない" style="width:18px;height:18px"></td></tr>`).join('')}</tbody></table></div>`,
+    actions: [{ label: 'やめる' }, { label: '帳簿に入れる', primary: true, onClick: body => {
+      const rows = $$('tr[data-i]', body).map(tr => ({ x: xs[+tr.dataset.i], on: $('[data-on]', tr).checked && !$('[data-skip]', tr).checked, skip: $('[data-skip]', tr).checked }));
+      const add = rows.filter(r => r.on), skip = rows.filter(r => r.skip);
+      if (!add.length && !skip.length) { toast('入れるものを選んでください'); return false; }
+      edit(st => {
+        add.forEach(r => { const e = newEntry({ date: r.x.date, kind: 'out', cat: '楽器の修理・購入', title: r.x.title, amount: r.x.amount, method: '現金', note: '楽器台帳から' }); st.ledger.push(e); st.imported[r.x.k] = e.id; });
+        skip.forEach(r => { st.imported[r.x.k] = 'skip'; });
+      });
+      toast(`${add.length}件を帳簿に入れました${skip.length ? `（${skip.length}件は入れないことにしました）` : ''}`, '元に戻す', undo);
+    } }] });
+}
 $('#fQ').addEventListener('input', GKY.debounce(renderBook, 150));
 function entrySheet(id, kind = 'out') {
   const e = id ? S.ledger.find(x => x.id === id) : newEntry({ kind, date: GKY.ymd() < yRange(Y)[0] || GKY.ymd() > yRange(Y)[1] ? yRange(Y)[1] : GKY.ymd() });
@@ -1905,6 +1938,17 @@ $('#feeNew').onclick = () => planSheet(null);
 $('#feeEdit').onclick = () => { if (P()) planSheet(plan); };
 
 /* --- 予算と実績 --- */
+const BUDGET_TPL = [['in', '入場料・チケット'], ['in', '寄付・協賛'], ['out', '会場費'], ['out', '楽譜'], ['out', '運搬費'], ['out', '印刷費'], ['out', '指導料・謝礼']];
+function budgetNew(c) {
+  const sh = sheet({ title: '予算を作る', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(c ? { concert: c.id } : {})}<label class="fld wide"><span>名前</span><input type="text" id="bN" placeholder="例：第13回 定期演奏会・夏合宿" value="${esc(c ? c.title : '')}"></label><label class="fld"><span>日付（本番など）</span><input type="date" id="bD" value="${esc(c ? c.date : '')}"></label></div><label class="chk" style="margin-top:8px"><input type="checkbox" id="bTpl" checked> よく使う科目の行を入れておく</label>`,
+    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => {
+      if (S.sample) { edit(st => { Object.assign(st, normalize({ start: st.start })); }); toast('例の帳簿を消しました'); }
+      const nb = { id: uid('b'), name: norm($('#bN', body).value) || '予算', date: $('#bD', body).value, concert: '', lines: $('#bTpl', body).checked ? BUDGET_TPL.map(([kind, cat]) => ({ id: uid('l'), kind, cat, plan: 0 })) : [] };
+      const cid = GKY.readConcertField(body, { title: nb.name, date: nb.date }); if (cid) nb.concert = cid;
+      edit(st => st.budgets.push(nb)); bud = nb.id; showTab('budget'); toast('予算を作りました。帳簿の記録に、この予算をつけると実績に入ります');
+    } }] });
+  GKY.wireConcertField(sh.body, { title: '#bN', date: '#bD' });
+}
 const B = () => S.budgets.find(b => b.id === bud);
 /* 予算の実績：その予算をつけた帳簿の記録（団費の集金も）を、収入・支出と科目ごとに足す */
 function budgetView(b) {
@@ -1919,19 +1963,21 @@ function renderBudget() {
   if (!B()) bud = (S.budgets[S.budgets.length - 1] || {}).id || '';
   $('#bgList').innerHTML = S.budgets.map(b => `<button class="chip" data-b="${esc(b.id)}" aria-pressed="${b.id === bud}">${esc(b.name)}</button>`).join('') + '<button class="btn sm" id="bgNew">＋ 予算を作る</button>';
   $$('#bgList [data-b]').forEach(x => x.onclick = () => { bud = x.dataset.b; renderBudget(); });
-  $('#bgNew').onclick = () => sheet({ title: '予算を作る', content: `<div class="grid"><label class="fld wide"><span>名前</span><input type="text" id="bN" placeholder="例：第13回 定期演奏会・夏合宿"></label><label class="fld"><span>日付（本番など）</span><input type="date" id="bD"></label></div><label class="chk" style="margin-top:8px"><input type="checkbox" id="bTpl" checked> よく使う科目の行を入れておく</label>`,
-    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => { const nb = { id: uid('b'), name: norm($('#bN', body).value) || '予算', date: $('#bD', body).value, lines: $('#bTpl', body).checked ? [['in', '入場料・チケット'], ['in', '寄付・協賛'], ['out', '会場費'], ['out', '楽譜'], ['out', '運搬費'], ['out', '印刷費'], ['out', '指導料・謝礼']].map(([kind, cat]) => ({ id: uid('l'), kind, cat, plan: 0 })) : [] }; edit(st => st.budgets.push(nb)); bud = nb.id; toast('予算を作りました。帳簿の記録に、この予算をつけると実績に入ります'); } }] });
+  $('#bgNew').onclick = () => budgetNew(null);
   const b = B();
   if (!b) { $('#bgBody').innerHTML = '<div class="empty"><b>予算はまだありません</b>演奏会や合宿ごとに予算を作ると、帳簿の記録とくらべられます。</div>'; return; }
   const v = budgetView(b);
   const row = r => `<tr data-kind="${r.kind}" data-cat="${esc(r.cat)}"><td>${esc(r.cat)}</td><td class="num"><input type="text" data-plan value="${r.plan || ''}" inputmode="numeric" placeholder="0" style="width:8em;text-align:right;min-height:30px" aria-label="${esc(r.cat)}の予算"></td><td class="num yen">${yen(r.act)}</td><td class="num yen diff ${r.kind === 'out' ? (r.act > r.plan ? 'over' : r.act < r.plan ? 'under' : '') : (r.act < r.plan ? 'over' : r.act > r.plan ? 'under' : '')}">${r.act - r.plan ? (r.act - r.plan > 0 ? '+' : '') + yen(r.act - r.plan) : ''}</td><td><button class="ibtn del" data-del aria-label="この行を消す">×</button></td></tr>`;
   const part = (k, label, t) => `<tr><th colspan="5" style="text-align:left">${label}</th></tr>${v.rows.filter(r => r.kind === k).map(row).join('')}<tr class="tot"><td><b>${label}の計</b></td><td class="num yen">${yen(t.plan)}</td><td class="num yen">${yen(t.act)}</td><td class="num yen">${t.act - t.plan ? (t.act - t.plan > 0 ? '+' : '') + yen(t.act - t.plan) : ''}</td><td></td></tr>`;
   $('#bgBody').innerHTML = `<div class="sec"><div class="btnrow" style="margin-bottom:8px"><input type="text" id="bgName" value="${esc(b.name)}" aria-label="予算の名前" style="flex:1 1 200px;width:auto;font-weight:700"><input type="date" id="bgDate" value="${esc(b.date)}" aria-label="日付" style="width:auto"><button class="btn sm danger" id="bgDel">この予算を消す</button></div>
+    ${GKY.IN_VIEWER ? '' : `<div class="grid" style="margin-bottom:8px" id="bgConcert">${GKY.concertField(b)}</div>`}
     <div class="tbl-wrap"><table class="tbl bud"><thead><tr><th>科目</th><th class="num">予算</th><th class="num">実績</th><th class="num">差</th><th></th></tr></thead><tbody>${part('in', '収入', v.tin)}${part('out', '支出', v.tout)}<tr class="tot"><td><b>収支（収入−支出）</b></td><td class="num yen">${yen(v.tin.plan - v.tout.plan)}</td><td class="num yen">${yen(v.tin.act - v.tout.act)}</td><td></td><td></td></tr></tbody></table></div>
     <div class="btnrow" style="margin-top:8px"><button class="btn sm" data-addl="in">＋ 収入の科目</button><button class="btn sm" data-addl="out">＋ 支出の科目</button><span style="flex:1"></span><button class="btn sm" id="bgPrint">予算と実績を印刷</button></div>
     <p class="note">実績は、帳簿でこの予算をつけた記録（団費の集金でこの予算をつけたものも）の合計です。支出の「差」が赤いのは、予算より多く使った所です。</p></div>`;
   $('#bgName').onchange = e => edit(st => { st.budgets.find(x => x.id === b.id).name = norm(e.target.value) || b.name; });
   $('#bgDate').onchange = e => edit(st => { st.budgets.find(x => x.id === b.id).date = e.target.value; });
+  const bc = $('#bgConcert [data-gky-concert]');
+  if (bc) bc.onchange = () => { const cid = GKY.readConcertField($('#bgConcert'), { title: b.name, date: b.date }), c = GKY.concertOf(cid); edit(st => { const x = st.budgets.find(y => y.id === b.id); x.concert = cid || ''; if (c && !x.date) x.date = c.date; }); toast(c ? `楽屋の本番「${c.title}」とつなぎました` : 'つなぐのをやめました'); };
   $$('#bgBody tr[data-cat]').forEach(tr => {
     const k = tr.dataset.kind, c = tr.dataset.cat;
     $('[data-plan]', tr).onchange = e => { const n = toYen(e.target.value); if (n != null && isNaN(n)) { e.target.classList.add('bad'); toast('金額を数字で入れてください'); return; } edit(st => { const bb = st.budgets.find(x => x.id === b.id); const ls = bb.lines.filter(l => l.kind === k && l.cat === c); if (ls.length) { ls[0].plan = n || 0; ls.slice(1).forEach(l => { l.plan = 0; }); } else bb.lines.push({ id: uid('l'), kind: k, cat: c, plan: n || 0 }); }); };
@@ -2005,7 +2051,9 @@ GKY.onOrgChange(() => renderAll());
 GKY.fitTop(); GKY.offline();
 showTab('book');
 renderAll();
-if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, get Y() { return Y; }, yearOf, carryOf, feeRows, feeState, budgetView, roster, normalize, toYen, fyOf, yRange, renderAll };
+// 楽屋の「本番」から開いたとき：その本番の予算を開く（なければ作るか聞く）
+if (!GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '予算', find: c => { if (S.sample) return null; const r = GKY.recForConcert(S.budgets.map(b => ({ id: b.id, concert: b.concert, date: b.date, title: b.name })), c); return r ? S.budgets.find(b => b.id === r.id) : null; }, open: r => { bud = r.id; showTab('budget'); }, create: c => budgetNew(c) }));
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, get Y() { return Y; }, yearOf, carryOf, feeRows, feeState, budgetView, roster, normalize, toYen, fyOf, yRange, renderAll, gakkiCosts };
 })();
 </script>
 </body>

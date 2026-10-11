@@ -360,6 +360,24 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .slbar{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:12px}
 .slbar select{flex:1 1 220px}
 .more{display:flex; justify-content:center; margin-top:8px}
+/* PDFの楽譜 */
+.pdf{display:grid; grid-template-columns:minmax(6.5em,auto) minmax(0,1fr) auto; gap:6px 8px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line); font-size:13px}
+.pdf:last-child{border-bottom:0}
+.pdf select{width:auto; max-width:10em; min-height:32px; font-size:13px}
+.pdf .nm{min-width:0; overflow-wrap:anywhere}
+.pdf .nm small{display:block; color:var(--muted); font-size:11.5px}
+.pdf .act{display:flex; gap:4px; align-items:center}
+@media (max-width:560px){ .pdf{grid-template-columns:minmax(0,1fr) auto} .pdf .nm{grid-column:1/-1; grid-row:1} }
+.nopdf{display:flex; flex-wrap:wrap; gap:4px; align-items:center; font-size:12.5px; margin-top:8px}
+#pdfSec.drag{outline:2px dashed var(--tape); outline-offset:-4px; background:var(--tape-soft)}
+.droptip{display:none}
+@media (hover:hover) and (pointer:fine){ .droptip{display:inline} }
+.bund td{vertical-align:top}
+.bund td .miss{display:block; font-size:11.5px; color:var(--muted)}
+.bund td.num{white-space:nowrap}
+.imp-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:6px 10px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line); font-size:13px}
+.imp-row:last-child{border-bottom:0}
+@media (max-width:560px){ .imp-row{grid-template-columns:minmax(0,1fr)} }
 </style>
 </head>
 <body>
@@ -415,6 +433,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
         <div class="sec">
           <h2>曲を選ぶ</h2>
           <div class="grid" style="margin-bottom:10px">
+            <div id="slCf" style="display:contents"></div>
             <label class="fld wide"><span>演奏会の名前</span><input type="text" id="slTitle" placeholder="例：第12回 定期演奏会"></label>
             <label class="fld"><span>日付</span><input type="date" id="slDate"></label>
             <label class="fld"><span>会場</span><input type="text" id="slVenue" placeholder="例：〇〇市民会館"></label>
@@ -432,6 +451,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
             <button class="btn" id="slCsv">CSVで保存</button>
             <button class="btn" id="slCopy">文字でコピー</button>
             <button class="btn" id="slHist">演奏の記録に足す</button>
+            <button class="btn" id="slPdf">パートごとのPDF</button>
           </div>
           <p class="note">入場料をとる演奏会などでは、著作権の手続き（JASRACなど）が必要になる場合があります。必要かどうか・どこへ出すかは、演奏会の条件に合わせて確かめてください。「著作権の手続き用」の一覧には、作詞者・原曲名・メドレーの内訳も入ります（曲の「くわしく」で入れておくと出ます）。自分たちで編曲した楽譜を使うときは、編曲の許可についても確かめてください。</p>
         </div>
@@ -441,7 +461,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
     <section data-panel="io" hidden>
       <div class="gky-cols">
         <div>
-          <div class="sec">
+          <div class="sec" data-staff>
             <h2>楽屋とつなぐ</h2>
             <p class="lead">同じ場所（bamiriunei-arch.github.io）に置いたツールは、楽屋の曲データを使えます。コウバンでは編成がそのまま受け持ちになり、ステマネの曲名の書き方もそろえやすくなります。</p>
             <label class="chk"><input type="checkbox" id="autoSync"> 曲を直したら、自動で楽屋に反映する</label>
@@ -468,7 +488,14 @@ a.gky-cchip:hover{border-color:var(--tape)}
               <button class="btn" id="btnJsonOut">ファイルに保存（バックアップ）</button>
               <button class="btn" id="btnJsonIn">ファイルから読み込む</button>
             </div>
-            <p class="note">「ファイルに保存」で保存したファイルを読み込むと、今の台帳と入れかわります（読み込む前に確かめが出ます）。</p>
+            <p class="note">「ファイルに保存」で保存したファイルを読み込むと、今の台帳と入れかわります（読み込む前に確かめが出ます）。PDFの楽譜はこのファイルには入りません（下の「PDFの楽譜」で、zipにまとめて保存してください）。</p>
+          </div>
+          <div class="sec" id="pdfIO">
+            <h2>PDFの楽譜<small id="pdfUse"></small></h2>
+            <p class="lead">曲に入れたPDF（スコア・パート譜）は、この端末の中（ファイル置き場）にあります。ほかの端末へ移すときや、とっておくときは、zipにまとめて保存してください。読み込むと、同じ曲（なければ同じ曲名の曲）に入ります。</p>
+            <div class="btnrow"><button class="btn" id="pdfOut">PDFをzipで保存</button><button class="btn" id="pdfIn">zipから読み込む</button></div>
+            <div id="pdfOrph"></div>
+            <p class="note">同じ曲に、同じ名前・同じ大きさのPDFは2つ入れません。ほかのソフトで作ったzipも読めます（フォルダの名前か、ファイルの名前に入っている曲名で、曲を見分けます）。</p>
           </div>
         </div>
       </div>
@@ -1708,8 +1735,15 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: [
+    'スコアやパート譜のPDF（写真も）を、曲ごとに入れて開けるようにしました。ファイルの名前からパートを見分け（例：「宝島_Tp1.pdf」→ Tp1）、PDFのないパートもわかります。zipのまま入れることもできます',
+    '曲目一覧から、パートごとにPDFをまとめて送れるようにしました（全部のパートをパートごとのフォルダに分けたzipも作れます）',
+    'PDFをzipにまとめて保存し、ほかの端末で読み込めるようにしました（「取り込み・書き出し」）',
+    '曲目一覧を楽屋の「本番」とつなげるようにしました。楽屋の本番から開くと、その本番の曲目一覧を開くか作ります',
+    '部員用の端末では、楽屋への反映をしないようにしました',
+  ] },
   { v: '2', d: '2026-10-06', items: [
     '「今の部員でできる曲」の数え方を直しました：打楽器は楽器ごとではなく人数で数え（曲ごとに「打楽器の人数」を入れられます）、「なくても可」にしたパートは足りなくても数えません。ピッコロ←フルート、バストロンボーン←トロンボーンのような近い楽器の持ち替えも数え、「できる（持ち替え）」と出します',
     '作詞者・原曲名・メドレーの内訳を入れられるようにし、「著作権の手続き用」の曲目一覧（印刷・CSV）に出るようにしました',
@@ -1729,13 +1763,15 @@ const LOAN = { out: '貸している', in: '借りている' };
 
 /* ---------- データの形 ----------
   S = { v:1, sample, songs:[曲], settings:{ autoSync, canSrc:'org'|'manual', counts:{楽器:人数} }, setlists:[曲目一覧], slCur:曲目一覧のid }
-  曲目一覧 = { id, title, date, venue, ids:[曲id] }
+  曲目一覧 = { id, title, date, venue, concert(楽屋の本番のid), ids:[曲id] }
+  PDFの楽譜は S に入れず、共通の「ファイル置き場」（GKY.media、cat:'score'）に入れる：
+  { id, cat:'score', name(ファイル名), type, size, at, from, song(曲id), title(入れたときの曲名), part('スコア' | パートのラベル | 楽器の記号（Tp など：その楽器の全部のパート） | ''(その他)) } 
   曲 = { id, title, kana, composer, lyricist(作詞), arranger, original(原曲名), medley:[{ title, composer, lyricist }], publisher, catalog, grade, dur(秒), tags:[],
          parts:[ラベル], opt:[なくても演奏できるパートのラベル], percN(打楽器の人数|null),
          location, source, rentFrom, rentDue, returned, inv:{ ラベル:{ n, st } }, history:[{ id, date, event }],
          loans:[{ id, dir:'out'|'in', who, since, due, back }], memo, added } */
 const newSong = (o = {}) => Object.assign({ id: uid('s'), title: '', kana: '', composer: '', lyricist: '', arranger: '', original: '', medley: [], publisher: '', catalog: '', grade: '', dur: null, tags: [], parts: [], opt: [], percN: null, location: '', source: 'buy', rentFrom: '', rentDue: '', returned: false, inv: {}, history: [], loans: [], memo: '', added: Date.now() }, o);
-const newList = (o = {}) => Object.assign({ id: uid('l'), title: '', date: '', venue: '', ids: [] }, o);
+const newList = (o = {}) => Object.assign({ id: uid('l'), title: '', date: '', venue: '', concert: '', ids: [] }, o);
 function normalizeSong(x) {
   const s = newSong(x && typeof x === 'object' ? x : {});
   if (typeof s.id !== 'string' || !s.id) s.id = uid('s');
@@ -1781,7 +1817,7 @@ function sampleState() {
 }
 /* 曲目一覧：前の版の1つだけの曲目一覧（setlist）は、1つめの曲目一覧にする */
 function normLists(s) {
-  const ls = (Array.isArray(s.setlists) ? s.setlists : s.setlist ? [s.setlist] : []).filter(Boolean).map(x => { const l = newList(x); l.id = typeof l.id === 'string' && l.id ? l.id : uid('l'); l.ids = (Array.isArray(l.ids) ? l.ids : []).filter(id => typeof id === 'string'); ['title', 'date', 'venue'].forEach(k => l[k] = String(l[k] || '')); return l; });
+  const ls = (Array.isArray(s.setlists) ? s.setlists : s.setlist ? [s.setlist] : []).filter(Boolean).map(x => { const l = newList(x); l.id = typeof l.id === 'string' && l.id ? l.id : uid('l'); l.ids = (Array.isArray(l.ids) ? l.ids : []).filter(id => typeof id === 'string'); ['title', 'date', 'venue', 'concert'].forEach(k => l[k] = String(l[k] || '')); return l; });
   if (!ls.length) ls.push(newList());
   return { setlists: ls, slCur: ls.some(x => x.id === s.slCur) ? s.slCur : ls[0].id };
 }
@@ -1793,6 +1829,48 @@ function load() {
   return sampleState();
 }
 const SL = st => st.setlists.find(x => x.id === st.slCur) || st.setlists[0];
+
+/* ---------- PDFの楽譜（共通の「ファイル置き場」GKY.media の cat:'score'） ---------- */
+let PDFS = [];   // この端末に入っている楽譜のファイル（meta）
+async function loadPdfs() { try { PDFS = GKY.media.ok() ? await GKY.media.list(m => m.cat === 'score') : []; } catch (e) { PDFS = []; } return PDFS; }
+const SCORE = 'スコア';
+const isCode = p => GKY.PARTS.some(x => x[0] === p) || GKY.PERC.some(x => x[0] === p);
+const partRank = p => p === SCORE ? -1 : !p ? 1e4 : GKY.partOrder(p);
+const pdfSort = (a, b) => partRank(a.part) - partRank(b.part) || String(a.part).localeCompare(String(b.part), 'ja', { numeric: true }) || a.name.localeCompare(b.name, 'ja', { numeric: true });
+const pdfsOf = id => PDFS.filter(m => m.song === id).sort(pdfSort);
+/* そのPDFが、そのパート（ラベル）の分か。楽器の記号だけのPDF（「Tp」など）は、その楽器の全部のパートの分にする */
+const covers = (part, label) => !!part && (part === label || (isCode(part) && part !== label && (GKY.baseOf(label) === part || (part === 'Perc' && GKY.familyOf(label) === 'Perc'))));
+/* その曲で、PDFのないパート（スコアも数える） */
+const pdfMissing = s => { const ms = pdfsOf(s.id); return [SCORE, ...new Set(s.parts)].filter(l => !ms.some(m => covers(m.part, l))); };
+const SCORE_EXT = /\.(pdf|png|jpe?g|gif|webp|heic|heif)$/i;
+const MIME = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', heif: 'image/heif' };
+const mimeOf = n => MIME[((String(n).match(/\.([a-z0-9]+)$/i) || [])[1] || '').toLowerCase()] || 'application/octet-stream';
+const extOf = (n, type) => (String(n).match(/\.[a-z0-9]{2,5}$/i) || [''])[0].toLowerCase() || ({ 'application/pdf': '.pdf', 'image/png': '.png', 'image/jpeg': '.jpg' })[type] || '';
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 80) || '無題';
+const pad2 = n => String(n).padStart(2, '0');
+/* ファイルの名前からパートを見分ける（英語の楽器名・「1st」「Ⅱ」「第2」・曲名入りの名前も読む）。わからなければ '' */
+const EN_PART = { bassclarinet: 'B.Cl', altoclarinet: 'A.Cl', ebclarinet: 'E♭Cl', 'e♭clarinet': 'E♭Cl', eflatclarinet: 'E♭Cl', sopranosax: 'S.Sax', sopranosaxophone: 'S.Sax', altosax: 'A.Sax', altosaxophone: 'A.Sax', tenorsax: 'T.Sax', tenorsaxophone: 'T.Sax', baritonesax: 'B.Sax', baritonesaxophone: 'B.Sax', baritone: 'Euph', bariton: 'Euph', frenchhorn: 'Hn', fhorn: 'Hn', basstrombone: 'B.Tb', englishhorn: 'E.H.', stringbass: 'St.B', doublebass: 'St.B', electricbass: 'St.B', snaredrum: 'S.D.', bassdrum: 'B.D.', crashcymbals: 'Cym', cymbals: 'Cym', suspendedcymbal: 'Sus.Cym', drumset: 'Drs', drums: 'Drs', glockenspiel: 'Glk', bells: 'Glk', xylophone: 'Xylo', vibraphone: 'Vib', marimba: 'Mar', timpani: 'Timp', tambourine: 'Tamb', triangle: 'Tri', woodblock: 'W.B.', mallets: 'Perc', mallet: 'Perc', flugelhorn: 'Tp', cornet: 'Cor', oboe: 'Ob', bassoon: 'Fg', clarinet: 'Cl', flute: 'Fl', piccolo: 'Pic', trumpet: 'Tp', horn: 'Hn', trombone: 'Tb', euphonium: 'Euph', tuba: 'Tuba', percussion: 'Perc', piano: 'Pf', harp: 'Hp' };
+const SEP = /[\s_\-－―—・,，、()（）\[\]［］【】「」『』+＋&＆\/／~〜]+/;
+function guessPart(fname, s) {
+  let t = norm(String(fname || '').replace(/\.[A-Za-z0-9]{2,5}$/, '').replace(/[ⅠⅡⅢⅣ]/g, c => ' ' + ('ⅠⅡⅢⅣ'.indexOf(c) + 1) + ' '));
+  if (s && s.title) { const tt = norm(s.title); if (tt) t = t.split(tt).join(' '); }
+  if (/score|スコア|総譜|conductor|指揮/i.test(t)) return SCORE;
+  t = t.replace(/第\s*(\d+)/g, ' $1 ').replace(/(\d+)\s*(?:st|nd|rd|th|番)(?![a-z])/gi, ' $1 ')
+    .replace(/([^\d\s])(\d)/g, '$1 $2').replace(/(\d)([^\d\s.])/g, '$1 $2');
+  const toks = t.split(SEP).filter(Boolean);
+  const codeOf = w => { for (const c of [w, w.replace(/\.+$/, ''), w.replace(/\./g, '')]) { if (!c) continue; const k = c.toLowerCase(); if (EN_PART[k]) return EN_PART[k]; const p = GKY.partOf(c); if (isCode(p)) return p; } return ''; };
+  let hit = null;
+  for (let i = 0; i < toks.length && !hit; i++) for (const n of [3, 2, 1]) { if (i + n > toks.length) continue; const w = toks.slice(i, i + n).join(''); if (n > 1 && /\d/.test(w)) continue; const c = codeOf(w); if (c) { hit = { c, i, n }; break; } }
+  if (!hit) return '';
+  const ROMAN = { i: 1, ii: 2, iii: 3, iv: 4 }, isNum = x => /^\d{1,2}$/.test(x || '');
+  let num = '';
+  for (let j = hit.i + hit.n; j < Math.min(toks.length, hit.i + hit.n + 3); j++) { if (isNum(toks[j])) { num = String(+toks[j]); break; } if (j === hit.i + hit.n && ROMAN[toks[j].toLowerCase()]) { num = String(ROMAN[toks[j].toLowerCase()]); break; } if (!/^(in|[a-g](♭|b|#|♯)?|key|t\.?c\.?|b\.?c\.?)$/i.test(toks[j])) break; }
+  if (!num && isNum(toks[hit.i - 1])) num = String(+toks[hit.i - 1]);
+  const labels = [...new Set(s ? s.parts : [])].map(l => { const x = norm(l), m = x.match(/(\d+)$/) || x.match(/^(\d+)/); return { l, code: GKY.baseOf(l), num: m ? String(+m[1]) : '' }; });
+  const hits = labels.filter(x => x.code === hit.c);
+  const pick = num ? hits.find(x => x.num === num) || hits.find(x => !x.num) : hits.find(x => !x.num) || (hits.length === 1 ? hits[0] : null);
+  return pick ? pick.l : hit.c + num;
+}
 
 /* ---------- 小物 ---------- */
 const byId = id => S.songs.find(s => s.id === id);
@@ -1868,6 +1946,7 @@ function updHist() { $('#btnUndo').disabled = !past.length; $('#btnRedo').disabl
 /* 楽屋へ反映（曲名・作曲・編曲・出版社・時間・編成だけを渡す） */
 function syncOrg(quiet) {
   if (GKY.IN_VIEWER) { if (!quiet) toast('ここでは楽屋に反映できません。公開ページで開いてください'); return false; }
+  if (GKY.isMember()) { if (!quiet) toast('部員用の端末からは、楽屋に反映しません'); return false; }
   const ok = GKY.saveOrg('songs', S.songs.map(s => ({ id: s.id, title: s.title, kana: s.kana, composer: s.composer, arranger: s.arranger, publisher: s.publisher, dur: s.dur, parts: s.parts, opt: s.opt })));
   if (!quiet) toast(ok ? `楽屋に${S.songs.length}曲を反映しました` : '楽屋に反映できませんでした');
   return ok;
@@ -1875,7 +1954,7 @@ function syncOrg(quiet) {
 function renderSync() {
   const o = GKY.org();
   const same = o.songs.length === S.songs.length && o.songs.every(x => { const s = byId(x.id); return s && s.title === x.title && s.dur === x.dur && s.parts.join() === x.parts.join() && s.opt.join() === (x.opt || []).join(); });
-  $('#syncBar').innerHTML = GKY.IN_VIEWER || S.sample ? '' : same ? '<span class="dot ok"></span>楽屋と同じ' : '<span class="dot warn"></span>楽屋とちがう';
+  $('#syncBar').innerHTML = GKY.IN_VIEWER || S.sample || GKY.isMember() ? '' : same ? '<span class="dot ok"></span>楽屋と同じ' : '<span class="dot warn"></span>楽屋とちがう';
   const n = $('#syncNote'); if (n) n.textContent = GKY.IN_VIEWER ? 'Claudeの画面の中では楽屋とつながりません。公開ページ（GitHub Pages）で開いて使ってください。' : S.sample ? '例のデータのあいだは、楽屋に反映しません。' : same ? '楽屋の曲データは、この台帳と同じです。' : '楽屋の曲データは、この台帳とちがいます。「いま楽屋に反映する」を押すと同じになります。';
 }
 
@@ -1898,6 +1977,7 @@ function filtered() {
   if (filter === 'loan') xs = xs.filter(s => loansOpen(s).length);
   if (filter === 'lack') xs = xs.filter(s => lacks(s).length);
   if (filter === 'noparts') xs = xs.filter(s => !s.parts.length);
+  if (filter === 'pdf') xs = xs.filter(s => PDFS.some(m => m.song === s.id));
   if (filter.startsWith('tag:')) xs = xs.filter(s => s.tags.includes(filter.slice(4)));
   const cmp = {
     title: (a, b) => sortKey(a).localeCompare(sortKey(b), 'ja'),
@@ -1913,12 +1993,12 @@ function renderLib() {
   const loans = S.songs.filter(s => loansOpen(s).length), lateL = S.songs.filter(s => s.loans.some(loanLate));
   $('#libSums').innerHTML = `<span class="sum">楽譜 <b>${S.songs.length}</b>曲</span>${loans.length ? `<span class="sum ${lateL.length ? 'bad' : ''}">ほかの団体と貸し借り中 <b>${loans.length}</b>${lateL.length ? `（期限すぎ ${lateL.length}）` : ''}</span>` : ''}<span class="sum ${over.length ? 'bad' : rents.length ? 'warn' : ''}">レンタル中 <b>${rents.length}</b>${over.length ? `（期限切れ ${over.length}）` : ''}</span><span class="sum ${lk.length ? 'warn' : ''}">欠け・傷みあり <b>${lk.length}</b></span><span class="sum">演奏時間の合計 <b>${GKY.clock(S.songs.reduce((t, s) => t + (s.dur || 0), 0))}</b></span>`;
   const tags = [...new Set(S.songs.flatMap(s => s.tags))].sort((a, b) => a.localeCompare(b, 'ja'));
-  $('#filters').innerHTML = [['', 'すべて'], ['rent', 'レンタル中'], ['loan', '貸し借り中'], ['lack', '欠け・傷みあり'], ['noparts', '編成が未入力'], ...tags.map(t => ['tag:' + t, '#' + t])].map(([k, l]) => `<button class="chip" data-f="${esc(k)}" aria-pressed="${filter === k}">${esc(l)}</button>`).join('');
+  $('#filters').innerHTML = [['', 'すべて'], ['rent', 'レンタル中'], ['loan', '貸し借り中'], ['lack', '欠け・傷みあり'], ['noparts', '編成が未入力'], ...(PDFS.length ? [['pdf', 'PDFあり']] : []), ...tags.map(t => ['tag:' + t, '#' + t])].map(([k, l]) => `<button class="chip" data-f="${esc(k)}" aria-pressed="${filter === k}">${esc(l)}</button>`).join('');
   $$('#filters [data-f]').forEach(b => b.onclick = () => { filter = filter === b.dataset.f ? '' : b.dataset.f; shown = 150; renderLib(); });
   const all = filtered(), xs = all.slice(0, shown);
   $('#songList').innerHTML = xs.length ? xs.map(s => {
     const r = rentState(s), lk2 = lacks(s), lo = loansOpen(s);
-    const badges = [r ? `<span class="chip ${r.over ? 'bad' : r.soon ? 'warn' : 'tp'}">${r.over ? '返却期限を' + (-r.d) + '日すぎ' : '返却まで' + r.d + '日'}</span>` : '', lo.length ? `<span class="chip ${lo.some(loanLate) ? 'bad' : 'tp'}">${esc(LOAN[lo[0].dir])}：${esc(lo[0].who || '相手未入力')}</span>` : '', lk2.length ? `<span class="chip warn">欠け・傷み ${lk2.length}</span>` : '', !s.parts.length ? '<span class="chip">編成なし</span>' : ''].join('');
+    const badges = [r ? `<span class="chip ${r.over ? 'bad' : r.soon ? 'warn' : 'tp'}">${r.over ? '返却期限を' + (-r.d) + '日すぎ' : '返却まで' + r.d + '日'}</span>` : '', lo.length ? `<span class="chip ${lo.some(loanLate) ? 'bad' : 'tp'}">${esc(LOAN[lo[0].dir])}：${esc(lo[0].who || '相手未入力')}</span>` : '', lk2.length ? `<span class="chip warn">欠け・傷み ${lk2.length}</span>` : '', !s.parts.length ? '<span class="chip">編成なし</span>' : '', (n => n ? `<span class="chip tp">PDF ${n}</span>` : '')(PDFS.filter(m => m.song === s.id).length)].join('');
     return `<button class="spine${s.id === sel ? ' on' : ''}" data-id="${esc(s.id)}"><span class="bar"></span><span style="min-width:0"><span class="t1" style="display:block">${esc(s.title || '無題')}</span><span class="t2" style="display:block">${esc(credit(s) || '作曲者未入力')}${s.grade ? '　グレード ' + esc(s.grade) : ''}${s.location ? '　' + esc(s.location) : ''}</span></span><span class="r"><span class="dur">${s.dur ? GKY.dur(s.dur) : ''}</span><span class="badges">${badges}</span></span></button>`;
   }).join('') : `<div class="empty"><b>${S.songs.length ? '見つかりませんでした' : 'まだ楽譜がありません'}</b>${S.songs.length ? 'さがす言葉や絞り込みを変えてみてください。' : '「＋ 曲を足す」か、「取り込み・書き出し」からExcelの一覧を取り込んでください。'}</div>`;
   if (all.length > xs.length) { $('#songList').insertAdjacentHTML('beforeend', `<div class="more"><button class="btn" id="moreSongs">あと${all.length - xs.length}曲を出す</button></div>`); $('#moreSongs').onclick = () => { shown += 300; renderLib(); }; }
@@ -1973,6 +2053,7 @@ function renderDetail() {
     ${s.parts.length ? `<div class="tbl-wrap"><table class="tbl inv"><thead><tr><th>パート</th><th class="num">必要</th><th class="num">部数</th><th>状態</th></tr></thead><tbody>${invRows(s).map(x => `<tr data-label="${esc(x.label)}"><td><span class="tape">${esc(x.label)}</span></td><td class="num">${x.need}</td><td class="num"><input type="number" min="0" step="1" value="${x.v ? x.v.n : ''}" placeholder="${x.need}" style="width:4.5em" aria-label="${esc(x.label)}の部数"></td><td><select aria-label="${esc(x.label)}の状態">${Object.entries(STATES).map(([k, v]) => `<option value="${k}"${(x.v ? x.v.st : 'ok') === k ? ' selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>
     <div class="btnrow" style="margin-top:8px"><button class="btn sm" id="dInvAll">全部そろっていることにする</button></div>` : '<p class="muted" style="font-size:13px;margin:0">編成を入れると、パートごとの在庫を記録できます。</p>'}
   </div>
+  ${pdfSecHTML(s)}
   <div class="sec">
     <h2>ほかの団体との貸し借り<small>${loansOpen(s).length ? loansOpen(s).length + '件 返していない' : ''}</small></h2>
     <div>${s.loans.map(l => `<div class="loan" data-lo="${esc(l.id)}"><span class="chip ${l.back ? '' : loanLate(l) ? 'bad' : 'tp'}">${esc(LOAN[l.dir])}</span><span><b>${esc(l.who || '相手未入力')}</b>　${esc(l.since || '')}〜${esc(l.due || '')}${l.back ? '　返した' : loanLate(l) ? '　<b style="color:var(--bad)">期限をすぎています</b>' : ''}${l.note ? '<br><span class="muted">' + esc(l.note) + '</span>' : ''}</span><span class="btnrow" style="gap:4px">${l.back ? '' : '<button class="btn sm" data-lback>返した</button>'}<button class="ibtn del" data-ldel aria-label="消す">×</button></span></div>`).join('') || '<p class="muted" style="font-size:13px;margin:0">楽譜をほかの学校・団体に貸したとき・借りたときに記録します。</p>'}</div>
@@ -1985,6 +2066,7 @@ function renderDetail() {
   </div>
   <div class="btnrow"><button class="btn" id="dDup">複製</button><span style="flex:1"></span><button class="btn danger" id="dDel">この曲を消す</button></div>`;
   $('#dBack').onclick = () => { sel = null; renderLib(); };
+  wirePdfSec(s, box);
   $$('[data-k]', box).forEach(inp => {
     const k = inp.dataset.k;
     const ev = inp.type === 'checkbox' || inp.tagName === 'SELECT' ? 'change' : 'change';
@@ -2030,8 +2112,92 @@ function renderDetail() {
   $$('[data-delh]', box).forEach(b => b.onclick = () => { const id = b.closest('[data-h]').dataset.h; edit(st => { const x = st.songs.find(y => y.id === s.id); x.history = x.history.filter(h => h.id !== id); }); });
   $('#hAdd').onclick = () => { const d = $('#hDate').value; if (!d) { toast('日付を入れてください'); return; } edit(st => { const x = st.songs.find(y => y.id === s.id); x.history.unshift({ id: uid('h'), date: d, event: norm($('#hEvent').value) }); x.history.sort((a, b) => b.date.localeCompare(a.date)); }); };
   $('#dDup').onclick = () => { const n = normalizeSong(Object.assign(clone(s), { id: uid('s'), title: s.title + '（複製）', history: [], loans: [], added: Date.now() })); edit(st => st.songs.push(n)); sel = n.id; renderLib(); toast('複製しました'); };
-  GKY.arm($('#dDel'), () => { edit(st => { st.songs = st.songs.filter(y => y.id !== s.id); st.setlists.forEach(l => { l.ids = l.ids.filter(y => y !== s.id); }); }); sel = null; renderLib(); toast(`「${s.title}」を消しました`, '元に戻す', undo); }, 'もう一度押すと消します');
+  GKY.arm($('#dDel'), () => { const np = pdfsOf(s.id).length; edit(st => { st.songs = st.songs.filter(y => y.id !== s.id); st.setlists.forEach(l => { l.ids = l.ids.filter(y => y !== s.id); }); }); sel = null; renderLib(); toast(`「${s.title}」を消しました${np ? `（PDF ${np}個は「取り込み・書き出し」から消せます）` : ''}`, '元に戻す', undo, np ? 6000 : 3200); }, 'もう一度押すと消します');
 }
+/* --- PDFの楽譜（くわしくの中） --- */
+function partOptions(s, cur) {
+  const ls = [SCORE, ...[...new Set(s.parts)].sort((a, b) => partRank(a) - partRank(b) || a.localeCompare(b, 'ja', { numeric: true }))];
+  if (cur && !ls.includes(cur)) ls.push(cur);
+  return ls.map(l => `<option value="${esc(l)}"${l === cur ? ' selected' : ''}>${esc(l === cur && isCode(l) && !s.parts.includes(l) ? l + '（全部）' : l)}</option>`).join('') + `<option value=""${cur ? '' : ' selected'}>その他</option>`;
+}
+function pdfSecHTML(s) {
+  const ms = pdfsOf(s.id), miss = pdfMissing(s), sum = ms.reduce((t, m) => t + (m.size || 0), 0);
+  if (!GKY.media.ok()) return `<div class="sec" id="pdfSec"><h2>PDFの楽譜</h2><p class="muted" style="font-size:13px;margin:0">この端末（ブラウザ）では、ファイルを入れられません。</p></div>`;
+  return `<div class="sec" id="pdfSec">
+    <h2>PDFの楽譜<small>${ms.length ? ms.length + '個・' + GKY.bytes(sum) : 'スコア・パート譜'}</small></h2>
+    ${ms.length ? `<div id="pdfList">${ms.map(m => `<div class="pdf" data-pdf="${esc(m.id)}"><select data-ppart aria-label="「${esc(m.name)}」のパート">${partOptions(s, m.part)}</select><span class="nm">${esc(m.name)}<small>${GKY.bytes(m.size)}${/^image\//.test(m.type) ? '・画像' : ''}</small></span><span class="act"><button class="btn sm" data-popen>開く</button><button class="btn sm" data-pshare>送る</button><button class="ibtn del" data-pdel aria-label="「${esc(m.name)}」を消す">×</button></span></div>`).join('')}</div>`
+      : `<p class="lead" style="margin-bottom:6px">スコアやパート譜のPDF（写真でも）を、この曲に入れておけます。ファイルの名前からパートを見分けます（例：「${esc(fileSafe(s.title || '曲名'))}_Tp1.pdf」→ Tp1、「Score.pdf」→ スコア）。<span class="droptip">ここにファイルを落としても入ります。</span></p>`}
+    ${ms.length && miss.length ? `<div class="nopdf" id="pdfMiss"><span class="muted">PDFのないパート：</span>${miss.map(l => `<span class="tape">${esc(l)}</span>`).join('')}</div>` : ms.length && s.parts.length ? '<div class="nopdf" id="pdfMiss"><span class="chip ok">全部のパートのPDFがあります</span></div>' : ''}
+    <div class="btnrow" style="margin-top:10px"><button class="btn" id="pdfAdd">＋ PDFを入れる</button>${ms.length > 1 ? '<button class="btn" id="pdfAll">全部を送る・保存</button>' : ''}</div>
+    <p class="note">ファイルはこの端末の中（ファイル置き場）にだけ入ります。ほかの端末へは「取り込み・書き出し」の「PDFをzipで保存」で移せます。いくつかまとめて選んでも、zipのままでも入れられます。</p>
+  </div>`;
+}
+function wirePdfSec(s, box) {
+  const sec = $('#pdfSec', box); if (!sec || !GKY.media.ok()) return;
+  const add = $('#pdfAdd', sec);
+  if (add) add.onclick = async () => { const fs = await GKY.openFile({ accept: '.pdf,application/pdf,image/*,.zip,application/zip', as: 'file', multiple: true }); if (fs) addPdfs(s.id, fs); };
+  const all = $('#pdfAll', sec);
+  if (all) all.onclick = async () => { const fs = []; for (const m of pdfsOf(s.id)) { const f = await pdfFile(m); if (f) fs.push(f); } if (fs.length) GKY.shareFiles(fs, { title: s.title }); };
+  $$('[data-pdf]', sec).forEach(row => {
+    const id = row.dataset.pdf, m = PDFS.find(x => x.id === id); if (!m) return;
+    $('[data-ppart]', row).onchange = async e => { const v = e.target.value; try { await GKY.media.update(id, { part: v }); m.part = v; toast(`「${m.name}」を${v || 'その他'}にしました`); } catch (er) { toast('直せませんでした'); } renderLib(); };
+    $('[data-popen]', row).onclick = () => pdfOpen(m);
+    $('[data-pshare]', row).onclick = async () => { const f = await pdfFile(m); if (f) GKY.shareFiles([f], { title: `${s.title} ${m.part || ''}`.trim() }); };
+    GKY.arm($('[data-pdel]', row), () => pdfDel(m), '消す？');
+  });
+  // パソコンでは、ファイルを落として入れられる
+  sec.ondragover = e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); sec.classList.add('drag'); } };
+  sec.ondragleave = e => { if (!sec.contains(e.relatedTarget)) sec.classList.remove('drag'); };
+  sec.ondrop = e => { e.preventDefault(); sec.classList.remove('drag'); const fs = [...(e.dataTransfer.files || [])].map(f => ({ name: f.name, size: f.size, type: f.type, file: f })); if (fs.length) addPdfs(s.id, fs); };
+}
+async function pdfFile(m) {
+  try { const r = await GKY.media.get(m.id); if (!r || !r.blob) { toast(`「${m.name}」が見つかりませんでした`); return null; } return new File([r.blob], m.name, { type: m.type || r.blob.type || mimeOf(m.name) }); }
+  catch (e) { toast('ファイルを読み出せませんでした'); return null; }
+}
+/* 開く：新しいタブで（ブラウザのPDFの画面）。開けない端末では保存 */
+async function pdfOpen(m) {
+  const w = GKY.IN_VIEWER ? null : window.open('', '_blank');
+  const f = await pdfFile(m); if (!f) { if (w) w.close(); return; }
+  const url = URL.createObjectURL(f);
+  if (w) { try { w.location.href = url; } catch (e) { w.close(); GKY.saveFile(m.name, f, f.type); } }
+  else GKY.saveFile(m.name, f, f.type);
+  setTimeout(() => URL.revokeObjectURL(url), 180000);
+}
+async function pdfDel(m) {
+  let keep = null;
+  try { keep = await GKY.media.get(m.id); await GKY.media.del(m.id); } catch (e) { toast('消せませんでした'); return; }
+  PDFS = PDFS.filter(x => x.id !== m.id); renderTab();
+  toast(`「${m.name}」を消しました`, keep && keep.blob ? '元に戻す' : '', async () => { try { const n = await GKY.media.put(keep.blob, keep.meta); PDFS.push(n); renderTab(); toast('元に戻しました'); } catch (e) { toast('元に戻せませんでした'); } }, 6000);
+}
+/* ファイルを曲に入れる。fs は GKY.openFile(as:'file') の形（{ name, size, type, file }）。zip は中の PDF・画像を入れる */
+async function addPdfs(songId, fs) {
+  if (S.sample) { toast('例のデータのあいだは、PDFを入れられません。「例を消して始める」を押してから入れてください'); return 0; }
+  const s = byId(songId); if (!s) return 0;
+  const items = [], skip = [];
+  for (const f of fs) {
+    if (/\.zip$/i.test(f.name) || /zip/.test(f.type || '')) {
+      let zs; try { zs = await GKY.zipRead(f.file); } catch (e) { skip.push(f.name); continue; }
+      for (const z of zs) { if (!SCORE_EXT.test(z.name)) continue; try { items.push({ name: z.name.split('/').pop(), blob: await z.blob(mimeOf(z.name)) }); } catch (e) { skip.push(z.name); } }
+    } else if (SCORE_EXT.test(f.name) || /^(application\/pdf|image\/)/.test(f.type || '')) items.push({ name: f.name, blob: f.file });
+    else skip.push(f.name);
+  }
+  const r = await putScores(items.map(it => ({ ...it, s, part: guessPart(it.name, s) })));
+  if (r.added) GKY.media.persist();
+  renderTab();
+  toast([r.added ? `「${s.title}」にPDFを${r.added}個入れました（パートがちがうときは左の欄で直せます）` : 'PDFは入りませんでした', r.same ? `同じファイル ${r.same}個は入れていません` : '', skip.length ? `PDF・画像でないファイル ${skip.length}個は入れていません` : '', r.err ? r.err : ''].filter(Boolean).join('。'), '', null, 6000);
+  return r.added;
+}
+/* まとめて入れる：[{ name, blob, s(曲), part }]。同じ曲・同じ名前・同じ大きさは入れない */
+async function putScores(items) {
+  let added = 0, same = 0, err = '';
+  for (const it of items) {
+    if (PDFS.some(m => m.song === it.s.id && m.name === it.name && m.size === it.blob.size)) { same++; continue; }
+    try { const m = await GKY.media.put(it.blob, { cat: 'score', name: it.name, type: it.blob.type || mimeOf(it.name), song: it.s.id, title: it.s.title, part: it.part || '' }); PDFS.push(m); added++; }
+    catch (e) { err = e && e.name === 'QuotaExceededError' ? 'この端末の空きが足りなくなりました。いらないPDFや録音を消してください' : '入れられないファイルがありました'; break; }
+  }
+  return { added, same, err };
+}
+
 function addPartSheet(id) {
   const nums = ['', '1', '2', '3', '4'];
   const winds = GKY.PARTS.filter(x => x[0] !== 'Perc');
@@ -2092,6 +2258,15 @@ function renderSetlist() {
   $('#slSel').innerHTML = S.setlists.map(l => `<option value="${esc(l.id)}"${l.id === L.id ? ' selected' : ''}>${esc(l.title || '名前のない曲目一覧')}${l.date ? '（' + esc(l.date) + '）' : ''}・${l.ids.length}曲</option>`).join('');
   $('#slDel').disabled = S.setlists.length < 2 && !L.ids.length && !L.title;
   $('#slTitle').value = L.title; $('#slDate').value = L.date; $('#slVenue').value = L.venue;
+  // 楽屋の本番とつなぐ欄（選ぶと、空の名前・日付・会場に入れる）
+  const cf = $('#slCf');
+  cf.innerHTML = GKY.IN_VIEWER ? '' : GKY.concertField(Object.assign({}, L, { sample: S.sample }));
+  const csel = $('[data-gky-concert]', cf);
+  if (csel) csel.onchange = () => {
+    const cur = SL(S), cid = GKY.readConcertField(cf, { title: cur.title || '演奏会', date: cur.date, venue: cur.venue, kind: 'concert' }), c = GKY.concertOf(cid);
+    edit(st => { const l = SL(st); l.concert = cid || ''; if (c) { if (!l.title) l.title = c.title; if (!l.date) l.date = c.date; if (!l.venue) l.venue = c.venue; } });
+    toast(c ? `楽屋の本番「${c.title}」とつなぎました` : '楽屋の本番とつなぐのをやめました');
+  };
   const k = GKY.key($('#slQ').value);
   const xs = S.songs.filter(s => !k || [s.title, s.kana, s.composer].some(v => GKY.key(v).includes(k))).sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'ja'));
   $('#slPick').innerHTML = xs.map(s => `<label><input type="checkbox" value="${esc(s.id)}" ${L.ids.includes(s.id) ? 'checked' : ''}><span style="flex:1;min-width:0">${esc(s.title)}<span class="muted" style="font-size:12px">　${esc(credit(s))}</span></span><span class="mono muted" style="font-size:12px">${s.dur ? GKY.dur(s.dur) : ''}</span></label>`).join('') || '<p class="muted" style="margin:6px">曲がありません。</p>';
@@ -2141,6 +2316,56 @@ $('#slHist').onclick = () => {
   edit(st => xs.forEach(s => { const x = st.songs.find(y => y.id === s.id); if (!x.history.some(h => h.date === L.date)) { x.history.unshift({ id: uid('h'), date: L.date, event: L.title }); x.history.sort((a, b) => b.date.localeCompare(a.date)); } }));
   toast(`${xs.length}曲に「${L.title || L.date}」の記録を足しました`);
 };
+/* パートごとのPDF：曲目一覧の曲のPDFを、パートごとにまとめて送る・zipにする */
+function bundleRows(xs) {
+  const keys = [], add = l => { if (l && !keys.includes(l)) keys.push(l); };
+  add(SCORE); xs.forEach(s => s.parts.forEach(add));
+  // PDFだけにあるパートも足す。楽器の記号だけのPDF（Tp）は、Tp1・Tp2 などの行があれば、そちらに入れる
+  xs.forEach(s => pdfsOf(s.id).forEach(m => { if (!(isCode(m.part) && keys.some(k => k !== m.part && covers(m.part, k)))) add(m.part); }));
+  keys.sort((a, b) => partRank(a) - partRank(b) || a.localeCompare(b, 'ja', { numeric: true }));
+  return keys.map(k => {
+    // 楽器の記号だけのPDF（Tp など）は、その曲にそのパートがあるときだけ数える（ふるさとに Tp3 がなければ、Tp3 の人には送らない）
+    const per = xs.map((s, i) => { const need = k === SCORE || s.parts.includes(k); return { s, i, need, ms: pdfsOf(s.id).filter(m => m.part === k || (covers(m.part, k) && (need || !s.parts.length))) }; });
+    return { k, per, have: per.filter(p => p.ms.length), miss: per.filter(p => p.need && !p.ms.length) };
+  }).filter(r => r.have.length || (r.miss.length && r.k !== SCORE) || r.k === SCORE);
+}
+/* そのパートのファイル名：「01_宝島_Tp1.pdf」（同じ曲に2つあれば「-2」） */
+function bundleFiles(row, { folder = false } = {}) {
+  const out = [];
+  row.per.forEach(p => p.ms.forEach((m, j) => {
+    const base = `${pad2(p.i + 1)}_${fileSafe(p.s.title)}${folder ? '' : '_' + fileSafe(row.k)}${p.ms.length > 1 ? '-' + (j + 1) : ''}${extOf(m.name, m.type)}`;
+    out.push({ m, name: folder ? `${fileSafe(row.k)}/${base}` : base });
+  }));
+  return out;
+}
+async function bundleZip(rows, L) {
+  const files = [], lines = [`【${L.title || '曲目一覧'}】${L.date ? GKY.jpDate(L.date) : ''}`, ...setSongs().map((s, i) => `${pad2(i + 1)}. ${s.title}`), ''];
+  for (const r of rows) {
+    const fs = bundleFiles(r, { folder: true });
+    for (const f of fs) { const g = await GKY.media.get(f.m.id).catch(() => null); if (g && g.blob) files.push({ name: f.name, data: g.blob }); }
+    if (r.miss.length && r.k !== SCORE) lines.push(`${r.k}：PDFのない曲 ${r.miss.map(p => pad2(p.i + 1)).join('、')}`);
+  }
+  if (!files.length) return null;
+  files.push({ name: '曲目一覧.txt', data: lines.join('\r\n') + '\r\n' });
+  return GKY.zipMake(files);
+}
+$('#slPdf').onclick = async () => {
+  const xs = setSongs(); if (!xs.length) { toast('曲を選んでください'); return; }
+  await loadPdfs();
+  const L = SL(S), rows = bundleRows(xs), any = rows.some(r => r.have.length);
+  const sh = sheet({ title: `パートごとのPDF（${L.title || '曲目一覧'}）`, content: any ? `<p class="lead" style="margin-bottom:8px">パートごとに、この曲目一覧の曲のPDFをまとめて送れます（スマホでは送る画面、パソコンではファイルに保存）。ファイルの名前は「01_曲名_パート」で、演奏する順に並びます。</p>
+    <div class="tbl-wrap"><table class="tbl bund"><thead><tr><th>パート</th><th class="num">PDF</th><th>ない曲</th><th></th></tr></thead><tbody>${rows.map((r, ri) => `<tr data-ri="${ri}"><td><span class="tape">${esc(r.k)}</span></td><td class="num">${r.have.length}／${xs.length}曲</td><td>${r.miss.length ? r.miss.map(p => `<span class="miss">${p.i + 1}. ${esc(p.s.title)}</span>`).join('') : '<span class="muted">—</span>'}</td><td>${r.have.length ? '<button class="btn sm" data-bsend>送る</button>' : ''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="bZip">全部のパートをzipで保存</button></div>
+    <p class="note">zipの中は、パートごとのフォルダに分かれます（「曲目一覧.txt」に曲の順番と、PDFのない曲も書きます）。PDFは「楽譜」で曲を選んで入れます。</p>`
+    : `<div class="empty"><b>この曲目一覧の曲には、まだPDFが入っていません</b>「楽譜」で曲を選んで、「＋ PDFを入れる」から入れてください。</div>`, actions: [{ label: '閉じる' }] });
+  $$('[data-bsend]', sh.body).forEach(b => b.onclick = async () => {
+    const r = rows[+b.closest('tr').dataset.ri], fs = [];
+    for (const f of bundleFiles(r)) { const g = await GKY.media.get(f.m.id).catch(() => null); if (g && g.blob) fs.push(new File([g.blob], f.name, { type: f.m.type || g.blob.type })); }
+    if (fs.length) GKY.shareFiles(fs, { title: `${L.title || '曲目一覧'} ${r.k}` });
+  });
+  const z = $('#bZip', sh.body);
+  if (z) z.onclick = async () => { z.disabled = true; z.textContent = 'まとめています…'; try { const blob = await bundleZip(rows, L); if (blob) await GKY.saveFile(`${fileSafe(L.title || '曲目一覧')}_パート譜.zip`, blob, 'application/zip'); } catch (e) { toast('zipを作れませんでした'); } z.disabled = false; z.textContent = '全部のパートをzipで保存'; };
+};
 $('#slFromStagemane').onclick = async () => {
   const f = await GKY.openJSON(); if (!f) return;
   if (f.kind !== 'stagemane') { toast('ステマネで保存したファイルを選んでください'); return; }
@@ -2153,7 +2378,72 @@ $('#slFromStagemane').onclick = async () => {
 };
 
 /* --- 取り込み・書き出し --- */
-function renderIO() { $('#autoSync').checked = !!S.settings.autoSync; renderSync(); }
+function renderIO() { $('#autoSync').checked = !!S.settings.autoSync; renderSync(); renderPdfIO(); }
+async function renderPdfIO() {
+  const use = $('#pdfUse'), orph = $('#pdfOrph'); if (!use) return;
+  if (!GKY.media.ok()) { use.textContent = ''; $('#pdfIO .lead').textContent = 'この端末（ブラウザ）では、PDFを入れられません。'; return; }
+  const sum = PDFS.reduce((t, m) => t + (m.size || 0), 0), est = await GKY.media.estimate();
+  use.textContent = PDFS.length ? `${PDFS.length}個・${GKY.bytes(sum)}${est && est.quota ? `（この端末の空きのめやす ${GKY.bytes(Math.max(0, est.quota - est.usage))}）` : ''}` : 'まだありません';
+  const os = PDFS.filter(m => !byId(m.song));
+  orph.innerHTML = os.length ? `<div class="issue warn" style="margin-top:10px"><span class="dot warn"></span><div class="main">台帳にない曲のPDFが <b>${os.length}</b>個（${GKY.bytes(os.reduce((t, m) => t + (m.size || 0), 0))}）あります。<span class="muted" style="font-size:12px">${esc([...new Set(os.map(m => m.title || '曲名なし'))].slice(0, 5).join('、'))}</span></div><button class="btn sm danger" id="pdfOrphDel">消す</button></div>` : '';
+  const od = $('#pdfOrphDel'); if (od) GKY.arm(od, async () => { for (const m of os) { try { await GKY.media.del(m.id); } catch (e) { /* つぎへ */ } } await loadPdfs(); renderIO(); toast(`${os.length}個のPDFを消しました`); }, 'もう一度押すと消します（元に戻せません）');
+}
+/* PDFをzipにまとめる：曲名のフォルダに入れ、gakufu-pdf.json に曲とパートを書く */
+async function pdfZip() {
+  await loadPdfs();
+  const files = [], items = [];
+  for (const m of PDFS.slice().sort((a, b) => a.at - b.at)) {
+    const g = await GKY.media.get(m.id).catch(() => null); if (!g || !g.blob) continue;
+    const s = byId(m.song), title = s ? s.title : m.title || '曲名なし';
+    let path = `${fileSafe(title)}/${fileSafe(m.name)}`, k = 2;
+    while (files.some(f => f.name === path)) path = `${fileSafe(title)}/${fileSafe(m.name).replace(/(\.[^.]+)?$/, `_${k++}$1`)}`;
+    files.push({ name: path, data: g.blob });
+    items.push({ file: path, song: m.song, title, part: m.part || '', name: m.name, type: m.type || '' });
+  }
+  if (!files.length) return null;
+  files.unshift({ name: 'gakufu-pdf.json', data: JSON.stringify({ app: 'gakufu', kind: 'scores', format: 1, exportedAt: new Date().toISOString(), org: GKY.org().org.name, items }, null, 1) });
+  return GKY.zipMake(files);
+}
+$('#pdfOut').onclick = async () => {
+  const b = $('#pdfOut'); b.disabled = true;
+  try { const z = await pdfZip(); if (!z) toast('PDFの楽譜はまだありません'); else await GKY.saveFile(`楽譜PDF_${fileSafe(GKY.org().org.name || '楽譜ライブラリ')}_${GKY.ymd()}.zip`, z, 'application/zip'); }
+  catch (e) { toast('zipを作れませんでした'); }
+  b.disabled = false;
+};
+/* zipから読み込む：曲は id → 曲名（フォルダの名前）→ ファイルの名前に入っている曲名 の順に見分ける。見分けられない分は選んでもらう */
+async function pdfImport(blob) {
+  if (S.sample) { toast('例のデータのあいだは、PDFを入れられません。「例を消して始める」を押してから読み込んでください'); return; }
+  let zs; try { zs = await GKY.zipRead(blob); } catch (e) { toast('zip のファイルとして読めませんでした'); return; }
+  const man = zs.find(z => /(^|\/)gakufu-pdf\.json$/.test(z.name));
+  let items = [];
+  if (man) {
+    try { const j = JSON.parse(await (await man.blob('application/json')).text()); items = (Array.isArray(j.items) ? j.items : []).map(it => ({ z: zs.find(z => z.name === it.file), song: String(it.song || ''), title: String(it.title || ''), part: String(it.part || ''), name: String(it.name || '').trim() || String(it.file || '').split('/').pop() })).filter(x => x.z); }
+    catch (e) { toast('zip の中の一覧（gakufu-pdf.json）が読めませんでした'); return; }
+  } else items = zs.filter(z => SCORE_EXT.test(z.name)).map(z => { const seg = z.name.split('/'); return { z, song: '', title: seg.length > 1 ? seg[seg.length - 2] : '', part: null, name: seg[seg.length - 1] }; });
+  if (!items.length) { toast('zip の中に、PDF・画像のファイルがありませんでした'); return; }
+  const byLen = S.songs.filter(s => s.title).slice().sort((a, b) => b.title.length - a.title.length);
+  items.forEach(it => { it.s = byId(it.song) || (it.title && S.songs.find(s => GKY.key(s.title) === GKY.key(it.title))) || byLen.find(s => GKY.key(it.name).includes(GKY.key(s.title))) || null; });
+  const ok = items.filter(it => it.s), un = items.filter(it => !it.s);
+  const groups = []; un.forEach(it => { const t = it.title || ''; let g = groups.find(x => x.t === t); if (!g) groups.push(g = { t, its: [] }); g.its.push(it); });
+  const songOpts = S.songs.slice().sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'ja')).map(s => `<option value="${esc(s.id)}">${esc(s.title || '無題')}</option>`).join('');
+  const sh = sheet({ title: 'PDFの楽譜を読み込む', content: `<div class="sums"><span class="sum ok">台帳の曲に入る <b>${ok.length}</b>個（${new Set(ok.map(i => i.s.id)).size}曲）</span>${un.length ? `<span class="sum warn">曲がわからない <b>${un.length}</b>個</span>` : ''}</div>
+    ${groups.length ? `<p style="font-size:13px;margin:8px 0 4px">曲がわからないファイルを、どうするか選んでください。</p><div>${groups.map((g, gi) => `<div class="imp-row" data-gi="${gi}"><span><b>${esc(g.t || '（フォルダのないファイル）')}</b><span class="muted" style="font-size:12px">　${g.its.length}個：${esc(g.its.slice(0, 3).map(i => i.name).join('、'))}${g.its.length > 3 ? '…' : ''}</span></span><select aria-label="入れる曲">${g.t ? `<option value="+" selected>新しい曲「${esc(g.t)}」として足す</option>` : ''}<option value=""${g.t ? '' : ' selected'}>入れない</option><optgroup label="台帳の曲に入れる">${songOpts}</optgroup></select></div>`).join('')}</div>` : ''}
+    <p class="note">同じ曲に、同じ名前・同じ大きさのPDFは2つ入れません。パートは${man ? 'zipに書いてあるとおりに' : 'ファイルの名前から見分けて'}入れます。</p>`,
+    actions: [{ label: 'やめる' }, { label: '読み込む', primary: true, onClick: async body => {
+      const picks = $$('.imp-row', body).map(r => ({ g: groups[+r.dataset.gi], v: $('select', r).value }));
+      const news = [];
+      picks.forEach(({ g, v }) => { if (v === '+') { const s = normalizeSong({ title: g.t }); news.push(s); g.its.forEach(it => it.s = s); } else if (v) { const s = byId(v); g.its.forEach(it => it.s = s); } });
+      if (news.length) edit(st => { news.forEach(s => st.songs.push(s)); });
+      const list = items.filter(it => it.s);
+      const res = []; for (const it of list) { try { res.push({ name: it.name, blob: await it.z.blob(mimeOf(it.name)), s: it.s, part: it.part != null ? it.part : guessPart(it.name, it.s) }); } catch (e) { /* 読めないファイルは入れない */ } }
+      const r = await putScores(res);
+      if (r.added) GKY.media.persist();
+      renderAll();
+      toast([`PDFを${r.added}個入れました${news.length ? `（新しい曲 ${news.length}曲）` : ''}`, r.same ? `同じファイル ${r.same}個は入れていません` : '', r.err].filter(Boolean).join('。'), '', null, 6000);
+    } }] });
+  return sh;
+}
+$('#pdfIn').onclick = async () => { const f = await GKY.openFile({ accept: '.zip,application/zip', as: 'file' }); if (f) pdfImport(f.file); };
 $('#autoSync').onchange = e => edit(st => { st.settings.autoSync = e.target.checked; }, false);
 $('#btnSync').onclick = () => { if (S.sample) { toast('例のデータのあいだは楽屋に反映しません。例を消してから使ってください'); return; } syncOrg(false); renderSync(); };
 const CSV_HEAD = ['曲名', 'よみ', '作曲', '作詞', '編曲', '原曲名', '出版社', '品番', 'グレード', '演奏時間', '保管場所', 'タグ', '手に入れ方', '返却期限', 'メモ'];
@@ -2226,7 +2516,13 @@ GKY.fitTop(); GKY.offline();
 showTab('lib');
 if (!sel && S.songs.length && window.matchMedia('(min-width:901px)').matches) sel = filtered()[0] && filtered()[0].id;
 renderAll();
-if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, canPlay, percOf, playersFromCounts, normalizeSong, lacks, rentState, renderAll, load };
+const pdfReady = loadPdfs().then(xs => { if (xs.length) renderAll(); });
+// 楽屋の「本番」から開いたとき：その本番の曲目一覧を開く（なければ作るか聞く）
+if (!GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '曲目一覧',
+  find: c => GKY.recForConcert(S.sample ? S.setlists.filter(l => l.concert) : S.setlists, c),
+  open: r => { S.slCur = r.id; persist(); showTab('setlist'); renderAll(); },
+  create: c => { const l = newList({ title: c.title, date: c.date, venue: c.venue, concert: c.id }); edit(st => { const cur = SL(st); if (!cur.ids.length && !cur.title && !cur.concert && st.setlists.length === 1) st.setlists = []; st.setlists.unshift(l); st.slCur = l.id; }); showTab('setlist'); renderAll(); toast(`「${c.title}」の曲目一覧を作りました。左で曲を選んでください`); } }));
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, canPlay, percOf, playersFromCounts, normalizeSong, lacks, rentState, renderAll, load, guessPart, covers, pdfMissing, bundleRows, bundleFiles, pdfZip, pdfImport, addPdfs, loadPdfs, get PDFS() { return PDFS; }, pdfReady };
 })();
 </script>
 </body>

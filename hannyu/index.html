@@ -1657,8 +1657,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の積み込みリストを開くか作ります'] },
   { v: '2', d: '2026-10-06', items: [
     '見るだけのリンク・QRコードを作れるようにしました。運ぶ人は、自分の担当や車でしぼって、自分のスマホでチェックできます',
     '同じ搬入出リストを2つのタブで開いて直したとき、黙って上書きしないようにしました',
@@ -1684,7 +1685,7 @@ const PRESETS = [
   本番 = { id, title, date, from, to, sample, vehicles:[{ id, name, driver, note }], items:[{ id, name, qty, cat, vehicle, who, first, back, ord, note }],
           checks:{ 品物id:{ load1, unload1, load2, unload2 } }, phase }                                                          */
 const newItem = (o = {}) => Object.assign({ id: uid('t'), name: '', qty: 1, cat: 'other', vehicle: '', who: '', first: false, back: true, ord: 0, note: '' }, o);
-const newTrip = (o = {}) => Object.assign({ id: uid('r'), title: '新しい本番', date: '', from: '学校', to: '会場', sample: false, vehicles: [{ id: uid('v'), name: 'トラック', driver: '', note: '' }], items: [], checks: {}, phase: 'load1' }, o);
+const newTrip = (o = {}) => Object.assign({ id: uid('r'), title: '新しい本番', date: '', from: '学校', to: '会場', sample: false, concert: '', vehicles: [{ id: uid('v'), name: 'トラック', driver: '', note: '' }], items: [], checks: {}, phase: 'load1' }, o);
 function sampleTrip() {
   const v1 = { id: uid('v'), name: 'トラック（楽器店）', driver: '（例）〇〇楽器さん', note: '2トン・ほろ付き' }, v2 = { id: uid('v'), name: '保護者の車A', driver: '（例）森さん', note: 'ワゴン' }, v3 = { id: uid('v'), name: '保護者の車B', driver: '（例）山口さん', note: '' };
   const I = (name, cat, v, who, o = {}) => newItem(Object.assign({ name, cat, vehicle: v.id, who }, o));
@@ -1712,7 +1713,7 @@ function autoOrder(t, vid = null) {
 function normalizeTrip(t) {
   t = Object.assign(newTrip(), t && typeof t === 'object' ? t : {});
   if (typeof t.id !== 'string' || !t.id) t.id = uid('r');
-  ['title', 'date', 'from', 'to'].forEach(k => t[k] = String(t[k] ?? ''));
+  ['title', 'date', 'from', 'to', 'concert'].forEach(k => t[k] = String(t[k] ?? ''));
   t.vehicles = (Array.isArray(t.vehicles) ? t.vehicles : []).filter(Boolean).map(v => ({ id: v.id || uid('v'), name: String(v.name || '車'), driver: String(v.driver || ''), note: String(v.note || '') }));
   const vids = new Set(t.vehicles.map(v => v.id));
   t.items = (Array.isArray(t.items) ? t.items : []).filter(Boolean).map(i => { const x = newItem(i); x.id = x.id || uid('t'); x.name = String(x.name || ''); x.qty = Math.max(1, Math.round(+x.qty || 1)); if (!CATS[x.cat]) x.cat = 'other'; if (!vids.has(x.vehicle)) x.vehicle = ''; x.first = !!x.first; x.back = x.back !== false; x.ord = +x.ord || 0; return x; });
@@ -1933,14 +1934,22 @@ async function startViewer() {
 }
 
 /* --- 本番の設定 --- */
-function newTripFlow() {
-  sheet({ title: '新しい本番', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="nT" placeholder="例：吹奏楽コンクール 地区大会"></label><label class="fld"><span>日付</span><input type="date" id="nD"></label></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="nCopy" checked> 今の本番の品物・車・担当を引きつぐ（チェックは空）</label>`,
-    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => { const cur = T(); const t = newTrip({ title: norm($('#nT', body).value) || '新しい本番', date: $('#nD', body).value }); if ($('#nCopy', body).checked) { t.vehicles = clone(cur.vehicles); t.items = clone(cur.items).map(i => Object.assign(i, { id: uid('t') })); t.from = cur.from; t.to = ''; } S.trips[t.id] = t; S.order.unshift(t.id); S.current = t.id; past = []; future = []; persist(); renderAll(); showTab('items'); toast(`「${t.title}」を作りました`); } }] });
+function newTripFlow(c = null) {
+  const sh = sheet({ title: '新しい本番', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(c ? { concert: c.id } : {})}<label class="fld wide"><span>本番の名前</span><input type="text" id="nT" placeholder="例：吹奏楽コンクール 地区大会" value="${esc(c ? c.title : '')}"></label><label class="fld"><span>日付</span><input type="date" id="nD" value="${esc(c ? c.date : '')}"></label><label class="fld"><span>行き先</span><input type="text" id="nTo" placeholder="例：市民会館" value="${esc(c ? c.venue : '')}"></label></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="nCopy" checked> 今の本番の品物・車・担当を引きつぐ（チェックは空）</label>`,
+    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => {
+      const cur = T(); const t = newTrip({ title: norm($('#nT', body).value) || '新しい本番', date: $('#nD', body).value });
+      if ($('#nCopy', body).checked) { t.vehicles = clone(cur.vehicles); t.items = clone(cur.items).map(i => Object.assign(i, { id: uid('t') })); t.from = cur.from; t.to = ''; }
+      if (norm($('#nTo', body).value)) t.to = norm($('#nTo', body).value);
+      const cid = GKY.readConcertField(body, { title: t.title, date: t.date, venue: t.to === '会場' ? '' : t.to }); if (cid) t.concert = cid;
+      S.trips[t.id] = t; S.order.unshift(t.id); S.current = t.id; past = []; future = []; persist(); renderAll(); showTab('items'); toast(`「${t.title}」を作りました`);
+    } }] });
+  GKY.wireConcertField(sh.body, { title: '#nT', date: '#nD', venue: '#nTo' });
 }
 $('#btnTrip').onclick = () => {
   const t = T();
-  const sh = sheet({ title: '本番の設定', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="tT" value="${esc(t.title)}"></label><label class="fld"><span>日付</span><input type="date" id="tD" value="${esc(t.date)}"></label><label class="fld"><span>出発</span><input type="text" id="tF" value="${esc(t.from)}"></label><label class="fld"><span>行き先</span><input type="text" id="tTo" value="${esc(t.to)}"></label></div><div class="btnrow" style="margin-top:14px"><button class="btn" id="tNew">新しい本番を作る</button><button class="btn danger" id="tDel">この本番を消す</button></div>`,
-    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => edit(tt => { tt.title = norm($('#tT', body).value) || '無題'; tt.date = $('#tD', body).value; tt.from = norm($('#tF', body).value); tt.to = norm($('#tTo', body).value); tt.sample = false; }) }] });
+  const sh = sheet({ title: '本番の設定', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(t)}<label class="fld wide"><span>本番の名前</span><input type="text" id="tT" value="${esc(t.title)}"></label><label class="fld"><span>日付</span><input type="date" id="tD" value="${esc(t.date)}"></label><label class="fld"><span>出発</span><input type="text" id="tF" value="${esc(t.from)}"></label><label class="fld"><span>行き先</span><input type="text" id="tTo" value="${esc(t.to)}"></label></div><div class="btnrow" style="margin-top:14px"><button class="btn" id="tNew">新しい本番を作る</button><button class="btn danger" id="tDel">この本番を消す</button></div>`,
+    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => { const ti = norm($('#tT', body).value) || '無題', d = $('#tD', body).value, to = norm($('#tTo', body).value), cid = GKY.readConcertField(body, { title: ti, date: d, venue: to === '会場' ? '' : to }); edit(tt => { tt.title = ti; tt.date = d; tt.from = norm($('#tF', body).value); tt.to = to; tt.sample = false; if (cid !== undefined) tt.concert = cid; }); } }] });
+  GKY.wireConcertField(sh.body, { title: '#tT', date: '#tD', venue: '#tTo' });
   $('#tNew', sh.body).onclick = () => { sh.close(); newTripFlow(); };
   GKY.arm($('#tDel', sh.body), () => { const gone = clone(t), pos = S.order.indexOf(t.id); delete S.trips[t.id]; S.order = S.order.filter(x => x !== t.id); if (!S.order.length) { const n = newTrip(); S.trips[n.id] = n; S.order.push(n.id); } S.current = S.order[Math.min(pos, S.order.length - 1)]; past = []; future = []; persist(); sh.close(); renderAll(); toast(`「${gone.title}」を消しました`, '元に戻す', () => { S.trips[gone.id] = gone; S.order.splice(pos, 0, gone.id); S.current = gone.id; persist(); renderAll(); }); }, 'もう一度押すと消します');
 };
@@ -1954,7 +1963,10 @@ document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.k
 GKY.fitTop(); GKY.offline();
 showTab('check');
 renderAll();
-startViewer().finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, T, autoOrder, normalizeTrip, renderAll, sharePayload }; });
+startViewer().then(viewing => {
+  // 楽屋の「本番」から開いたとき：その本番の積み込みリストを開く（なければ作るか聞く）
+  if (!viewing && !GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '積み込みリスト', find: c => GKY.recForConcert(S.order.map(id => S.trips[id]), c), open: r => { S.current = r.id; past = []; future = []; ckCar = ''; persist(); renderAll(); }, create: c => newTripFlow(c) }));
+}).finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, T, autoOrder, normalizeTrip, renderAll, sharePayload }; });
 })();
 </script>
 </body>

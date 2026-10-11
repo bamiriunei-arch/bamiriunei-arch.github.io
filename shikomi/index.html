@@ -1679,8 +1679,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の資料を開くか作ります'] },
   { v: '2', d: '2026-10-06', items: [
     '同じ仕込み図を2つのタブで開いて直したとき、黙って上書きしないようにしました',
     '楽屋シリーズ共通：印刷の用紙（A4・B4・A3）を選べるようにし、2ページ以上の表で各ページの最後の行が切れることがあったのを直しました。ホーム画面に追加すると、どのツールからでも「楽屋」という1つのアプリになります。文字を大きくする設定と「ご意見」のリンク（画面左上の名前を押す）も使えます。一般の団体・地域クラブでは、画面の「部員」「休部」「顧問」を「団員」「休団」「団長（代表）」にそろえます。最後のバックアップから日がたつと（学校は7日、ほかは30日）、ツールの画面でも1日1回お知らせします',
@@ -1756,7 +1757,7 @@ function windPlot() {
   items.push({ t: 'conductor', label: '指揮', x: cx, y: cy, w: 90, h: 90 });
   return { W, D, title: '吹奏楽（例）', items };
 }
-const newEvent = (o = {}) => Object.assign({ id: uid('e'), title: '新しい本番', date: '', venue: '', contact: '', hall: '', sample: false, needs: { mc: 'wl', kage: true, cond: false, solo: 0, vocal: 0, bass: false, key: false, gtr: false, drums: false, play: false, rec: '', hang: false }, inputs: [], marks: [], plot: null, cues: [], requests: [] }, o);
+const newEvent = (o = {}) => Object.assign({ id: uid('e'), title: '新しい本番', date: '', venue: '', contact: '', hall: '', sample: false, concert: '', needs: { mc: 'wl', kage: true, cond: false, solo: 0, vocal: 0, bass: false, key: false, gtr: false, drums: false, play: false, rec: '', hang: false }, inputs: [], marks: [], plot: null, cues: [], requests: [] }, o);
 function sampleEvent() {
   const needs = { mc: 'wl', kage: true, cond: true, solo: 2, vocal: 0, bass: true, key: true, gtr: false, drums: false, play: false, rec: 'hall', hang: true };
   const e = newEvent({ title: '（例）第12回 定期演奏会', date: GKY.addDays(GKY.ymd(), 70), venue: '（例）〇〇市民会館 大ホール', contact: '舞台係の方', hall: 'ワイヤレスマイクは2本まで。DIは持ち込み。録音はライン出し1系統（受け取りはUSBメモリー）', sample: true, needs, plot: windPlot() });
@@ -1777,7 +1778,7 @@ function sampleEvent() {
 function normalizeEvent(e) {
   e = Object.assign(newEvent(), e && typeof e === 'object' ? e : {});
   if (typeof e.id !== 'string' || !e.id) e.id = uid('e');
-  ['title', 'date', 'venue', 'contact', 'hall'].forEach(k => e[k] = String(e[k] ?? ''));
+  ['title', 'date', 'venue', 'contact', 'hall', 'concert'].forEach(k => e[k] = String(e[k] ?? ''));
   e.needs = Object.assign(newEvent().needs, e.needs || {});
   e.inputs = (Array.isArray(e.inputs) ? e.inputs : []).filter(Boolean).map(x => ({ id: x.id || uid('i'), ch: Math.max(0, Math.round(+x.ch || 0)), src: String(x.src || ''), gear: String(x.gear || ''), stand: String(x.stand || ''), phantom: x.phantom === true ? true : x.phantom === false ? false : null, place: String(x.place || ''), note: String(x.note || ''), x: isFinite(+x.x) && x.x !== null ? +x.x : null, y: isFinite(+x.y) && x.y !== null ? +x.y : null }));
   e.marks = (Array.isArray(e.marks) ? e.marks : []).filter(m => m && MARKS[m.kind]).map(m => ({ id: m.id || uid('k'), kind: m.kind, label: String(m.label || MARKS[m.kind][0]), x: +m.x || 0, y: +m.y || 0 }));
@@ -2063,18 +2064,24 @@ $('#jsonIn').onclick = async () => {
 };
 
 /* --- 本番の設定 --- */
-function newEventFlow() {
-  const sh = sheet({ title: '新しい本番', content: `<label class="fld"><span>本番の名前</span><input type="text" id="nTitle" placeholder="例：第13回 定期演奏会"></label><label class="chk" style="margin-top:10px"><input type="checkbox" id="nCopy"> 今の本番の「使うもの」と配置図を引きつぐ</label>`,
+function newEventFlow(c = null) {
+  const sh = sheet({ title: '新しい本番', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(c ? { concert: c.id } : {})}<label class="fld wide"><span>本番の名前</span><input type="text" id="nTitle" placeholder="例：第13回 定期演奏会" value="${esc(c ? c.title : '')}"></label><label class="fld"><span>日付</span><input type="date" id="nDate" value="${esc(c ? c.date : '')}"></label><label class="fld"><span>会場</span><input type="text" id="nVenue" value="${esc(c ? c.venue : '')}"></label></div><label class="chk" style="margin-top:10px"><input type="checkbox" id="nCopy"> 今の本番の「使うもの」と配置図を引きつぐ</label>`,
     actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => {
       const cur = E(), copy = $('#nCopy', body).checked;
-      const e = newEvent({ title: norm($('#nTitle', body).value) || '新しい本番' });
+      const e = newEvent({ title: norm($('#nTitle', body).value) || '新しい本番', date: $('#nDate', body).value, venue: norm($('#nVenue', body).value) });
+      const cid = GKY.readConcertField(body, { title: e.title, date: e.date, venue: e.venue }); if (cid) e.concert = cid;
       if (copy) { e.needs = clone(cur.needs); e.plot = clone(cur.plot); e.inputs = genInputs(e.needs); e.requests = genRequests(e.needs); }
       S.events[e.id] = e; S.order.unshift(e.id); S.current = e.id; past = []; future = []; persist(); renderAll(); showTab('needs'); toast(`「${e.title}」を作りました`);
     } }] });
+  GKY.wireConcertField(sh.body, { title: '#nTitle', date: '#nDate', venue: '#nVenue' });
 }
 $('#btnEv').onclick = () => {
   const e = E();
-  const sh = sheet({ title: '本番の設定', content: `<div class="btnrow"><button class="btn" id="eNew">新しい本番を作る</button><button class="btn" id="eDup">この本番を複製</button><button class="btn danger" id="eDel">この本番を消す</button></div><p class="note">本番の名前・日付・会場は「打合せ・印刷」で直せます。</p>`, actions: [{ label: '閉じる' }] });
+  const sh = sheet({ title: '本番の設定', content: `${GKY.IN_VIEWER ? '' : `<div class="grid">${GKY.concertField(e)}</div><p class="note" style="margin:4px 0 12px">楽屋の本番を選ぶと、名前・日付・会場が空のところに入ります。</p>`}<div class="btnrow"><button class="btn" id="eNew">新しい本番を作る</button><button class="btn" id="eDup">この本番を複製</button><button class="btn danger" id="eDel">この本番を消す</button></div><p class="note">本番の名前・日付・会場は「打合せ・印刷」で直せます。</p>`,
+    actions: GKY.IN_VIEWER ? [{ label: '閉じる' }] : [{ label: '閉じる' }, { label: '決める', primary: true, onClick: body => {
+      const cid = GKY.readConcertField(body, { title: e.title, date: e.date, venue: e.venue }), c = GKY.concertOf(cid);
+      edit(ee => { ee.concert = cid || ''; if (c) { if (!ee.title || ee.title === '新しい本番' || ee.sample) ee.title = c.title; if (!ee.date || ee.sample) ee.date = c.date; if (!ee.venue || ee.sample) ee.venue = c.venue; ee.sample = false; } });
+    } }] });
   $('#eNew', sh.body).onclick = () => { sh.close(); newEventFlow(); };
   $('#eDup', sh.body).onclick = () => { const n = normalizeEvent(Object.assign(clone(e), { id: uid('e'), title: e.title + '（複製）', sample: false })); S.events[n.id] = n; S.order.unshift(n.id); S.current = n.id; past = []; future = []; persist(); sh.close(); renderAll(); toast('複製しました'); };
   GKY.arm($('#eDel', sh.body), () => {
@@ -2095,6 +2102,8 @@ document.addEventListener('keydown', ev => { if (!(ev.ctrlKey || ev.metaKey) || 
 GKY.fitTop(); GKY.offline();
 showTab('needs');
 renderAll();
+// 楽屋の「本番」から開いたとき：その本番の資料を開く（なければ作るか聞く）
+if (!GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '音響・照明の資料', find: c => GKY.recForConcert(S.order.map(id => S.events[id]), c), open: r => { S.current = r.id; past = []; future = []; placing = null; selMark = null; persist(); renderAll(); }, create: c => newEventFlow(c) }));
 if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, E, genInputs, genRequests, cuesFromStagemane, normalizeEvent, plotSVG, renderAll };
 })();
 </script>

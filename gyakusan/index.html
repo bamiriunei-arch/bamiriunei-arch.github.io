@@ -1734,7 +1734,7 @@ const isOff = s => { const dt = GKY.parseYmd(s); return dt.getDay() === 0 || dt.
 
 /* ---------- データの形 ----------
   S = { v:1, current, order:[id], plans:{ id: 本番 }, mine:[{ id, name, tasks }] }
-  本番 = { id, title, date, kind, sample, weekday, tasks:[{ id, name, off, due, who, done, note, cat, link }] } */
+  本番 = { id, title, date, kind, sample, weekday, concert(楽屋の本番の id), tasks:[{ id, name, off, due, who, done, note, cat, link }] } */
 const newTask = (o = {}) => Object.assign({ id: uid('k'), name: '', off: -7, due: '', who: '', done: false, note: '', cat: '全体', link: '' }, o);
 /* ひな形から、やることを作る。一般・大学などでは「保護者への案内」を「団員（部員）への案内」にする */
 function fromTemplate(kind, mine) {
@@ -1744,7 +1744,7 @@ function fromTemplate(kind, mine) {
 }
 /* 土日・祝日の締め切りを前の平日にするか：はじめの値は、学校・大学ならする、一般の団体・地域クラブ（平日は仕事・学校）ならしない */
 const weekdayDefault = () => !['ippan', 'chiiki'].includes(GKY.orgType());
-const newPlan = (o = {}) => Object.assign({ id: uid('p'), title: '新しい本番', date: GKY.addDays(GKY.ymd(), 120), kind: 'concert', sample: false, weekday: weekdayDefault(), tasks: [] }, o);
+const newPlan = (o = {}) => Object.assign({ id: uid('p'), title: '新しい本番', date: GKY.addDays(GKY.ymd(), 120), kind: 'concert', sample: false, weekday: weekdayDefault(), concert: '', tasks: [] }, o);
 function samplePlan() {
   const p = newPlan({ title: '（例）第12回 定期演奏会', date: GKY.addDays(GKY.ymd(), 70), kind: 'concert', sample: true });
   p.tasks = fromTemplate('concert');
@@ -1757,7 +1757,7 @@ function samplePlan() {
 function normalizePlan(p) {
   p = Object.assign(newPlan(), p && typeof p === 'object' ? p : {});
   if (typeof p.id !== 'string' || !p.id) p.id = uid('p');
-  p.title = String(p.title || '無題'); p.date = /^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : GKY.ymd(); p.weekday = p.weekday !== false;
+  p.title = String(p.title || '無題'); p.date = /^\d{4}-\d{2}-\d{2}$/.test(p.date) ? p.date : GKY.ymd(); p.weekday = p.weekday !== false; p.concert = typeof p.concert === 'string' ? p.concert : '';
   p.tasks = (Array.isArray(p.tasks) ? p.tasks : []).filter(Boolean).map(t => { const x = newTask(t); x.id = x.id || uid('k'); x.off = Math.round(+x.off || 0); x.due = /^\d{4}-\d{2}-\d{2}$/.test(x.due) ? x.due : ''; x.done = !!x.done; x.link = TOOLS[x.link] ? x.link : ''; return x; });
   return p;
 }
@@ -1808,7 +1808,7 @@ function renderTab() { ({ list: renderList, edit: renderEdit, out: renderOut })[
 const toolLink = slug => { const u = GKY.linkTo(slug); return u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(TOOLS[slug])}を開く</a>` : esc(TOOLS[slug]); };
 function renderList() {
   const p = P(), today = GKY.ymd(), left = GKY.daysBetween(today, p.date);
-  $('#hero').innerHTML = `<div><div class="what">${esc(p.title)}</div><div class="when">${esc(GKY.jpDate(p.date))}　${esc((TEMPLATES[p.kind] || {}).name || '')}</div></div><div class="days">${left > 0 ? 'あと ' + left : left === 0 ? '今日' : -left + '日前'}<small>${left > 0 ? '日' : left === 0 ? 'が本番' : 'に終わりました'}</small></div>`;
+  $('#hero').innerHTML = `<div><div class="what">${esc(p.title)}</div><div class="when">${esc(GKY.jpDate(p.date))}　${esc((TEMPLATES[p.kind] || {}).name || '')}</div>${GKY.concertChip(p) ? `<div style="margin-top:4px">${GKY.concertChip(p)}</div>` : ''}</div><div class="days">${left > 0 ? 'あと ' + left : left === 0 ? '今日' : -left + '日前'}<small>${left > 0 ? '日' : left === 0 ? 'が本番' : 'に終わりました'}</small></div>`;
   $('#weekday').checked = p.weekday;
   // 時間の帯：いちばん早い締め切り 〜 本番（とそのあと）
   const dues = p.tasks.map(t => dueOf(p, t)).concat([today, p.date]).sort();
@@ -1886,18 +1886,27 @@ $('#jsonOut').onclick = () => { const p = P(); GKY.saveJSON(`本番逆算_${p.ti
 $('#jsonIn').onclick = async () => { const f = await GKY.openJSON(); if (!f) return; if (f.kind !== 'gyakusan' || !f.data.plan) { toast('本番逆算スケジュールで保存したファイルを選んでください'); return; } const p = normalizePlan(f.data.plan); if (S.plans[p.id]) p.id = uid('p'); S.plans[p.id] = p; S.order.unshift(p.id); S.current = p.id; (f.data.mine || []).forEach(m => { if (!S.mine.some(x => x.name === m.name)) S.mine.push(m); }); past = []; future = []; persist(); renderAll(); toast(`「${p.title}」を読み込みました`); };
 
 /* --- 本番の設定 --- */
-function newPlanFlow() {
-  const type = GKY.orgType(), op = ([k, v]) => `<option value="${k}">${esc(v.name)}</option>`;
+/* 楽屋の本番の種類 → はじめに選ぶひな形 */
+const kindFromConcert = c => !c ? '' : ({ contest: 'contest', event: 'event', school: 'school' })[c.kind] || (GKY.orgType() === 'daigaku' ? 'univ' : 'concert');
+function newPlanFlow(c = null) {
+  const type = GKY.orgType(), def = kindFromConcert(c), op = ([k, v]) => `<option value="${k}"${k === def ? ' selected' : ''}>${esc(v.name)}</option>`;
   const all = Object.entries(TEMPLATES).filter(([k]) => k !== 'blank'), rec = type ? all.filter(([, v]) => (v.for || []).includes(type)) : [], rest = type ? all.filter(([, v]) => !(v.for || []).includes(type)) : all;
   const opts = (rec.length ? `<optgroup label="${esc(GKY.ORG_TYPES[type])}向け">${rec.map(op).join('')}</optgroup><optgroup label="ほかのひな形">${rest.map(op).join('')}</optgroup>` : rest.map(op).join(''))
     + op(['blank', TEMPLATES.blank]) + (S.mine.length ? `<optgroup label="自分のひな形">${S.mine.map(m => `<option value="mine:${esc(m.id)}">${esc(m.name)}</option>`).join('')}</optgroup>` : '');
-  sheet({ title: '新しい本番', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="nT" placeholder="例：第13回 定期演奏会"></label><label class="fld"><span>本番の日</span><input type="date" id="nD" value="${GKY.addDays(GKY.ymd(), 120)}"></label><label class="fld"><span>ひな形</span><select id="nK">${opts}</select></label></div>`,
-    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => { const k = $('#nK', body).value, mine = k.startsWith('mine:') ? S.mine.find(m => m.id === k.slice(5)) : null; const p = newPlan({ title: norm($('#nT', body).value) || '新しい本番', date: $('#nD', body).value || GKY.ymd(), kind: mine ? 'mine' : k }); p.tasks = fromTemplate(k, mine); S.plans[p.id] = p; S.order.unshift(p.id); S.current = p.id; past = []; future = []; persist(); renderAll(); showTab('list'); toast(`「${p.title}」を作りました。締め切りの日数は、施設や大会のきまりに合わせて直してください`, null, null, 6000); } }] });
+  const sh = sheet({ title: '新しい本番', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(c ? { concert: c.id } : {})}<label class="fld wide"><span>本番の名前</span><input type="text" id="nT" placeholder="例：第13回 定期演奏会" value="${esc(c ? c.title : '')}"></label><label class="fld"><span>本番の日</span><input type="date" id="nD" value="${esc(c && c.date ? c.date : GKY.addDays(GKY.ymd(), 120))}"></label><label class="fld"><span>ひな形</span><select id="nK">${opts}</select></label></div>`,
+    actions: [{ label: 'やめる' }, { label: '作る', primary: true, onClick: body => {
+      const k = $('#nK', body).value, mine = k.startsWith('mine:') ? S.mine.find(m => m.id === k.slice(5)) : null;
+      const p = newPlan({ title: norm($('#nT', body).value) || '新しい本番', date: $('#nD', body).value || GKY.ymd(), kind: mine ? 'mine' : k });
+      const cid = GKY.readConcertField(body, { title: p.title, date: p.date, kind: ({ contest: 'contest', ensemble: 'contest', event: 'event', school: 'school', newcomer: 'school' })[k] || 'concert' }); if (cid) p.concert = cid;
+      p.tasks = fromTemplate(k, mine); S.plans[p.id] = p; S.order.unshift(p.id); S.current = p.id; past = []; future = []; persist(); renderAll(); showTab('list'); toast(`「${p.title}」を作りました。締め切りの日数は、施設や大会のきまりに合わせて直してください`, null, null, 6000);
+    } }] });
+  GKY.wireConcertField(sh.body, { title: '#nT', date: '#nD' });
 }
 $('#btnPlan').onclick = () => {
   const p = P();
-  const sh = sheet({ title: '本番の設定', content: `<div class="grid"><label class="fld wide"><span>本番の名前</span><input type="text" id="sT" value="${esc(p.title)}"></label><label class="fld"><span>本番の日</span><input type="date" id="sD" value="${esc(p.date)}"></label></div><p class="note">本番の日を変えると、「決まった日」のないやることは、いっしょに動きます。</p><div class="btnrow" style="margin-top:12px"><button class="btn" id="sNew">新しい本番を作る</button><button class="btn" id="sDup">この本番を複製（来年用）</button><button class="btn danger" id="sDel">この本番を消す</button></div>`,
-    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => edit(pp => { pp.title = norm($('#sT', body).value) || '無題'; pp.date = $('#sD', body).value || pp.date; pp.sample = false; }) }] });
+  const sh = sheet({ title: '本番の設定', content: `<div class="grid">${GKY.IN_VIEWER ? '' : GKY.concertField(p)}<label class="fld wide"><span>本番の名前</span><input type="text" id="sT" value="${esc(p.title)}"></label><label class="fld"><span>本番の日</span><input type="date" id="sD" value="${esc(p.date)}"></label></div><p class="note">本番の日を変えると、「決まった日」のないやることは、いっしょに動きます。</p><div class="btnrow" style="margin-top:12px"><button class="btn" id="sNew">新しい本番を作る</button><button class="btn" id="sDup">この本番を複製（来年用）</button><button class="btn danger" id="sDel">この本番を消す</button></div>`,
+    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => { const t = norm($('#sT', body).value) || '無題', d = $('#sD', body).value || p.date, cid = GKY.readConcertField(body, { title: t, date: d }); edit(pp => { pp.title = t; pp.date = d; pp.sample = false; if (cid !== undefined) pp.concert = cid; }); } }] });
+  GKY.wireConcertField(sh.body, { title: '#sT', date: '#sD' });
   $('#sNew', sh.body).onclick = () => { sh.close(); newPlanFlow(); };
   $('#sDup', sh.body).onclick = () => { const d = GKY.parseYmd(p.date); d.setFullYear(d.getFullYear() + 1); const n = normalizePlan(Object.assign(clone(p), { id: uid('p'), title: p.title + '（来年）', date: GKY.ymd(d), sample: false })); n.tasks.forEach(t => { t.id = uid('k'); t.done = false; t.due = ''; }); S.plans[n.id] = n; S.order.unshift(n.id); S.current = n.id; past = []; future = []; persist(); sh.close(); renderAll(); toast('1年後の日付で複製しました'); };
   GKY.arm($('#sDel', sh.body), () => { const gone = clone(p), pos = S.order.indexOf(p.id); delete S.plans[p.id]; S.order = S.order.filter(x => x !== p.id); if (!S.order.length) { const n = newPlan(); n.tasks = fromTemplate('concert'); S.plans[n.id] = n; S.order.push(n.id); } S.current = S.order[Math.min(pos, S.order.length - 1)]; past = []; future = []; persist(); sh.close(); renderAll(); toast(`「${gone.title}」を消しました`, '元に戻す', () => { S.plans[gone.id] = gone; S.order.splice(pos, 0, gone.id); S.current = gone.id; persist(); renderAll(); }); }, 'もう一度押すと消します');
@@ -1944,7 +1953,10 @@ document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.k
 GKY.fitTop(); GKY.offline();
 showTab('list');
 renderAll();
-startViewer().finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, P, holidays, dueOf, ics, normalizePlan, renderAll, sharePayload }; });
+startViewer().then(viewing => {
+  // 楽屋の「本番」から開いたとき：その本番のスケジュールを開く（なければ作るか聞く）
+  if (!viewing && !GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '準備のスケジュール', find: c => GKY.recForConcert(S.order.map(id => S.plans[id]), c), open: r => { S.current = r.id; past = []; future = []; persist(); renderAll(); showTab('list'); }, create: c => newPlanFlow(c) }));
+}).finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, P, holidays, dueOf, ics, normalizePlan, renderAll, sharePayload, newPlanFlow }; });
 })();
 </script>
 </body>

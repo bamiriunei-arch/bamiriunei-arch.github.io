@@ -345,6 +345,8 @@ table.mx{border-collapse:separate; border-spacing:0; font-size:12.5px; min-width
 .mx td.cell.two{background:var(--warn-soft)}
 .mx td.cell.hole{background:var(--bad-soft)}
 .mx tr.absent td{color:var(--muted); text-decoration:line-through}
+.bm-tbl tr.short td{background:var(--bad-soft)}
+.bm-tbl .chip{margin:1px 0}
 .mx tr.absent td.cell.on{background:var(--bad-soft)}
 .mx tr.sep td{background:var(--surface-3); color:var(--muted); font-size:11px; font-weight:700; padding:3px 7px; position:sticky; left:0}
 .mx td.cnt{text-align:right; font-family:var(--f-mono); font-variant-numeric:tabular-nums}
@@ -450,6 +452,7 @@ table.mx{border-collapse:separate; border-spacing:0; font-size:12.5px; min-width
               <button class="btn" id="btnAddPiece">＋ 曲を足す</button>
               <button class="btn" id="btnImportStagemane">ステマネのファイルから</button>
               <button class="btn" id="btnImportSongs">楽屋の曲から</button>
+              <button class="btn" id="btnImportSetlist">楽譜ライブラリの曲目一覧から</button>
             </div>
             <p class="note">ステマネで保存した演奏会のファイル（.json）を読み込むと、曲名と順番がそのまま入ります。</p>
           </div>
@@ -466,6 +469,7 @@ table.mx{border-collapse:separate; border-spacing:0; font-size:12.5px; min-width
           <button class="btn" id="btnAddMember">＋ 部員を足す</button>
           <button class="btn" id="btnFromOrg">楽屋の部員を読み込む</button>
           <button class="btn" id="btnCsvMember">CSVから読み込む</button>
+          <button class="btn" id="btnFromAtt">出欠から「休み」を入れる</button>
         </div>
         <div class="tbl-wrap" id="memberList"></div>
       </div>
@@ -1774,8 +1778,15 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet, arm } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: [
+    'バミリに名前を入れるとき、パートごとに「席の数・人の数・席が足りない人・あまった席」の表を出すようにしました。足りない人の席を、同じパートの席のとなりに名前つきで足すこともできます。曲ごとの席の足りない人数も出します',
+    '楽屋の「本番」とつなげるようにしました（演奏会の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の香盤表を開くか作ります',
+    '「楽譜ライブラリの曲目一覧から」：同じ本番の曲目一覧の曲を、編成（受け持ち）ごと順番どおりに入れられます',
+    '「出欠から休みを入れる」：出欠で、この演奏会の日に欠席の人を「休み」にします',
+    '仮引退の人を、演奏会ごとに候補に入れられるようにしました（演奏会の設定）',
+  ] },
   { v: '2', d: '2026-10-06', items: [
     '曲ごとに指揮者と部（第1部など）を入れられるようにしました。印刷・コピーにも出ます。ステマネから読み込むときも入ります',
     '出場人数の上限を入れると、出る人の数が上限をこえたときに知らせます。同じ日のほかの演奏会（A編成とB編成など）に重なっている人も知らせます',
@@ -1797,7 +1808,9 @@ const KEY = 'kouban.v1';
   演奏会 = { id, title, date, kind:'concert'|'ensemble', memo, sample, limit(出場人数の上限|null), members:[部員], absent:[部員id],
             pieces:[{ id, title, composer, conductor(指揮者), part(第1部など), note, slots:[{ id, label, role:''|'top'|'solo', opt(なくても可) }] }],
             assign:{ 曲id:{ 受け持ちid: 部員id } }, updatedAt }                                   */
-const blankProject = (o = {}) => Object.assign({ id: uid('k'), title: '新しい演奏会', date: '', kind: 'concert', memo: '', sample: false, limit: null, members: [], absent: [], pieces: [], assign: {}, updatedAt: Date.now() }, o);
+const blankProject = (o = {}) => Object.assign({ id: uid('k'), title: '新しい演奏会', date: '', kind: 'concert', memo: '', sample: false, limit: null, concert: '', semiOk: false, members: [], absent: [], pieces: [], assign: {}, updatedAt: Date.now() }, o);
+/* 仮引退の人：演奏会の設定で「候補に入れる」にしたときだけ、割り振りの候補（active）にする */
+const semiFix = p => { p.members.forEach(m => { if (m.status === 'semi') m.active = !!p.semiOk; }); return p; };
 const newPiece = (o = {}) => Object.assign({ id: uid('p'), title: '', composer: '', conductor: '', part: '', note: '', slots: [] }, o);
 const newSlot = (label, role = '', opt = false) => ({ id: uid('s'), label: norm(label), role, opt: !!opt });
 
@@ -1864,7 +1877,9 @@ function normalizeProject(p) {
   p.title = String(p.title || '無題の演奏会');
   p.kind = p.kind === 'ensemble' ? 'ensemble' : 'concert';
   p.limit = p.limit == null || p.limit === '' || !(+p.limit > 0) ? null : Math.round(+p.limit);
-  p.members = (Array.isArray(p.members) ? p.members : []).map(GKY.normMember);
+  // 仮引退の人は active を外してから読む（active だけで在籍・退部を決める古い読み方で、仮引退が消えないように）
+  p.members = (Array.isArray(p.members) ? p.members : []).map(m => GKY.normMember(m && m.status === 'semi' ? Object.assign({}, m, { active: undefined }) : m));
+  p.concert = typeof p.concert === 'string' ? p.concert : ''; p.semiOk = !!p.semiOk; semiFix(p);
   const mids = new Set(p.members.map(m => m.id));
   p.absent = (Array.isArray(p.absent) ? p.absent : []).filter(id => mids.has(id));
   p.pieces = (Array.isArray(p.pieces) ? p.pieces : []).filter(x => x && typeof x === 'object').map(x => {
@@ -1901,7 +1916,7 @@ function fresh() { const p = sampleProject(); return { v: 1, current: p.id, orde
 let past = [], future = [];
 function edit(fn, rerender = true) {
   past.push(JSON.stringify(P())); if (past.length > 80) past.shift(); future = [];
-  fn(P()); P().updatedAt = Date.now(); persist(); if (rerender) renderAll(); else updHist();
+  fn(P()); semiFix(P()); P().updatedAt = Date.now(); persist(); if (rerender) renderAll(); else updHist();
 }
 function undo() { if (!past.length) return; future.push(JSON.stringify(P())); S.projects[S.current] = JSON.parse(past.pop()); persist(); renderAll(); toast('元に戻しました'); }
 function redo() { if (!future.length) return; past.push(JSON.stringify(P())); S.projects[S.current] = JSON.parse(future.pop()); persist(); renderAll(); toast('やり直しました'); }
@@ -2323,6 +2338,47 @@ $('#btnImportSongs').onclick = () => {
   $('#isQ', sh.body).oninput = e => { const k = GKY.key(e.target.value); let n = 0; $$('[data-k]', sh.body).forEach(el => { const on = !k || el.dataset.k.includes(k); el.hidden = !on; if (on) n++; }); $('#isN', sh.body).textContent = k ? `${n}曲が見つかりました` : ''; };
 };
 
+/* 楽譜ライブラリの曲目一覧から足す（同じ楽屋の本番・同じ日付の曲目一覧を先に出す） */
+function gakufuLists(p) {
+  const g = GKY.IN_VIEWER ? null : GKY.store.get('gakufu.v1');
+  if (!g || g.sample || !Array.isArray(g.setlists) || !Array.isArray(g.songs)) return { g: null, lists: [] };
+  const c = GKY.concertFor(p), mine = l => (c && (l.concert === c.id || (!l.concert && l.date && l.date === c.date))) || (!!p.date && l.date === p.date);
+  const lists = g.setlists.filter(l => l && Array.isArray(l.ids) && l.ids.length).map(l => Object.assign({}, l, { mine: mine(l) })).sort((a, b) => b.mine - a.mine || (b.date || '').localeCompare(a.date || ''));
+  return { g, lists };
+}
+function importSetlist() {
+  const p = P(), { g, lists } = gakufuLists(p);
+  if (!lists.length) { toast(GKY.IN_VIEWER ? 'ここでは楽譜ライブラリのデータを読めません' : '楽譜ライブラリに曲目一覧がありません。楽譜ライブラリの「演奏会の曲目一覧」で作ってください'); return; }
+  const have = new Set(p.pieces.map(x => GKY.key(x.title))), song = id => g.songs.find(s => s.id === id);
+  const sh = sheet({ title: '楽譜ライブラリの曲目一覧から', content: `<p class="lead">曲目一覧の曲を、演奏する順に足します。楽譜ライブラリで入れた編成（パート）は、そのまま受け持ちになります。もう入っている曲は足しません。</p>
+    <div class="list">${lists.map((l, i) => { const ss = l.ids.map(song).filter(Boolean); return `<label class="item"><input type="radio" name="sl" value="${i}"${i === 0 ? ' checked' : ''} style="width:18px;height:18px;accent-color:var(--tape)"><div class="main"><div class="t1">${esc(l.title || '名前のない曲目一覧')}${l.mine ? ' <span class="chip ok">この本番</span>' : ''}</div><div class="t2">${esc([l.date && GKY.jpDate(l.date), l.venue].filter(Boolean).join('　'))}　${ss.length}曲：${esc(ss.slice(0, 4).map(s => s.title).join('・'))}${ss.length > 4 ? '…' : ''}</div></div></label>`; }).join('')}</div>`,
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => {
+      const l = lists[+$('[name="sl"]:checked', body).value], add = l.ids.map(song).filter(s => s && !have.has(GKY.key(s.title)));
+      if (!add.length) { toast('足す曲がありません（もう入っています）'); return false; }
+      edit(pp => add.forEach(s => { const opt = new Set(s.opt || []); pp.pieces.push(newPiece({ title: s.title, composer: [s.composer, s.arranger && s.arranger + ' 編曲'].filter(Boolean).join('／'), slots: (s.parts || []).map(lb => newSlot(lb, '', opt.has(lb))) })); }));
+      toast(`「${l.title || '曲目一覧'}」から${add.length}曲を足しました`, '元に戻す', undo);
+    } }] });
+  return sh;
+}
+$('#btnImportSetlist').onclick = importSetlist;
+/* 出欠から「休み」を入れる：この演奏会の日（または同じ楽屋の本番）の出欠で、欠席の人 */
+const attKey = n => norm(n).replace(/^\(例\)/, '').replace(/\s+/g, '');
+function fromAttendance() {
+  const p = P(), a = GKY.IN_VIEWER ? null : GKY.store.get('shukketsu.v1');
+  if (!a || a.sample || !Array.isArray(a.events)) { toast('出欠のデータがありません（出欠で「例を消して始める」と、使えるようになります）'); return; }
+  if (!p.date && !p.concert) { toast('先に「演奏会の設定」で日付を入れてください'); return; }
+  const evs = a.events.filter(e => (p.concert && e.concert === p.concert) || (p.date && e.date === p.date));
+  if (!evs.length) { toast(`${p.date ? GKY.jpDate(p.date) : 'この演奏会の日'}の予定が、出欠にありません`); return; }
+  const abs = [], late = [];
+  p.members.forEach(m => { const k = attKey(m.name); evs.forEach(e => { const x = ((a.att || {})[e.id] || {})[k]; if (!x) return; if (x.s === 'a' && !abs.some(y => y.m === m)) abs.push({ m, r: x.r, e }); if ((x.s === 'l' || x.s === 'e') && !late.some(y => y.m === m)) late.push({ m, r: x.r, s: x.s, e }); }); });
+  const add = abs.filter(x => !isAbsent(p, x.m.id));
+  sheet({ title: '出欠から「休み」を入れる', content: `<p class="lead">出欠の「${esc(evs.map(e => GKY.mdDate(e.date) + ' ' + e.title).join('・'))}」で欠席の人を、この演奏会の「休み」にします。</p>
+    ${abs.length ? `<div class="issue bad"><span class="dot bad"></span><div class="main"><b>欠席</b>：${abs.map(x => esc(x.m.name) + (x.r ? '（' + esc(x.r) + '）' : '') + (isAbsent(p, x.m.id) ? '<span class="muted">（もう休み）</span>' : '')).join('、')}</div></div>` : '<p class="muted">欠席の人はいません。</p>'}
+    ${late.length ? `<div class="issue warn" style="margin-top:6px"><span class="dot warn"></span><div class="main"><b>遅刻・早退</b>（休みにはしません）：${late.map(x => esc(x.m.name) + '（' + (x.s === 'l' ? '遅刻' : '早退') + (x.r ? '・' + esc(x.r) : '') + '）').join('、')}</div></div>` : ''}`,
+    actions: [{ label: add.length ? 'やめる' : '閉じる' }, ...(add.length ? [{ label: `${add.length}人を休みにする`, primary: true, onClick: () => { edit(pp => { add.forEach(x => { if (!pp.absent.includes(x.m.id)) pp.absent.push(x.m.id); }); }); toast(`${add.length}人を休みにしました。「確認」で、あく所と代わりの候補が出ます`, '元に戻す', undo); } }] : [])] });
+}
+$('#btnFromAtt').onclick = fromAttendance;
+
 /* --- 部員 --- */
 function renderMembers() {
   const p = P();
@@ -2519,36 +2575,79 @@ function saveCsv() {
   p.members.filter(m => m.active).sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part)).forEach(m => rows.push([m.name, m.grade, m.part, ...p.pieces.map(pc => slotsOfMember(p, pc, m.id).map(s => s.label).join('・')), load[m.id] || 0]));
   GKY.saveFile(`香盤表_${p.title}_${GKY.stamp()}.csv`, GKY.csv(rows), 'text/csv');
 }
-/* バミリの配置図に名前を入れる。席は左から順に入る */
-function fillBamiri(bm, pcId) {
+/* バミリの配置図に名前を入れる。席は左から順に入る。
+   addSeats：席が足りない人の席を、同じ楽器の席のとなりに（なければ舞台の左上に）名前つきで足す
+   stats：パート（楽器のなかま）ごとの 席の数・受け持ちの人・入った人・席が足りない人・あまった席 */
+function fillBamiri(bm, pcId, { addSeats = false } = {}) {
   const p = P(), pc = p.pieces.find(x => x.id === pcId);
   const doc = clone(bm.raw);
   const a = A(p, pc.id);
   const seats = doc.items.filter(i => i && i.label && i.t !== 'text' && i.t !== 'riser' && i.t !== 'conductor');
   seats.forEach(i => { i.name = ''; });
-  const used = new Set(), done = [], miss = [];
+  const used = new Set(), done = [], miss = [], placed = [];
   const left = (x, y) => x.x - y.x || x.y - y.y;
   const todo = pc.slots.filter(s => a[s.id] && member(p, a[s.id]));
-  const put = (s, seat) => { seat.name = member(p, a[s.id]).name; used.add(seat); done.push(s.label); };
+  const put = (s, seat) => { seat.name = member(p, a[s.id]).name; used.add(seat); done.push(s.label); placed.push(s); };
   // 1回目：名前がぴったり同じ席（Cl1 → Cl1）。2回目：楽器が同じ席（Tp1 → Tp）。ティンパニは丸い太鼓の真ん中に
   const rest = todo.filter(s => { const seat = seats.filter(i => !used.has(i) && norm(i.label) === s.label).sort(left)[0]; if (seat) { put(s, seat); return false; } return true; });
   rest.forEach(s => {
     let seat = seats.filter(i => !used.has(i) && GKY.baseOf(i.label) === GKY.baseOf(s.label)).sort(left)[0];
     if (!seat && GKY.baseOf(s.label) === 'Timp') { const rings = seats.filter(i => !used.has(i) && i.v === 'ring').sort(left); seat = rings[Math.floor((rings.length - 1) / 2)]; if (seat) rings.forEach(r => used.add(r)); }
-    if (seat) put(s, seat); else miss.push(`${s.label}（${member(p, a[s.id]).name}）`);
+    if (seat) put(s, seat); else miss.push({ s, m: member(p, a[s.id]) });
   });
+  // パートごとの表
+  const fam = l => GKY.familyOf(l) || GKY.baseOf(l) || norm(l);
+  const st = {};
+  const row = f => st[f] = st[f] || { fam: f, seats: 0, people: 0, placed: 0, miss: [] };
+  seats.forEach(i => { if (i.v === 'ring') return; row(fam(i.label)).seats++; });
+  todo.forEach(s => row(fam(s.label)).people++);
+  placed.forEach(s => row(fam(s.label)).placed++);
+  miss.forEach(x => row(fam(x.s.label)).miss.push(x));
+  const stats = Object.values(st).sort((x, y) => GKY.partOrder(x.fam) - GKY.partOrder(y.fam));
+  // 足りない人の席を足す
+  const added = [];
+  if (addSeats && miss.length) {
+    const near = (x, y) => doc.items.some(i => i && Math.abs(i.x - x) < (i.w || 46) * 0.8 && Math.abs(i.y - y) < (i.h || 46) * 0.8);
+    const anyPlayer = seats.find(i => i.t === 'player') || null;
+    let free = 0;
+    miss.forEach(({ s, m }) => {
+      const group = doc.items.filter(i => i && i.label && GKY.baseOf(i.label) === GKY.baseOf(s.label) && i.v !== 'ring').sort(left);
+      const tpl = group[group.length - 1] || null;
+      const it = tpl ? clone(tpl) : { t: 'player', r: 0, w: 46, h: 46, sec: GKY.sectionOf(s.label), layer: anyPlayer ? anyPlayer.layer : undefined };
+      Object.assign(it, { id: uid('b'), label: s.label, name: m.name });
+      if (tpl) {
+        const ang = (tpl.r || 0) * Math.PI / 180, step = (tpl.w || 46) + 24;
+        let x = tpl.x + Math.cos(ang) * step, y = tpl.y + Math.sin(ang) * step, k = 0;
+        while (near(x, y) && k < 12) { k++; x = tpl.x + Math.cos(ang) * step * (1 + k % 3); y = tpl.y + Math.sin(ang) * step * (1 + k % 3) + Math.floor(k / 3) * ((tpl.h || 46) + 20); }
+        it.x = Math.round(x); it.y = Math.round(y);
+      } else { it.x = 70 + (free % 6) * 64; it.y = 70 + Math.floor(free / 6) * 64; free++; }
+      it.x = Math.max(30, Math.min((doc.W || 1400) - 30, it.x)); it.y = Math.max(30, Math.min((doc.D || 900) - 30, it.y));
+      doc.items.push(it); added.push({ s, m });
+    });
+  }
   doc.showNames = true;
   doc.title = (pc.title || doc.title || '').slice(0, 60);
-  return { doc, done, miss };
+  return { doc, done, miss, stats, added };
 }
 const BAMIRI_MAX = 40;   // バミリの「保存した配置」に覚えられる数
+let bmLast = null, bmAdd = true;   // 読みこんだ配置図と、「足りない人の席を足す」
 async function bamiriFrom(bm) {
+  if (bm) bmLast = bm; else bm = bmLast;
+  if (!bm) return;
   const pcId = $('#bmPiece').value;
   if (!pcId) { toast('先に曲を入れてください'); return; }
-  const { doc, done, miss } = fillBamiri(bm, pcId);
+  const r0 = fillBamiri(bm, pcId), { doc, done, miss, stats, added } = r0.miss.length && bmAdd ? fillBamiri(bm, pcId, { addSeats: true }) : r0;
   const pc = P().pieces.find(x => x.id === pcId);
-  $('#bmResult').innerHTML = `<div class="issue ${miss.length ? 'warn' : ''}"><span class="dot ${miss.length ? 'warn' : 'ok'}"></span><div class="main"><div>「${esc(pc.title)}」：${done.length}人の名前を入れました${miss.length ? `。席が見つからなかった人：${esc(miss.join('、'))}` : ''}</div><div class="sub">席が足りないときは、バミリで席を足してから、もう一度読み込んでください。</div></div></div>
-    <div class="btnrow" style="margin-top:8px"><button class="btn primary" id="bmSave">バミリ用のファイルを保存</button>${!GKY.IN_VIEWER && GKY.store.get('bamiri.saves') !== null ? '<button class="btn" id="bmPush">バミリの「保存した配置」に足す</button>' : ''}</div>`;
+  // 曲ごとの、席が足りない人の数
+  const per = P().pieces.map((x, i) => ({ x, i, n: fillBamiri(bm, x.id).miss.length, all: x.slots.filter(s => A(P(), x.id)[s.id]).length }));
+  $('#bmResult').innerHTML = `<div class="issue ${miss.length ? 'warn' : 'ok'}"><span class="dot ${miss.length ? 'warn' : 'ok'}"></span><div class="main"><div>「${esc(pc.title || '無題')}」：<b>${done.length}人</b>を席に入れました${miss.length ? `。<b style="color:var(--bad)">席が足りない人 ${miss.length}人</b>` : '。全員の席があります'}</div>${miss.length ? `<div class="sub">${miss.map(x => `${esc(x.s.label)}（${esc(x.m.name)}）`).join('、')}</div>` : ''}</div></div>
+    <div class="tbl-wrap" style="margin-top:8px"><table class="tbl bm-tbl"><thead><tr><th>パート</th><th class="num">席</th><th class="num">受け持ち</th><th class="num">入った</th><th>席が足りない人</th><th class="num">あまった席</th></tr></thead><tbody>${stats.map(x => `<tr class="${x.miss.length ? 'short' : ''}"><td><b>${esc(GKY.partName(x.fam))}</b></td><td class="num">${x.seats}</td><td class="num">${x.people}</td><td class="num">${x.placed}</td><td>${x.miss.length ? x.miss.map(y => `<span class="chip bad">${esc(y.m.name)}（${esc(y.s.label)}）</span>`).join(' ') : ''}</td><td class="num">${Math.max(0, x.seats - x.placed) || ''}</td></tr>`).join('')}</tbody></table></div>
+    ${r0.miss.length ? `<label class="chk" style="margin-top:8px"><input type="checkbox" id="bmAdd"${bmAdd ? ' checked' : ''}> 足りない人の席を足す（同じ楽器の席のとなりに、名前つきで。バミリで動かせます）</label>${added.length ? `<p class="note" style="margin:4px 0 0">${added.length}人分の席を足しました：${added.map(x => esc(x.m.name)).join('、')}</p>` : ''}` : ''}
+    ${per.length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">曲ごとの、席が足りない人の数</summary><div class="list" style="margin-top:6px">${per.map(y => `<button class="item${y.x.id === pcId ? ' on' : ''}" data-bmpc="${esc(y.x.id)}"><div class="main"><div class="t1">${y.i + 1}. ${esc(y.x.title || '無題')}</div><div class="t2">受け持ち ${y.all}人</div></div><span class="chip ${y.n ? 'bad' : 'ok'}">${y.n ? '足りない ' + y.n + '人' : '全員の席あり'}</span></button>`).join('')}</div></details>` : ''}
+    <div class="btnrow" style="margin-top:8px"><button class="btn primary" id="bmSave">バミリ用のファイルを保存</button>${!GKY.IN_VIEWER && GKY.store.get('bamiri.saves') !== null ? '<button class="btn" id="bmPush">バミリの「保存した配置」に足す</button>' : ''}<button class="btn ghost" id="bmCopy">席が足りない人をコピー</button></div>`;
+  const ba = $('#bmAdd'); if (ba) ba.onchange = () => { bmAdd = ba.checked; bamiriFrom(); };
+  $$('[data-bmpc]').forEach(b => b.onclick = () => { $('#bmPiece').value = b.dataset.bmpc; bamiriFrom(); });
+  $('#bmCopy').onclick = () => { const xs = per.filter(y => y.n); if (!xs.length) { toast('席が足りない人はいません'); return; } GKY.copyText(['【バミリの席が足りない人】' + (P().title ? ' ' + P().title : '')].concat(xs.map(y => `${y.i + 1}. ${y.x.title || '無題'}：` + fillBamiri(bm, y.x.id).miss.map(z => `${z.m.name}（${z.s.label}）`).join('、'))).join('\n'), 'コピーしました'); };
   $('#bmSave').onclick = () => GKY.saveFile(`bamiri-${pc.title || '配置'}.json`, JSON.stringify(doc), 'application/json');
   const push = $('#bmPush');
   if (push) push.onclick = () => {
@@ -2571,6 +2670,7 @@ $('#bmFile').onclick = async () => {
   bamiriFrom(GKY.bamiri(f.data));
 };
 $('#bmLocal').onclick = () => { const d = GKY.store.get('bamiri.current'); if (d && Array.isArray(d.items)) bamiriFrom(GKY.bamiri(d)); else toast('バミリの配置図が見つかりませんでした'); };
+$('#bmPiece').addEventListener('change', () => { if (bmLast) bamiriFrom(); });
 /* --- 見るだけのリンク --- */
 /* 中身：{ k:'kouban', t, d, o, m:[[名前,パート,学年]], p:[[曲名,作曲,指揮,部,'受け持ち|人の番号|印;…']] } */
 function sharePayload(p) {
@@ -2621,19 +2721,24 @@ $('#openJson').onclick = async () => {
 /* --- 演奏会の設定 --- */
 function openProject() {
   const p = P();
+  const hasSemi = p.members.some(m => m.status === 'semi') || GKY.org().members.some(m => m.status === 'semi');
   const sh = sheet({ title: '演奏会の設定', content: `<div class="grid">
+      ${GKY.IN_VIEWER ? '' : GKY.concertField(p)}
       <label class="fld wide"><span>名前</span><input type="text" id="pjTitle" value="${esc(p.title)}"></label>
       <label class="fld"><span>日付</span><input type="date" id="pjDate" value="${esc(p.date)}"></label>
       <label class="fld"><span>種類</span><select id="pjKind"><option value="concert"${p.kind === 'concert' ? ' selected' : ''}>演奏会（1人が何曲も出る）</option><option value="ensemble"${p.kind === 'ensemble' ? ' selected' : ''}>アンサンブル（1人1チーム）</option></select></label>
       <label class="fld"><span>出場人数の上限</span><input type="number" id="pjLimit" min="1" max="300" step="1" value="${p.limit || ''}" placeholder="なし"><span class="hint">コンクールなど、出られる人数が決まっているとき</span></label>
       <label class="fld wide"><span>メモ</span><textarea id="pjMemo">${esc(p.memo)}</textarea></label>
     </div>
+    ${hasSemi ? `<label class="chk" style="margin-top:8px"><input type="checkbox" id="pjSemi"${p.semiOk ? ' checked' : ''}> 仮引退の人も、この演奏会の候補に入れる</label>` : ''}
     <h3 style="font-size:13px;margin:16px 0 6px">新しく作る</h3>
     <div class="btnrow"><button class="btn" data-new="org">楽屋の部員で作る</button><button class="btn" data-new="same">この演奏会の部員で作る</button><button class="btn" data-new="copy">この演奏会を複製</button><button class="btn" data-new="blank">白紙から</button></div>
     <p class="note">アンサンブルにすると、2つ以上のチームに入っている人・どこにも入っていない人を知らせます（曲＝チームとして使います）。コンクールでA編成とB編成に分かれるときは、編成ごとに演奏会を作り、同じ日付にすると、両方に入っている人を知らせます。</p>`,
     actions: [{ label: 'この演奏会を消す', danger: true, left: true, keep: true, onClick: (body, close) => { delProject(close); return false; } }, { label: '閉じる' }, { label: '決める', primary: true, onClick: body => {
-      edit(pp => { pp.title = norm($('#pjTitle', body).value) || '無題の演奏会'; pp.date = $('#pjDate', body).value; pp.kind = $('#pjKind', body).value; pp.memo = $('#pjMemo', body).value; const lim = Math.round(+$('#pjLimit', body).value); pp.limit = lim > 0 ? lim : null; pp.sample = false; });
+      const t = norm($('#pjTitle', body).value) || '無題の演奏会', d = $('#pjDate', body).value, cid = GKY.readConcertField(body, { title: t, date: d, kind: $('#pjKind', body).value === 'ensemble' ? 'contest' : 'concert' });
+      edit(pp => { pp.title = t; pp.date = d; pp.kind = $('#pjKind', body).value; pp.memo = $('#pjMemo', body).value; const lim = Math.round(+$('#pjLimit', body).value); pp.limit = lim > 0 ? lim : null; pp.sample = false; if (cid !== undefined) pp.concert = cid; if ($('#pjSemi', body)) pp.semiOk = $('#pjSemi', body).checked; });
     } }] });
+  GKY.wireConcertField(sh.body, { title: '#pjTitle', date: '#pjDate' });
   $$('[data-new]', sh.body).forEach(b => b.onclick = () => {
     const k = b.dataset.new, cur = P();
     let np;
@@ -2677,7 +2782,18 @@ GKY.fitTop();
 GKY.offline();
 showTab(P().pieces.length ? 'assign' : 'pieces');
 renderAll();
-startViewer().finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, P, analyze, autofill, fillBamiri, normalizeProject, sampleProject, sharePayload, APP_VERSION, renderAll }; });
+/* 楽屋の「本番」から開いたとき：その本番の香盤表を開く（なければ、楽屋の部員で作るか聞く） */
+function createForConcert(c) {
+  const o = GKY.org(), np = blankProject({ title: c.title, date: c.date, concert: c.id, kind: 'concert' });
+  np.members = clone(o.members.filter(m => m.status !== 'gone')); semiFix(np);
+  S.projects[np.id] = np; S.order.unshift(np.id); S.current = np.id; past = []; future = [];
+  persist(); renderAll(); showTab('pieces');
+  const { lists } = gakufuLists(np), mine = lists.filter(l => l.mine);
+  toast(`「${np.title}」の香盤表を作りました（楽屋の${GKY.words().member} ${np.members.length}人）`, mine.length ? '曲目一覧から曲を入れる' : null, mine.length ? importSetlist : null, 8000);
+}
+startViewer().then(viewing => {
+  if (!viewing && !GKY.IN_VIEWER) GKY.watchConcertUrl(c => GKY.openForConcert(c, { what: '香盤表', find: c => GKY.recForConcert(S.order.map(id => S.projects[id]), c), open: r => { S.current = r.id; past = []; future = []; persist(); renderAll(); showTab(r.pieces.length ? 'assign' : 'pieces'); }, create: createForConcert }));
+}).finally(() => { if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, P, analyze, autofill, fillBamiri, normalizeProject, sampleProject, sharePayload, APP_VERSION, renderAll, semiFix, gakufuLists }; });
 })();
 </script>
 </body>
