@@ -953,6 +953,8 @@ const GKY = (() => {
   const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length || o.concerts.length); };
   /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
   function saveOrg(section, value) {
+    // 部員用の端末では、楽屋のほかのツールから楽屋データを書きかえない（楽屋の画面で受け取った設定・本番・名簿だけを入れる）
+    if (SLUG && SLUG !== 'gakuya' && isMember()) return false;
     const cur = org();
     if (section === 'org') cur.org = normOrg({ org: Object.assign(cur.org, value) }).org;
     else if (section === 'members') cur.members = value.map(normMember);
@@ -1025,7 +1027,7 @@ const GKY = (() => {
     const cs = concerts(), cur = concertFor(rec, cs), t = ymd();
     const opt = c => `<option value="${esc(c.id)}"${cur && cur.id === c.id ? ' selected' : ''}>${esc(concertLabel(c))}</option>`;
     const up = cs.filter(c => !c.date || c.date >= t), past = cs.filter(c => c.date && c.date < t).reverse();
-    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option></select></label>`;
+    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}${isMember() ? '' : '<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option>'}</select></label>`;
   }
   /* 本番を選んだら、名前・日付・会場の欄にも入れる。fill は { title, date, venue, start } の選び方（CSS セレクタ） */
   function wireConcertField(body, fill = {}) {

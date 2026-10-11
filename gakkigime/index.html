@@ -932,6 +932,8 @@ const GKY = (() => {
   const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length || o.concerts.length); };
   /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
   function saveOrg(section, value) {
+    // 部員用の端末では、楽屋のほかのツールから楽屋データを書きかえない（楽屋の画面で受け取った設定・本番・名簿だけを入れる）
+    if (SLUG && SLUG !== 'gakuya' && isMember()) return false;
     const cur = org();
     if (section === 'org') cur.org = normOrg({ org: Object.assign(cur.org, value) }).org;
     else if (section === 'members') cur.members = value.map(normMember);
@@ -1004,7 +1006,7 @@ const GKY = (() => {
     const cs = concerts(), cur = concertFor(rec, cs), t = ymd();
     const opt = c => `<option value="${esc(c.id)}"${cur && cur.id === c.id ? ' selected' : ''}>${esc(concertLabel(c))}</option>`;
     const up = cs.filter(c => !c.date || c.date >= t), past = cs.filter(c => c.date && c.date < t).reverse();
-    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option></select></label>`;
+    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}${isMember() ? '' : '<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option>'}</select></label>`;
   }
   /* 本番を選んだら、名前・日付・会場の欄にも入れる。fill は { title, date, venue, start } の選び方（CSS セレクタ） */
   function wireConcertField(body, fill = {}) {
@@ -1953,7 +1955,7 @@ $('#toOrg').onclick = () => {
   const add = xs.filter(n => !have.has(cleanName(n.name)));
   const g0 = t === 'ippan' ? '' : (GKY.gradesOf(t)[0] && !/^小/.test(GKY.gradesOf(t)[0]) ? GKY.gradesOf(t)[0] : '中1');
   sheet({ title: `楽屋の${w.member}に足す`, content: `<p>${add.length}人を、決まった楽器で楽屋の${w.member}に足します${xs.length - add.length ? `（もう楽屋にいる${xs.length - add.length}人は足しません）` : ''}。</p>${t === 'ippan' ? `<label class="fld" style="max-width:200px"><span>入団した年</span><input type="number" id="jn" value="${new Date().getFullYear()}"></label>` : `<label class="fld" style="max-width:200px"><span>学年</span><input type="text" id="gr" value="${esc(g0)}" list="grs"></label><datalist id="grs">${GKY.gradesOf(t).map(g => `<option value="${g}">`).join('')}</datalist>`}<p class="note">足したあとの編成計画では、楽屋にいる人を二重に数えません。</p>`,
-    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => { const g = $('#gr', body) ? norm($('#gr', body).value) : '', jn = $('#jn', body) ? +$('#jn', body).value || null : null; GKY.saveOrg('members', o.members.concat(add.map(n => ({ name: n.name.replace(/^（例）/, ''), grade: g, part: n.decided, status: 'active', joined: jn, note: '' })))); toast(`楽屋に${add.length}人を足しました`); if (tab === 'fc') renderFc(); } }] });
+    actions: [{ label: 'やめる' }, { label: '足す', primary: true, onClick: body => { if (GKY.isMember()) { toast('部員用の端末からは、楽屋の部員を足しません'); return; } const g = $('#gr', body) ? norm($('#gr', body).value) : '', jn = $('#jn', body) ? +$('#jn', body).value || null : null; GKY.saveOrg('members', o.members.concat(add.map(n => ({ name: n.name.replace(/^（例）/, ''), grade: g, part: n.decided, status: 'active', joined: jn, note: '' })))); toast(`楽屋に${add.length}人を足しました`); if (tab === 'fc') renderFc(); } }] });
 };
 
 /* --- 編成計画 --- */

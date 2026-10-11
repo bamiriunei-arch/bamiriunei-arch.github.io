@@ -343,6 +343,23 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .lab .nm{font-size:8.5pt}
 .lab .ow{font-size:7.5pt; color:var(--paper-mute)}
 .qrinfo{max-width:520px; margin:24px auto}
+.deals{display:flex; flex-direction:column; gap:8px}
+.deal{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+.deal.over{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.deal.done{opacity:.7}
+.deal .hd{display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px}
+.deal .hd small{color:var(--muted); font-size:12px}
+.deal .t2{font-size:12.5px; color:var(--muted); margin-top:2px}
+.deal .its{display:flex; flex-wrap:wrap; gap:4px; margin-top:6px}
+.deal .its .chip s{opacity:.7}
+.deal .btnrow{margin-top:8px}
+.chip.dout{background:var(--tape-soft); color:var(--ink)} .chip.din{background:var(--warn-soft); color:var(--warn)}
+.dl-pick{max-height:300px; overflow:auto; border:1px solid var(--line); border-radius:var(--r); padding:4px 8px; background:var(--surface)}
+.dl-pick label{display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line); font-size:13px}
+.dl-pick label:last-child{border-bottom:0}
+.dl-pick label.off{opacity:.5}
+.inrow{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1.1fr) minmax(0,1fr) 4.2em auto; gap:6px; align-items:center; margin-bottom:6px}
+@media (max-width:640px){ .inrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4.2em auto} .inrow .w2{grid-column:span 2} }
 </style>
 </head>
 <body>
@@ -385,6 +402,12 @@ a.gky-cchip:hover{border-color:var(--tape)}
     <section data-panel="lend" hidden>
       <div class="sums" id="lendSums"></div>
       <div class="sec">
+        <h2>ほかの団体との貸し借り<small id="dealSum"></small></h2>
+        <p class="lead">ほかの団体に楽器を貸すとき・借りるときに、相手・担当・期間・目的・楽器をまとめて記録し、貸出書・借用書を印刷できます。返したときも、まとめて記録できます。</p>
+        <div class="btnrow" style="margin-bottom:10px"><button class="btn primary" id="dealOut">＋ ほかの団体に貸す</button><button class="btn primary" id="dealIn">＋ ほかの団体から借りる</button></div>
+        <div class="deals" id="dealList"></div>
+      </div>
+      <div class="sec">
         <h2>貸し出し中<small>家での練習・ほかの団体へ</small></h2>
         <div class="tbl-wrap"><table class="tbl" id="lendTable"></table></div>
         <div class="btnrow" style="margin-top:10px"><button class="btn" id="lendCopy">貸し出し中の一覧をコピー</button><button class="btn" id="lendPrint">印刷・PDF</button></div>
@@ -397,7 +420,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
         <h2>今年度の使う人<small>1年間決まった人が使う楽器</small></h2>
         <p class="lead">学校や団体の楽器を、1年間だれが使うかです（家に持ち帰る「貸し出し」とは別）。卒業・引退・年度末に、返してもらうときの確かめに使います。楽器の「使う人」の欄で決めます。</p>
         <div class="tbl-wrap"><table class="tbl" id="userTable"></table></div>
-        <div class="btnrow" style="margin-top:10px"><button class="btn" id="retPrint">返却チェック表を印刷</button><button class="btn ghost" id="userClear">使う人を全部消す（新年度）</button></div>
+        <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="userBulk">使う人をまとめて決める</button><button class="btn" id="retPrint">返却チェック表を印刷</button><button class="btn ghost" id="userClear">使う人を全部消す（新年度）</button></div>
       </div>
     </section>
 
@@ -968,6 +991,8 @@ const GKY = (() => {
   const hasOrg = () => { const o = org(); return !!(o.org.name || o.members.length || o.songs.length || o.instruments.length || o.concerts.length); };
   /* 1つの区分（members / songs / instruments / org）だけを書きかえる。ほかの区分はそのまま */
   function saveOrg(section, value) {
+    // 部員用の端末では、楽屋のほかのツールから楽屋データを書きかえない（楽屋の画面で受け取った設定・本番・名簿だけを入れる）
+    if (SLUG && SLUG !== 'gakuya' && isMember()) return false;
     const cur = org();
     if (section === 'org') cur.org = normOrg({ org: Object.assign(cur.org, value) }).org;
     else if (section === 'members') cur.members = value.map(normMember);
@@ -1040,7 +1065,7 @@ const GKY = (() => {
     const cs = concerts(), cur = concertFor(rec, cs), t = ymd();
     const opt = c => `<option value="${esc(c.id)}"${cur && cur.id === c.id ? ' selected' : ''}>${esc(concertLabel(c))}</option>`;
     const up = cs.filter(c => !c.date || c.date >= t), past = cs.filter(c => c.date && c.date < t).reverse();
-    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option></select></label>`;
+    return `<label class="fld wide gky-cf"><span>${esc(label)} <small class="muted">楽屋の「本番」の一覧とつなぐと、楽屋やほかのツールから開けます</small></span><select data-gky-concert aria-label="${esc(label)}"><option value="">つなげない</option>${up.length ? `<optgroup label="これからの本番">${up.map(opt).join('')}</optgroup>` : ''}${past.length ? `<optgroup label="すんだ本番">${past.map(opt).join('')}</optgroup>` : ''}${isMember() ? '' : '<option value="+">＋ 楽屋の本番の一覧に入れる（ここの名前と日付で）</option>'}</select></label>`;
   }
   /* 本番を選んだら、名前・日付・会場の欄にも入れる。fill は { title, date, venue, start } の選び方（CSS セレクタ） */
   function wireConcertField(body, fill = {}) {
@@ -1694,8 +1719,14 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: [
+    'ほかの団体との楽器の貸し借りを、相手・担当・期間・目的・楽器でまとめて記録できるようにしました（「使う人・貸し出し」）。貸出書・借用書を印刷でき、返したときもまとめて記録できます',
+    '借りた楽器は、借用書の楽器を書くとそのまま台帳に入ります。返したときは台帳から外し、貸し借りの記録には残ります',
+    '「使う人をまとめて決める」で、楽器ごとの使う人を一度に入れられるようにしました（同じパートの部員が先に出ます）。使う人が決まっていない部員もわかります',
+    '楽器ごとに「使った人の記録」（だれが・いつからいつまで）を残すようにしました',
+  ] },
   { v: '2', d: '2026-10-06', items: [
     '「使う人（今年度）」を足しました。1年間決まった人が使う楽器と、家に持ち帰る「貸し出し」を分けて記録できます。年度末の返却チェック表も印刷できます',
     'ほかの団体への貸し出しと、ほかの団体から借りている楽器を、「使う人・貸し出し」のタブで一覧にしました',
@@ -1730,7 +1761,10 @@ function shrink(dataUrl, max = 1024) {
 }
 
 /* ---------- データの形 ----------
-  S = { v:1, sample, items:[楽器], cons:[消耗品], settings:{ autoSync } }
+  S = { v:1, sample, items:[楽器], cons:[消耗品], deals:[ほかの団体との貸し借り], settings:{ autoSync } }
+  貸し借り = { id, dir:'out'(貸す)|'in'(借りる), org(相手の団体), contact(担当・連絡先), purpose(目的), since, due, acc(付属品・メモ),
+               items:[楽器id], snap:{ 楽器id:{ no, name, maker, model, serial } }（台帳から外しても残す）, ret:{ 楽器id:返した日 }, back(全部返した日), at }
+  楽器.userHist = [{ name, since, until }]（使った人の記録） 
   楽器 = { id, no, name, part, maker, model, serial, owner, ownerNote, year, location, state, condNote, condDate,
            user(今年度の使う人), lentTo, lentKind(''＝人へ／'org'＝ほかの団体へ), lentSince, lentDue,
            price(購入価格・円), acq(入手：buy 購入／gift 寄贈／transfer ゆずり受け／other), donor(寄贈者・ゆずり元),
@@ -1747,7 +1781,31 @@ function normItem(x) {
   i.photos = (Array.isArray(i.photos) ? i.photos : []).filter(p => p && p.id).map(p => ({ id: String(p.id), cap: String(p.cap || ''), date: String(p.date || '') }));
   i.log = (Array.isArray(i.log) ? i.log : []).filter(l => l && l.date).map(l => ({ id: l.id || uid('l'), date: String(l.date), type: LOGT[l.type] ? l.type : 'memo', text: String(l.text || ''), cost: l.cost == null || l.cost === '' ? null : Math.max(0, Math.round(+l.cost || 0)) })).sort((a, b) => b.date.localeCompare(a.date));
   i.labeled = !!i.labeled;
+  i.userHist = (Array.isArray(i.userHist) ? i.userHist : []).filter(u => u && norm(u.name)).map(u => ({ name: norm(u.name), since: String(u.since || ''), until: String(u.until || '') }));
+  if (i.user && !i.userHist.some(u => u.name === i.user && !u.until)) i.userHist.push({ name: i.user, since: '', until: '' });
   return i;
+}
+const okD = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d : '';
+function normDeal(x) {
+  const d = Object.assign({ id: uid('d'), dir: 'out', org: '', contact: '', purpose: '', since: '', due: '', acc: '', items: [], snap: {}, ret: {}, back: '', at: Date.now() }, x && typeof x === 'object' ? x : {});
+  if (typeof d.id !== 'string' || !d.id) d.id = uid('d');
+  d.dir = d.dir === 'in' ? 'in' : 'out';
+  ['org', 'contact', 'purpose', 'acc'].forEach(k => d[k] = String(d[k] ?? '').trim());
+  d.since = okD(d.since); d.due = okD(d.due); d.back = okD(d.back);
+  d.items = [...new Set((Array.isArray(d.items) ? d.items : []).filter(x => typeof x === 'string'))];
+  d.snap = d.snap && typeof d.snap === 'object' ? d.snap : {}; d.ret = d.ret && typeof d.ret === 'object' ? d.ret : {};
+  d.at = +d.at || Date.now();
+  return d;
+}
+/* 使う人を変える（使った人の記録も、前の人は今日まで・新しい人は今日から） */
+function setUser(x, name, why = '') {
+  const old = x.user, t = GKY.ymd(); name = norm(name);
+  if (old === name) return false;
+  x.userHist.forEach(u => { if (!u.until && u.name === old) u.until = t; });
+  if (name) x.userHist.push({ name, since: t, until: '' });
+  x.user = name;
+  x.log.unshift({ id: uid('l'), date: t, type: 'user', text: name ? `${old ? old + 'さん → ' : ''}${name}さんが使う` : `${old}さんが使うのをやめた${why}`, cost: null });
+  return true;
 }
 const newCons = (o = {}) => Object.assign({ id: uid('c'), name: '', part: '', unit: '個', qty: 0, min: 0, note: '' }, o);
 function sampleState() {
@@ -1778,11 +1836,14 @@ function sampleState() {
     newCons({ name: 'コルクグリス', part: 'Cl', unit: '本', qty: 5, min: 2 }),
     newCons({ name: 'マレット（ゴム・中）', part: 'Perc', unit: '組', qty: 2, min: 1 }),
   ];
-  return { v: 1, sample: true, items, cons, settings: { autoSync: true } };
+  // 例：ほかの団体から借りているテューバの借用（借用書を印刷できる）
+  const tu = items.find(x => x.no === 'Tu-01');
+  const deals = tu ? [normDeal({ dir: 'in', org: '（例）市立〇〇中学校 吹奏楽部', contact: '（例）顧問 〇〇先生（学校代表番号）', purpose: '1年間の練習と演奏会', since: d(-180), due: d(160), acc: 'ハードケース・マウスピース', items: [tu.id], snap: { [tu.id]: { no: tu.no, name: tu.name, maker: tu.maker, model: tu.model, serial: tu.serial } } })] : [];
+  return { v: 1, sample: true, items, cons, deals, settings: { autoSync: true } };
 }
 function load() {
   const s = GKY.store.get(KEY);
-  if (s && Array.isArray(s.items)) return { v: 1, sample: !!s.sample, items: s.items.map(normItem), cons: (Array.isArray(s.cons) ? s.cons : []).map(c => newCons(c)), settings: Object.assign({ autoSync: true }, s.settings || {}) };
+  if (s && Array.isArray(s.items)) return { v: 1, sample: !!s.sample, items: s.items.map(normItem), cons: (Array.isArray(s.cons) ? s.cons : []).map(c => newCons(c)), deals: (Array.isArray(s.deals) ? s.deals : []).map(normDeal), settings: Object.assign({ autoSync: true }, s.settings || {}) };
   return sampleState();
 }
 
@@ -1809,6 +1870,7 @@ let S = load();
 let sel = null, q = '', filter = '', tab = 'list';
 const syncOrg = quiet => {
   if (GKY.IN_VIEWER) { if (!quiet) toast('ここでは楽屋に反映できません。公開ページで開いてください'); return; }
+  if (GKY.isMember()) { if (!quiet) toast('部員用の端末からは、楽屋に反映しません'); return; }
   const ok = GKY.saveOrg('instruments', S.items.map(i => ({ id: i.id, no: i.no, name: i.name, part: i.part, owner: OWNERS[i.owner], state: STATES[i.state][0], user: i.user })));
   if (!quiet) toast(ok ? `楽屋に${S.items.length}台を反映しました` : '楽屋に反映できませんでした');
 };
@@ -1825,7 +1887,7 @@ function renderSync() { if (GKY.IN_VIEWER || S.sample) { $('#syncBar').textConte
 const showTab = GKY.tabs($('#tabs'), id => { tab = id; renderTab(); });
 function renderAll() {
   $('#sampleBar').innerHTML = S.sample ? `<div class="intro"><span class="sample-flag">例</span><p>いまは使い方を見るための<b>例の楽器</b>が入っています。自分の台帳を作るときは「例を消して始める」を押すか、Excelの一覧を取り込んでください。</p><button class="btn sm" id="sbClear">例を消して始める</button></div>` : '';
-  const sb = $('#sbClear'); if (sb) GKY.arm(sb, () => { edit(st => { st.items = []; st.cons = []; st.sample = false; }); sel = null; toast('例を消しました', '元に戻す', undo); }, 'もう一度押すと例を消します');
+  const sb = $('#sbClear'); if (sb) GKY.arm(sb, () => { edit(st => { st.items = []; st.cons = []; st.deals = []; st.sample = false; }); sel = null; toast('例を消しました', '元に戻す', undo); }, 'もう一度押すと例を消します');
   const warn = S.items.filter(i => i.state !== 'good').length, lend = S.items.filter(i => i.lentTo), over = lend.filter(i => (lendState(i) || {}).over).length, low = S.cons.filter(c => c.qty < c.min).length;
   $('#cntWarn').textContent = warn ? String(warn) : '';
   $('#cntLend').textContent = lend.length ? String(lend.length) : ''; $('#cntLend').style.background = over ? 'var(--bad-soft)' : ''; $('#cntLend').style.color = over ? 'var(--bad)' : '';
@@ -1897,6 +1959,11 @@ function renderDetail() {
     <h2>借りた時点の状態<small>返すときの確かめに</small></h2>
     <div class="grid"><label class="fld"><span>記録した日</span><input type="date" data-k="condDate" value="${esc(i.condDate)}"></label><label class="fld wide"><span>状態（傷・へこみ・動きなど）</span><textarea data-k="condNote">${esc(i.condNote)}</textarea></label></div>
   </div>` : ''}
+  ${i.userHist.length ? `<div class="sec">
+    <h2>使った人の記録<small>${i.userHist.length}人</small></h2>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>使う人</th><th>いつから</th><th>いつまで</th></tr></thead><tbody>${i.userHist.slice().reverse().map(u => `<tr><td><b>${esc(u.name)}</b></td><td class="mono">${esc(u.since || '—')}</td><td class="mono">${u.until ? esc(u.until) : '<span class="chip ok">いま使っている</span>'}</td></tr>`).join('')}</tbody></table></div>
+  </div>` : ''}
+  ${(d => d ? `<div class="issue" style="margin:0 0 14px"><span class="dot ${dealOver(d) ? 'bad' : 'ok'}"></span><div class="main">${d.dir === 'in' ? `${esc(d.org)}から借りている楽器です（${esc(d.since || '?')}〜${esc(d.due || '?')}）` : `${esc(d.org)}に貸している楽器です（${esc(d.since || '?')}〜${esc(d.due || '?')}）`}<div class="sub">「使う人・貸し出し」の「ほかの団体との貸し借り」に記録があります</div></div></div>` : '')(openDealOf(i.id))}
   <div class="sec">
     <h2>写真<small>${i.photos.length}枚</small></h2>
     <div class="photos" id="phList">${i.photos.map(p => `<figure data-p="${esc(p.id)}"><img alt="${esc(p.cap || i.no)}" data-src="${esc(p.id)}"><figcaption>${esc(p.date)}${p.cap ? ' ' + esc(p.cap) : ''}</figcaption><button class="ibtn del" data-delp aria-label="写真を消す">×</button></figure>`).join('') || '<p class="muted" style="font-size:13px;margin:0">まだありません。傷やへこみは、借りた時点・返す前に撮っておくと安心です。</p>'}</div>
@@ -1916,7 +1983,7 @@ function renderDetail() {
       const x = st.items.find(y => y.id === i.id); const old = x[k];
       x[k] = k === 'part' ? GKY.partOf(inp.value) : k === 'price' ? (inp.value.replace(/[,，円¥\s]/g, '') === '' ? null : Math.round(+inp.value.replace(/[,，円¥\s]/g, ''))) : inp.value.trim();
       if (k === 'state' && old !== x[k]) x.log.unshift({ id: uid('l'), date: GKY.ymd(), type: 'state', text: `${STATES[old][0]} → ${STATES[x[k]][0]}`, cost: null });
-      if (k === 'user' && old !== x[k]) x.log.unshift({ id: uid('l'), date: GKY.ymd(), type: 'user', text: x[k] ? `${old ? old + 'さん → ' : ''}${x[k]}さんが使う` : `${old}さんが使うのをやめた`, cost: null });
+      if (k === 'user') { x.user = old; setUser(x, inp.value); }
     }, ['no', 'name', 'state', 'owner', 'part', 'location', 'maker', 'model', 'user'].includes(k));
   });
   $$('[data-q]', box).forEach(b => b.onclick = () => quick(i.id, b.dataset.q));
@@ -1958,7 +2025,133 @@ $('#btnAdd').onclick = () => { const n = newItem({ no: '', name: '新しい楽�
 $('#q').oninput = GKY.debounce(() => { q = $('#q').value; renderList(); }, 150);
 
 /* --- 貸し出し中 --- */
+/* --- ほかの団体との貸し借り --- */
+const dealOver = d => !d.back && d.due && d.due < GKY.ymd();
+const openDealOf = id => S.deals.find(d => !d.back && d.items.includes(id) && !d.ret[id]) || null;
+const dealItem = (d, id) => byId(id) || d.snap[id] || { no: '', name: '（台帳から外した楽器）' };
+const snapOf = i => ({ no: i.no, name: i.name, maker: i.maker, model: i.model, serial: i.serial });
+function renderDeals() {
+  const ds = S.deals.slice().sort((a, b) => (!!a.back - !!b.back) || (a.back ? b.back.localeCompare(a.back) : (a.due || '9999').localeCompare(b.due || '9999')));
+  const open = ds.filter(d => !d.back);
+  $('#dealSum').textContent = S.deals.length ? `貸している ${open.filter(d => d.dir === 'out').length}件・借りている ${open.filter(d => d.dir === 'in').length}件` : '';
+  $('#dealList').innerHTML = ds.length ? ds.map(d => {
+    const left = d.due && !d.back ? GKY.daysBetween(GKY.ymd(), d.due) : null;
+    return `<div class="deal${dealOver(d) ? ' over' : ''}${d.back ? ' done' : ''}" data-did="${esc(d.id)}"><div class="hd"><span class="chip ${d.dir === 'in' ? 'din' : 'dout'}">${d.back ? (d.dir === 'in' ? '返した' : '返してもらった') : d.dir === 'in' ? '借りている' : '貸している'}</span><b>${esc(d.org || '相手未入力')}</b><small>${esc(d.since || '?')} 〜 ${esc(d.due || '?')}${d.back ? `（${esc(d.back)} に返却）` : left != null ? (left < 0 ? `　<b style="color:var(--bad)">返す日を${-left}日すぎ</b>` : `　返す日まで あと${left}日`) : ''}</small></div>
+      <div class="t2">${[d.purpose && '目的：' + d.purpose, d.contact && '担当：' + d.contact, d.acc && '付属品など：' + d.acc].filter(Boolean).map(esc).join('　')}</div>
+      <div class="its">${d.items.map(id => { const x = dealItem(d, id); return `<span class="chip">${d.ret[id] ? '<s>' : ''}${esc([x.no, x.name].filter(Boolean).join(' '))}${d.ret[id] ? '</s> 返却' : ''}</span>`; }).join('') || '<span class="muted" style="font-size:12px">楽器がありません</span>'}</div>
+      <div class="btnrow"><button class="btn sm" data-dprint>${d.dir === 'in' ? '借用書' : '貸出書'}を印刷</button>${d.back ? '' : `<button class="btn sm primary" data-dback>${d.dir === 'in' ? '返した' : '返してもらった'}</button><button class="btn sm" data-dedit>直す</button>`}<span style="flex:1"></span><button class="ibtn del" data-ddel aria-label="この記録を消す">×</button></div></div>`;
+  }).join('') : '<div class="empty"><b>ほかの団体との貸し借りの記録はありません</b>上のボタンから記録すると、貸出書・借用書を印刷できます。</div>';
+  $$('#dealList .deal').forEach(card => {
+    const d = S.deals.find(x => x.id === card.dataset.did);
+    $('[data-dprint]', card).onclick = () => dealDoc(d);
+    const b = $('[data-dback]', card); if (b) b.onclick = () => dealBack(d.id);
+    const e = $('[data-dedit]', card); if (e) e.onclick = () => dealSheet(d.dir, d.id);
+    GKY.arm($('[data-ddel]', card), () => { edit(st => { st.deals = st.deals.filter(x => x.id !== d.id); }); toast('貸し借りの記録を消しました（台帳の楽器はそのまま）', '元に戻す', undo); }, '消す？');
+  });
+}
+/* 貸す・借りるの記録を作る・直す */
+function dealSheet(dir, id = null) {
+  const d = id ? S.deals.find(x => x.id === id) : normDeal({ dir, since: GKY.ymd(), due: GKY.addDays(GKY.ymd(), 30) });
+  const isIn = dir === 'in', t = GKY.ymd();
+  const free = i => i.owner !== 'borrowed' && i.owner !== 'personal' && (!i.lentTo || d.items.includes(i.id));
+  const pick = S.items.slice().sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part) || a.no.localeCompare(b.no, 'ja', { numeric: true }));
+  const row = (o = {}) => `<div class="inrow"><input type="text" data-r="name" placeholder="楽器（例：テューバ）" value="${esc(o.name || '')}" aria-label="楽器"><input type="text" data-r="no" placeholder="番号" value="${esc(o.no || '')}" aria-label="番号"><input type="text" data-r="maker" class="w2" placeholder="メーカー・型番" aria-label="メーカー・型番"><input type="text" data-r="serial" placeholder="製造番号" aria-label="製造番号"><input type="number" data-r="qty" min="1" max="30" value="1" aria-label="台数"><button class="ibtn del" data-rdel aria-label="この行を消す">×</button></div>`;
+  const sh = sheet({ title: isIn ? (id ? '借りている楽器の記録を直す' : 'ほかの団体から借りる') : (id ? '貸している楽器の記録を直す' : 'ほかの団体に貸す'), wide: true, content: `<div class="grid">
+      <label class="fld wide"><span>${isIn ? '借りる相手（団体）' : '貸す相手（団体）'}</span><input type="text" id="dOrg" value="${esc(d.org)}" placeholder="例：市立〇〇中学校 吹奏楽部"></label>
+      <label class="fld wide"><span>相手の担当・連絡先</span><input type="text" id="dCon" value="${esc(d.contact)}" placeholder="例：顧問 〇〇先生（電話 000-0000）"></label>
+      <label class="fld wide"><span>目的</span><input type="text" id="dPur" value="${esc(d.purpose)}" placeholder="例：定期演奏会で使う"></label>
+      <label class="fld"><span>いつから</span><input type="date" id="dSince" value="${esc(d.since)}"></label>
+      <label class="fld"><span>返す日</span><input type="date" id="dDue" value="${esc(d.due)}"></label>
+      <label class="fld wide"><span>付属品・メモ</span><input type="text" id="dAcc" value="${esc(d.acc)}" placeholder="例：ハードケース・マウスピース・スタンド"></label>
+    </div>
+    ${isIn ? `<h3 style="font-size:14px;margin:14px 0 6px">${id ? '借りる楽器を足す' : '借りる楽器'}<small class="muted" style="font-weight:400">　台帳に「借用」の楽器として入ります</small></h3>
+      ${id ? `<p class="note" style="margin:0 0 6px">いま入っている楽器：${d.items.map(x => esc([dealItem(d, x).no, dealItem(d, x).name].filter(Boolean).join(' '))).join('、') || 'なし'}</p>` : ''}
+      <div id="dRows">${id ? '' : row()}</div><button class="btn sm" id="dRowAdd">＋ 行を足す</button>`
+    : `<h3 style="font-size:14px;margin:14px 0 6px">貸す楽器<small class="muted" style="font-weight:400" id="dCnt"></small></h3><input type="search" id="dQ" placeholder="番号・楽器でさがす" aria-label="楽器をさがす" style="margin-bottom:6px"><div class="dl-pick" id="dPick">${pick.map(i => `<label class="${free(i) ? '' : 'off'}"><input type="checkbox" value="${esc(i.id)}" ${d.items.includes(i.id) ? 'checked' : ''} ${free(i) ? '' : 'disabled'}><span class="mono" style="min-width:4.5em">${esc(i.no)}</span><span style="flex:1">${esc(i.name)}</span><span class="muted" style="font-size:12px">${esc(!free(i) ? (i.lentTo ? lendTo(i) + 'に貸し出し中' : OWNERS[i.owner]) : STATES[i.state][0])}</span></label>`).join('') || '<p class="muted">楽器がありません</p>'}</div>`}`,
+    actions: [{ label: 'やめる' }, { label: id ? '直す' : isIn ? '借りる' : '貸す', primary: true, onClick: body => {
+      const org = norm($('#dOrg', body).value); if (!org) { toast('相手の団体を入れてください'); $('#dOrg', body).focus(); return false; }
+      const f = { org, contact: norm($('#dCon', body).value), purpose: norm($('#dPur', body).value), since: $('#dSince', body).value || t, due: $('#dDue', body).value, acc: norm($('#dAcc', body).value) };
+      if (isIn) {
+        const rows = $$('.inrow', body).map(r => { const g = k => norm($(`[data-r="${k}"]`, r).value); return { name: g('name'), no: g('no'), maker: g('maker'), serial: g('serial'), qty: Math.max(1, Math.min(30, Math.round(+g('qty') || 1))) }; }).filter(r => r.name);
+        if (!id && !rows.length) { toast('借りる楽器を入れてください'); return false; }
+        edit(st => {
+          const x = id ? st.deals.find(y => y.id === id) : normDeal({ dir: 'in' }); Object.assign(x, f);
+          rows.forEach(r => { for (let k = 0; k < r.qty; k++) {
+            let no = r.no ? r.no + (r.qty > 1 ? '-' + (k + 1) : '') : '借-' + String(st.items.filter(y => y.owner === 'borrowed').length + 1).padStart(2, '0');
+            while (st.items.some(y => y.no === no)) no = nextNo(no);
+            const p = GKY.partOf(r.name), it = normItem({ no, name: r.name, part: GKY.PARTS.some(q => q[0] === p) || GKY.PERC.some(q => q[0] === p) ? p : '', maker: r.maker, serial: r.qty > 1 ? '' : r.serial, owner: 'borrowed', ownerNote: `${org}から借用${f.due ? '（〜' + f.due + '）' : ''}`, condDate: f.since, location: '' });
+            it.log.unshift({ id: uid('l'), date: f.since, type: 'lend', text: `${org}から借りた${f.purpose ? '（' + f.purpose + '）' : ''}`, cost: null });
+            st.items.push(it); x.items.push(it.id); x.snap[it.id] = snapOf(it);
+          } });
+          x.items.forEach(iid => { const it = st.items.find(y => y.id === iid); if (it) it.ownerNote = `${org}から借用${f.due ? '（〜' + f.due + '）' : ''}`; });
+          if (!id) st.deals.push(x);
+        });
+        toast(id ? '記録を直しました' : `${org}から借りた楽器を台帳に入れました。「借用書を印刷」で借用書を作れます`, '元に戻す', undo, 6000);
+      } else {
+        const ids = $$('#dPick input:checked', body).map(c => c.value);
+        if (!ids.length) { toast('貸す楽器を選んでください'); return false; }
+        edit(st => {
+          const x = id ? st.deals.find(y => y.id === id) : normDeal({ dir: 'out' }); const before = x.items.slice(); Object.assign(x, f);
+          before.filter(iid => !ids.includes(iid)).forEach(iid => { const it = st.items.find(y => y.id === iid); if (it && it.lentKind === 'org') { it.lentTo = ''; it.lentKind = ''; it.lentSince = ''; it.lentDue = ''; } delete x.snap[iid]; });
+          x.items = ids;
+          ids.forEach(iid => { const it = st.items.find(y => y.id === iid); if (!it) return; if (!before.includes(iid)) it.log.unshift({ id: uid('l'), date: f.since, type: 'lend', text: `${org}（団体）へ${f.purpose ? '（' + f.purpose + '）' : ''}`, cost: null }); it.lentTo = org; it.lentKind = 'org'; it.lentSince = f.since; it.lentDue = f.due; x.snap[iid] = snapOf(it); });
+          if (!id) st.deals.push(x);
+        });
+        toast(id ? '記録を直しました' : `${ids.length}台を${org}に貸しました。「貸出書を印刷」で貸出書を作れます`, '元に戻す', undo, 6000);
+      }
+    } }] });
+  if (isIn) {
+    $('#dRowAdd', sh.body).onclick = () => { $('#dRows', sh.body).insertAdjacentHTML('beforeend', row()); wireRows(); $$('#dRows [data-r="name"]', sh.body).pop().focus(); };
+    const wireRows = () => $$('[data-rdel]', sh.body).forEach(b => b.onclick = () => b.closest('.inrow').remove());
+    wireRows();
+  } else {
+    const cnt = () => { $('#dCnt', sh.body).textContent = `　${$$('#dPick input:checked', sh.body).length}台`; };
+    $$('#dPick input', sh.body).forEach(c => c.onchange = cnt); cnt();
+    $('#dQ', sh.body).oninput = e => { const k = GKY.key(e.target.value); $$('#dPick label', sh.body).forEach(l => { l.hidden = !!k && !GKY.key(l.textContent).includes(k); }); };
+  }
+}
+/* 返した・返してもらった（楽器ごとに選ぶ。借りた楽器は台帳から外すか選ぶ） */
+function dealBack(id) {
+  const d = S.deals.find(x => x.id === id), isIn = d.dir === 'in', left = d.items.filter(x => !d.ret[x]);
+  sheet({ title: isIn ? `${d.org}に返した` : `${d.org}から返してもらった`, content: `<p class="lead">${isIn ? '返した' : '返ってきた'}楽器にチェックを入れてください。</p>
+    <div class="dl-pick">${left.map(x => { const it = dealItem(d, x); return `<label><input type="checkbox" value="${esc(x)}" checked><span class="mono" style="min-width:4.5em">${esc(it.no)}</span><span style="flex:1">${esc(it.name)}</span></label>`; }).join('')}</div>
+    <div class="grid" style="margin-top:10px"><label class="fld"><span>返した日</span><input type="date" id="bkD" value="${GKY.ymd()}"></label></div>
+    ${isIn ? '<label class="chk" style="margin-top:8px"><input type="checkbox" id="bkRm" checked> 返した楽器を台帳から外す（貸し借りの記録には残ります）</label>' : `<label class="fld" style="margin-top:8px"><span>返ってきた楽器の状態</span><select id="bkSt">${Object.entries(STATES).map(([s, v]) => `<option value="${s}">${v[0]}</option>`).join('')}</select></label>`}`,
+    actions: [{ label: 'やめる' }, { label: '記録する', primary: true, onClick: body => {
+      const ids = $$('.dl-pick input:checked', body).map(c => c.value), day = $('#bkD', body).value || GKY.ymd();
+      if (!ids.length) { toast('楽器を選んでください'); return false; }
+      const rm = isIn && $('#bkRm', body).checked, st0 = !isIn ? $('#bkSt', body).value : '';
+      edit(st => {
+        const x = st.deals.find(y => y.id === id);
+        ids.forEach(iid => {
+          x.ret[iid] = day; const it = st.items.find(y => y.id === iid);
+          if (it) x.snap[iid] = snapOf(it);
+          if (!it) return;
+          if (isIn) { if (rm) st.items = st.items.filter(y => y.id !== iid); else it.log.unshift({ id: uid('l'), date: day, type: 'return', text: `${x.org}に返した`, cost: null }); }
+          else { const old = it.state; it.lentTo = ''; it.lentKind = ''; it.lentSince = ''; it.lentDue = ''; it.log.unshift({ id: uid('l'), date: day, type: 'return', text: `${x.org}（団体）から返ってきた`, cost: null }); if (st0 && st0 !== old) { it.state = st0; it.log.unshift({ id: uid('l'), date: day, type: 'state', text: `${STATES[old][0]} → ${STATES[st0][0]}`, cost: null }); } }
+        });
+        if (x.items.every(iid => x.ret[iid])) x.back = day;
+      });
+      if (rm && ids.includes(sel)) sel = null;
+      toast(`${ids.length}台を${isIn ? '返した' : '返してもらった'}と記録しました${S.deals.find(x => x.id === id).back ? '（この貸し借りは、全部返しました）' : ''}`, '元に戻す', undo, 6000);
+    } }] });
+}
+/* 貸出書・借用書 */
+function dealDoc(d) {
+  const isIn = d.dir === 'in', o = GKY.org().org, w = GKY.words();
+  const doc = GKY.doc({ title: isIn ? '楽器借用書' : '楽器貸出書', sub: '', foot: o.name, file: (isIn ? '楽器借用書_' : '楽器貸出書_') + d.org });
+  doc.block(`<p style="text-align:right">${esc(GKY.jpDate(GKY.ymd()))}</p><p style="font-size:12pt"><b>${esc(d.org || '　　　　　　　　')}</b>　${isIn ? '御中' : '様'}</p><p style="text-align:right">${esc(o.name || '　　　　　　　　')}<br>${esc(w.staff)}・代表者　　　　　　　　　　印</p>`);
+  doc.block(`<p>${isIn ? '下記のとおり楽器を借用いたします。使用中は大切に取り扱い、返却の期日までに、借用したときの状態でお返しします。万一、破損・紛失があったときは、すぐにご連絡し、対応についてご相談します。' : '下記のとおり楽器をお貸しします。返却の期日までにご返却ください。破損・紛失があったときは、すぐにご連絡ください。'}</p><p style="text-align:center;margin:10px 0">記</p>`);
+  doc.table({ cols: [{ h: '項目', w: '22%' }, { h: '内容', w: '78%' }], rows: [['期間', `${esc(d.since ? GKY.jpDate(d.since) : '　　年　　月　　日')} 〜 ${esc(d.due ? GKY.jpDate(d.due) : '　　年　　月　　日')}`], ['目的', esc(d.purpose)], [isIn ? '貸してくださる方（担当）' : '借りる方（担当）', esc(d.contact)], ['付属品・メモ', esc(d.acc)]] });
+  doc.table({ cols: [{ h: 'No.', w: '6%', cls: 'num' }, { h: '楽器', w: '22%' }, { h: '番号', w: '12%' }, { h: 'メーカー・型番', w: '22%' }, { h: '製造番号', w: '14%' }, { h: '状態（貸し借りのとき）', w: '24%' }],
+    rows: d.items.map((iid, k) => { const it = byId(iid), x = it || d.snap[iid] || {}; return [String(k + 1), esc(x.name || ''), esc(x.no || ''), esc([x.maker, x.model].filter(Boolean).join(' ')), esc(x.serial || ''), esc(it ? (it.condNote || STATES[it.state][0]) : '')]; }) });
+  doc.block(`<table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:9.5pt"><tr><td style="border:1px solid #888;padding:8px;width:50%;vertical-align:top"><b>${isIn ? '受け取り' : '受領'}</b>：上記の楽器を受け取りました。<br><br>　　　年　　月　　日　　氏名　　　　　　　　　　印</td><td style="border:1px solid #888;padding:8px;vertical-align:top"><b>返却の確認</b>：上記の楽器の返却を確かめました。<br><br>　　　年　　月　　日　　氏名　　　　　　　　　　印</td></tr></table><p class="muted" style="font-size:8pt;margin-top:8px">2部印刷して、貸す側・借りる側で1部ずつ持っておくと安心です。</p>`, { keep: true });
+  doc.show();
+}
+$('#dealOut').onclick = () => dealSheet('out');
+$('#dealIn').onclick = () => dealSheet('in');
 function renderLend() {
+  renderDeals();
   const xs = S.items.filter(i => i.lentTo).sort((a, b) => (a.lentDue || '9999').localeCompare(b.lentDue || '9999'));
   const over = xs.filter(i => (lendState(i) || {}).over).length, bor = S.items.filter(i => i.owner === 'borrowed'), us = S.items.filter(i => i.user).sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part) || a.no.localeCompare(b.no, 'ja', { numeric: true }));
   $('#lendSums').innerHTML = `<span class="sum">貸し出し中 <b>${xs.length}</b>台</span>${xs.some(i => i.lentKind === 'org') ? `<span class="sum">うち ほかの団体へ <b>${xs.filter(i => i.lentKind === 'org').length}</b></span>` : ''}<span class="sum ${over ? 'bad' : 'ok'}">返す日をすぎた <b>${over}</b></span><span class="sum">借りている <b>${bor.length}</b>台</span><span class="sum">使う人が決まっている <b>${us.length}</b>台</span>`;
@@ -1981,7 +2174,35 @@ function returnSheet() {
 }
 $('#retPrint').onclick = returnSheet;
 $('#prReturn').onclick = returnSheet;
-GKY.arm($('#userClear'), () => { const n = S.items.filter(i => i.user).length; if (!n) { toast('使う人が決まっている楽器はありません'); return; } edit(st => st.items.forEach(i => { if (i.user) { i.log.unshift({ id: uid('l'), date: GKY.ymd(), type: 'user', text: `${i.user}さんが使うのをやめた（新年度）`, cost: null }); i.user = ''; } })); toast(`${n}台の使う人を消しました`, '元に戻す', undo); }, 'もう一度押すと消します');
+GKY.arm($('#userClear'), () => { const n = S.items.filter(i => i.user).length; if (!n) { toast('使う人が決まっている楽器はありません'); return; } edit(st => st.items.forEach(i => { if (i.user) setUser(i, '', '（新年度）'); })); toast(`${n}台の使う人を消しました（使った人の記録には残ります）`, '元に戻す', undo); }, 'もう一度押すと消します');
+/* 使う人をまとめて決める：楽器ごとに、同じパートの部員を先に出す */
+$('#userBulk').onclick = () => {
+  const xs = S.items.filter(i => i.owner !== 'personal').sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part) || a.no.localeCompare(b.no, 'ja', { numeric: true }));
+  if (!xs.length) { toast('楽器がありません'); return; }
+  const ms = GKY.org().members.filter(m => GKY.PLAYS.has(m.status));
+  const fams = [...new Set(xs.map(i => GKY.familyOf(i.part) || ''))];
+  const dl = f => `dlU-${(f || 'x').replace(/[^A-Za-z0-9]/g, '_')}`;
+  const opts = f => { const mine = ms.filter(m => f && (GKY.familyOf(m.part) === f || (m.subs || []).map(GKY.familyOf).includes(f))), rest = ms.filter(m => !mine.includes(m)); return mine.concat(rest).map(m => `<option value="${esc(m.name)}">${esc([GKY.familyOf(m.part), m.grade].filter(Boolean).join('・'))}</option>`).join(''); };
+  const sh = sheet({ title: '使う人をまとめて決める', wide: true, content: `<p class="lead">楽器ごとに、今年度の使う人を入れます（名前を入れるか、出てくる候補から選ぶ）。同じパートの${esc(GKY.words().member)}が先に出ます。空にすると、使う人なしになります。</p>
+    ${fams.map(f => `<datalist id="${dl(f)}">${opts(f)}</datalist>`).join('')}
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>番号</th><th>楽器</th><th>持ち主</th><th>使う人</th></tr></thead><tbody>${xs.map(i => `<tr data-id="${esc(i.id)}"><td class="mono">${esc(i.no)}</td><td>${esc(i.name)}</td><td>${esc(OWNERS[i.owner])}</td><td><input type="text" value="${esc(i.user)}" list="${dl(GKY.familyOf(i.part) || '')}" aria-label="${esc(i.no + ' ' + i.name)}の使う人" style="min-width:9em"></td></tr>`).join('')}</tbody></table></div>
+    <div id="ubFree"></div>`,
+    actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => {
+      const ch = $$('tr[data-id]', body).map(tr => ({ id: tr.dataset.id, v: norm($('input', tr).value) })).filter(r => byId(r.id).user !== r.v);
+      if (!ch.length) { toast('変わったところはありません'); return; }
+      edit(st => ch.forEach(r => setUser(st.items.find(y => y.id === r.id), r.v)));
+      toast(`${ch.length}台の使う人を変えました`, '元に戻す', undo);
+    } }] });
+  // 使う人が決まっていない部員（団体・学校の楽器があるパートだけ）
+  const upd = () => {
+    const used = new Set($$('tr[data-id] input', sh.body).map(i => GKY.key(i.value)).filter(Boolean));
+    S.items.filter(i => i.owner === 'personal').forEach(i => { const m = ms.find(m => i.ownerNote.includes(m.name) || i.user === m.name); if (m) used.add(GKY.key(m.name)); });
+    const famHas = new Set(xs.map(i => GKY.familyOf(i.part)).filter(Boolean));
+    const free = ms.filter(m => famHas.has(GKY.familyOf(m.part)) && !used.has(GKY.key(m.name)));
+    $('#ubFree', sh.body).innerHTML = ms.length ? `<p class="note" style="margin-top:10px">${free.length ? `楽器が決まっていない${esc(GKY.words().member)}（団体・学校の楽器があるパート）：${free.map(m => `<b>${esc(m.name)}</b>（${esc(GKY.familyOf(m.part))}）`).join('、')}。自分の楽器を持っている人は、持ち主「個人」の楽器として入れておくと、ここに出なくなります。` : `団体・学校の楽器があるパートの${esc(GKY.words().member)}は、全員の楽器が決まっています。`}</p>` : '';
+  };
+  $$('tr[data-id] input', sh.body).forEach(i => i.addEventListener('input', GKY.debounce(upd, 200))); upd();
+};
 /* 資産台帳：持ち主ごとに、入手・年・価格・寄贈者と合計。個人の楽器は分けて出す */
 $('#prAsset').onclick = () => {
   if (!S.items.length) { toast('楽器がありません'); return; }
@@ -2081,7 +2302,7 @@ $('#jsonIn').onclick = async () => {
   const d = f.data.data;
   sheet({ title: 'ファイルから読み込む', content: `<p>「${esc(f.name)}」（${d.items.length}台）を読み込むと、今の台帳（${S.items.length}台）と入れかわります。</p>`, actions: [{ label: 'やめる' }, { label: '入れかえる', primary: true, danger: true, onClick: async () => {
     for (const i of d.items) for (const p of (i.photos || [])) if (p.data) { await PH.put(p.id, p.data); delete p.data; }
-    edit(st => { st.items = d.items.map(normItem); st.cons = (d.cons || []).map(c => newCons(c)); st.settings = Object.assign({ autoSync: true }, d.settings || {}); st.sample = false; });
+    edit(st => { st.items = d.items.map(normItem); st.cons = (d.cons || []).map(c => newCons(c)); st.deals = (Array.isArray(d.deals) ? d.deals : []).map(normDeal); st.settings = Object.assign({ autoSync: true }, d.settings || {}); st.sample = false; });
     sel = null; toast(`${d.items.length}台を読み込みました`, '元に戻す', undo);
   } }] });
 };
@@ -2109,7 +2330,7 @@ showTab('list');
 if (window.matchMedia('(min-width:901px)').matches && S.items.length) sel = filtered()[0].id;
 renderAll();
 openFromHash();
-if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, qrText, qrSVG, normItem, lendState, PH, renderAll, unb64 };
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, qrText, qrSVG, normItem, lendState, PH, renderAll, unb64, normDeal, setUser, dealDoc };
 })();
 </script>
 </body>
