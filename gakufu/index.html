@@ -440,7 +440,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
           </div>
           <input type="search" id="slQ" placeholder="さがす" aria-label="曲をさがす" style="margin-bottom:6px">
           <div class="pick" id="slPick"></div>
-          <div class="btnrow" style="margin-top:8px"><button class="btn" id="slFromStagemane">ステマネのファイルから選ぶ</button></div>
+          <div class="btnrow" style="margin-top:8px"><button class="btn" id="slFromStagemane" title="同じ場所のステマネの演奏会か、ステマネで書き出したファイルから">ステマネから選ぶ</button></div>
         </div>
         <div class="sec">
           <h2>曲目一覧<small id="slSum"></small></h2>
@@ -471,7 +471,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
           <div class="sec">
             <h2>ステマネの演奏会から記録を足す</h2>
             <p class="lead">ステマネで保存した演奏会のファイルを読み込むと、その日の曲を「演奏の記録」に足します。台帳にない曲は、新しく足すか選べます。</p>
-            <button class="btn" id="btnStagemane">ステマネのファイルを選ぶ</button>
+            <button class="btn" id="btnStagemane" title="同じ場所のステマネの演奏会か、ステマネで書き出したファイルから">ステマネから選ぶ</button>
           </div>
         </div>
         <div>
@@ -1229,6 +1229,42 @@ const GKY = (() => {
     } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
   }
 
+  /* ---------- 同じ場所のステマネの演奏会 ----------
+     ステマネは localStorage の stagemane.v1（演奏会の順番）と stagemane.v1.c.〈id〉（演奏会ごと）に保存している */
+  const SM_KEY = 'stagemane.v1', SM_SAMPLE = 'sample-sunsun11';
+  /* この端末のステマネの演奏会（GKY.stagemane の形に、id・楽屋の本番・例かどうかを足したもの）。ステマネの並び順 */
+  function stagemaneLocal() {
+    if (IN_VIEWER) return [];
+    const idx = store.get(SM_KEY); if (!idx || !Array.isArray(idx.order)) return [];
+    return idx.order.map(id => store.get(SM_KEY + '.c.' + id)).filter(c => c && c.info && Array.isArray(c.program))
+      .map(c => Object.assign(stagemane(c)[0], { id: String(c.id), concert: String(c.info.concert || ''), sample: c.id === SM_SAMPLE, updatedAt: +c.updatedAt || 0 }));
+  }
+  /* ステマネの演奏会を1つ選ぶ。この端末のステマネに演奏会があれば一覧から（ファイルからも選べる）、なければファイルを選ぶ。
+     選んだ演奏会（GKY.stagemane の形）か null。concert（楽屋の本番の id）を渡すと、その本番とつないだ演奏会を上に出す */
+  async function pickStagemane({ title = 'ステマネの演奏会を選ぶ', concert = '' } = {}) {
+    const fromFile = async () => {
+      const f = await openJSON(); if (!f) return null;
+      if (f.kind !== 'stagemane') { toast(`これは${APP_NAMES[f.kind] || '別のツール'}のファイルです。ステマネで書き出したファイルを選んでください`); return null; }
+      const c = stagemane(f.data)[0];
+      if (!c) toast('演奏会が見つかりませんでした');
+      return c || null;
+    };
+    const xs = stagemaneLocal();
+    if (!xs.length) return fromFile();
+    const rank = c => (concert && c.concert === concert ? 0 : c.sample ? 2 : 1);
+    xs.sort((a, b) => rank(a) - rank(b) || String(b.date).localeCompare(String(a.date)));
+    return new Promise(res => {
+      let done = false;
+      const fin = v => { if (!done) { done = true; res(v); } };
+      const row = (c, i) => { const n = c.pieces.filter(p => !p.contOf).length, k = concertOf(c.concert);
+        return `<button type="button" class="item" data-sm="${i}"><div class="main"><div class="t1">${esc(c.title || '（名前なし）')}${c.sample ? ' <span class="chip warn">例</span>' : ''}${k ? ` <span class="chip ok">楽屋の本番：${esc(k.title)}</span>` : ''}</div><div class="t2">${esc([c.date && jpDate(c.date), c.venue, n ? n + '曲' : '曲はまだ'].filter(Boolean).join('　'))}</div></div></button>`; };
+      const sh = sheet({ title, content: `<p style="margin:0 0 10px">この端末のステマネにある演奏会です。ステマネで書き出したファイルからも選べます。</p><div class="list">${xs.map(row).join('')}</div>`,
+        actions: [{ label: 'ファイルから選ぶ', left: true, onClick: () => { fin(fromFile()); } }, { label: 'やめる', onClick: () => { fin(null); } }],
+        onClose: () => fin(null) });
+      $$('[data-sm]', sh.body).forEach(b => b.onclick = () => { fin(xs[+b.dataset.sm]); sh.close(); });
+    });
+  }
+
   /* ---------- CSV（Excelでそのまま開ける形） ---------- */
   const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
@@ -1425,7 +1461,7 @@ const GKY = (() => {
   }
 
   /* ---------- ほかのツールへのリンク ---------- */
-  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ（ステマネも）。Claudeの画面の中では下のアーティファクトのURLへ */
   const ARTIFACT_URLS = {
     gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
     tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
@@ -1435,8 +1471,7 @@ const GKY = (() => {
   const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
   const ON_PAGES = () => /\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   function linkTo(slug) {
-    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
-    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || PAGES_BASE + slug + '/';
     if (ON_PAGES()) return '../' + slug + '/';
     return PAGES_BASE + slug + '/';
   }
@@ -1725,7 +1760,7 @@ const GKY = (() => {
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
     ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
-    identify, APP_NAMES, stagemane, bamiri,
+    identify, APP_NAMES, stagemane, stagemaneLocal, pickStagemane, bamiri,
     saveFile, saveJSON, openFile, openJSON, decodeText, csv, parseCSV,
     toast, sheet, arm, copyText, tabs, fitTop, linkTo, targetOf, pageUrl, ARTIFACT_URLS, STANDALONE, SLUG, doc, about, offline, loadScript,
     packShare, unpackShare, shareUrl, readShare, qrSVG, shareSheet, viewer,
@@ -1738,8 +1773,11 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '3', APP_DATE = '2026-10-11';
+const APP_VERSION = '4', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '4', d: '2026-10-11', items: [
+    '「ステマネから」：同じ場所のステマネ（公開ページ）の演奏会を、ファイルにしなくても選べるようにしました（ステマネで書き出したファイルからも選べます）',
+  ] },
   { v: '3', d: '2026-10-11', items: [
     'スコアやパート譜のPDF（写真も）を、曲ごとに入れて開けるようにしました。ファイルの名前からパートを見分け（例：「宝島_Tp1.pdf」→ Tp1）、PDFのないパートもわかります。zipのまま入れることもできます',
     '曲目一覧から、パートごとにPDFをまとめて送れるようにしました（全部のパートをパートごとのフォルダに分けたzipも作れます）',
@@ -2371,12 +2409,10 @@ $('#slPdf').onclick = async () => {
   if (z) z.onclick = async () => { z.disabled = true; z.textContent = 'まとめています…'; try { const blob = await bundleZip(rows, L); if (blob) await GKY.saveFile(`${fileSafe(L.title || '曲目一覧')}_パート譜.zip`, blob, 'application/zip'); } catch (e) { toast('zipを作れませんでした'); } z.disabled = false; z.textContent = '全部のパートをzipで保存'; };
 };
 $('#slFromStagemane').onclick = async () => {
-  const f = await GKY.openJSON(); if (!f) return;
-  if (f.kind !== 'stagemane') { toast('ステマネで保存したファイルを選んでください'); return; }
-  const c = GKY.stagemane(f.data)[0]; if (!c) { toast('演奏会が見つかりませんでした'); return; }
+  const c = await GKY.pickStagemane({ title: 'ステマネの演奏会から曲を選ぶ' }); if (!c) return;
   const ids = [], miss = [];
   c.pieces.forEach(p => { const s = S.songs.find(x => GKY.key(x.title) === GKY.key(p.title)); if (s) { if (!ids.includes(s.id)) ids.push(s.id); } else miss.push(p.title); });
-  const l = newList({ title: c.title, date: c.date, venue: c.venue, ids });
+  const l = newList({ title: c.title, date: c.date, venue: c.venue, concert: c.concert && GKY.concertOf(c.concert) ? c.concert : '', ids });
   edit(st => { st.setlists.unshift(l); st.slCur = l.id; });
   toast(`${ids.length}曲を選びました${miss.length ? `（台帳にない曲：${miss.join('、')}）` : ''}`);
 };
@@ -2489,10 +2525,8 @@ $('#btnJsonIn').onclick = async () => {
   sheet({ title: 'ファイルから読み込む', content: `<p>「${esc(f.name)}」（${n}曲）を読み込むと、今の台帳（${S.songs.length}曲）と入れかわります。</p>`, actions: [{ label: 'やめる' }, { label: '入れかえる', primary: true, danger: true, onClick: () => { edit(st => { const d = f.data.data; st.songs = d.songs.map(normalizeSong); st.settings = Object.assign({ autoSync: true, canSrc: 'org', counts: {} }, d.settings || {}); Object.assign(st, normLists(d)); delete st.setlist; st.sample = false; }); sel = null; toast(`${n}曲を読み込みました`, '元に戻す', undo); } }] });
 };
 $('#btnStagemane').onclick = async () => {
-  const f = await GKY.openJSON(); if (!f) return;
-  if (f.kind !== 'stagemane') { toast('ステマネで保存したファイルを選んでください'); return; }
-  const c = GKY.stagemane(f.data)[0]; if (!c) { toast('演奏会が見つかりませんでした'); return; }
-  if (!c.date) { toast('このステマネのファイルには日付が入っていません'); return; }
+  const c = await GKY.pickStagemane({ title: 'ステマネの演奏会から演奏の記録を足す' }); if (!c) return;
+  if (!c.date) { toast('このステマネの演奏会には日付が入っていません'); return; }
   const found = [], miss = [];
   c.pieces.forEach(p => { const s = S.songs.find(x => GKY.key(x.title) === GKY.key(p.title)); if (s) found.push({ s, p }); else if (!miss.some(m => GKY.key(m.title) === GKY.key(p.title))) miss.push(p); });
   sheet({ title: 'ステマネから演奏の記録を足す', content: `<p class="lead">「${esc(c.title)}」（${esc(GKY.jpDate(c.date))}）の曲です。</p>

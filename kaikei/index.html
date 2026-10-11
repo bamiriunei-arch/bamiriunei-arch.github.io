@@ -1140,6 +1140,42 @@ const GKY = (() => {
     } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
   }
 
+  /* ---------- 同じ場所のステマネの演奏会 ----------
+     ステマネは localStorage の stagemane.v1（演奏会の順番）と stagemane.v1.c.〈id〉（演奏会ごと）に保存している */
+  const SM_KEY = 'stagemane.v1', SM_SAMPLE = 'sample-sunsun11';
+  /* この端末のステマネの演奏会（GKY.stagemane の形に、id・楽屋の本番・例かどうかを足したもの）。ステマネの並び順 */
+  function stagemaneLocal() {
+    if (IN_VIEWER) return [];
+    const idx = store.get(SM_KEY); if (!idx || !Array.isArray(idx.order)) return [];
+    return idx.order.map(id => store.get(SM_KEY + '.c.' + id)).filter(c => c && c.info && Array.isArray(c.program))
+      .map(c => Object.assign(stagemane(c)[0], { id: String(c.id), concert: String(c.info.concert || ''), sample: c.id === SM_SAMPLE, updatedAt: +c.updatedAt || 0 }));
+  }
+  /* ステマネの演奏会を1つ選ぶ。この端末のステマネに演奏会があれば一覧から（ファイルからも選べる）、なければファイルを選ぶ。
+     選んだ演奏会（GKY.stagemane の形）か null。concert（楽屋の本番の id）を渡すと、その本番とつないだ演奏会を上に出す */
+  async function pickStagemane({ title = 'ステマネの演奏会を選ぶ', concert = '' } = {}) {
+    const fromFile = async () => {
+      const f = await openJSON(); if (!f) return null;
+      if (f.kind !== 'stagemane') { toast(`これは${APP_NAMES[f.kind] || '別のツール'}のファイルです。ステマネで書き出したファイルを選んでください`); return null; }
+      const c = stagemane(f.data)[0];
+      if (!c) toast('演奏会が見つかりませんでした');
+      return c || null;
+    };
+    const xs = stagemaneLocal();
+    if (!xs.length) return fromFile();
+    const rank = c => (concert && c.concert === concert ? 0 : c.sample ? 2 : 1);
+    xs.sort((a, b) => rank(a) - rank(b) || String(b.date).localeCompare(String(a.date)));
+    return new Promise(res => {
+      let done = false;
+      const fin = v => { if (!done) { done = true; res(v); } };
+      const row = (c, i) => { const n = c.pieces.filter(p => !p.contOf).length, k = concertOf(c.concert);
+        return `<button type="button" class="item" data-sm="${i}"><div class="main"><div class="t1">${esc(c.title || '（名前なし）')}${c.sample ? ' <span class="chip warn">例</span>' : ''}${k ? ` <span class="chip ok">楽屋の本番：${esc(k.title)}</span>` : ''}</div><div class="t2">${esc([c.date && jpDate(c.date), c.venue, n ? n + '曲' : '曲はまだ'].filter(Boolean).join('　'))}</div></div></button>`; };
+      const sh = sheet({ title, content: `<p style="margin:0 0 10px">この端末のステマネにある演奏会です。ステマネで書き出したファイルからも選べます。</p><div class="list">${xs.map(row).join('')}</div>`,
+        actions: [{ label: 'ファイルから選ぶ', left: true, onClick: () => { fin(fromFile()); } }, { label: 'やめる', onClick: () => { fin(null); } }],
+        onClose: () => fin(null) });
+      $$('[data-sm]', sh.body).forEach(b => b.onclick = () => { fin(xs[+b.dataset.sm]); sh.close(); });
+    });
+  }
+
   /* ---------- CSV（Excelでそのまま開ける形） ---------- */
   const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
@@ -1336,7 +1372,7 @@ const GKY = (() => {
   }
 
   /* ---------- ほかのツールへのリンク ---------- */
-  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ（ステマネも）。Claudeの画面の中では下のアーティファクトのURLへ */
   const ARTIFACT_URLS = {
     gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
     tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
@@ -1346,8 +1382,7 @@ const GKY = (() => {
   const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
   const ON_PAGES = () => /\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   function linkTo(slug) {
-    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
-    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || PAGES_BASE + slug + '/';
     if (ON_PAGES()) return '../' + slug + '/';
     return PAGES_BASE + slug + '/';
   }
@@ -1636,7 +1671,7 @@ const GKY = (() => {
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
     ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
-    identify, APP_NAMES, stagemane, bamiri,
+    identify, APP_NAMES, stagemane, stagemaneLocal, pickStagemane, bamiri,
     saveFile, saveJSON, openFile, openJSON, decodeText, csv, parseCSV,
     toast, sheet, arm, copyText, tabs, fitTop, linkTo, targetOf, pageUrl, ARTIFACT_URLS, STANDALONE, SLUG, doc, about, offline, loadScript,
     packShare, unpackShare, shareUrl, readShare, qrSVG, shareSheet, viewer,

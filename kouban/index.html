@@ -450,7 +450,7 @@ table.mx{border-collapse:separate; border-spacing:0; font-size:12.5px; min-width
             <div class="pl" id="pieceList"></div>
             <div class="btnrow" style="margin-top:10px">
               <button class="btn" id="btnAddPiece">＋ 曲を足す</button>
-              <button class="btn" id="btnImportStagemane">ステマネのファイルから</button>
+              <button class="btn" id="btnImportStagemane" title="同じ場所のステマネの演奏会か、ステマネで書き出したファイルから">ステマネから</button>
               <button class="btn" id="btnImportSongs">楽屋の曲から</button>
               <button class="btn" id="btnImportSetlist">楽譜ライブラリの曲目一覧から</button>
             </div>
@@ -1272,6 +1272,42 @@ const GKY = (() => {
     } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
   }
 
+  /* ---------- 同じ場所のステマネの演奏会 ----------
+     ステマネは localStorage の stagemane.v1（演奏会の順番）と stagemane.v1.c.〈id〉（演奏会ごと）に保存している */
+  const SM_KEY = 'stagemane.v1', SM_SAMPLE = 'sample-sunsun11';
+  /* この端末のステマネの演奏会（GKY.stagemane の形に、id・楽屋の本番・例かどうかを足したもの）。ステマネの並び順 */
+  function stagemaneLocal() {
+    if (IN_VIEWER) return [];
+    const idx = store.get(SM_KEY); if (!idx || !Array.isArray(idx.order)) return [];
+    return idx.order.map(id => store.get(SM_KEY + '.c.' + id)).filter(c => c && c.info && Array.isArray(c.program))
+      .map(c => Object.assign(stagemane(c)[0], { id: String(c.id), concert: String(c.info.concert || ''), sample: c.id === SM_SAMPLE, updatedAt: +c.updatedAt || 0 }));
+  }
+  /* ステマネの演奏会を1つ選ぶ。この端末のステマネに演奏会があれば一覧から（ファイルからも選べる）、なければファイルを選ぶ。
+     選んだ演奏会（GKY.stagemane の形）か null。concert（楽屋の本番の id）を渡すと、その本番とつないだ演奏会を上に出す */
+  async function pickStagemane({ title = 'ステマネの演奏会を選ぶ', concert = '' } = {}) {
+    const fromFile = async () => {
+      const f = await openJSON(); if (!f) return null;
+      if (f.kind !== 'stagemane') { toast(`これは${APP_NAMES[f.kind] || '別のツール'}のファイルです。ステマネで書き出したファイルを選んでください`); return null; }
+      const c = stagemane(f.data)[0];
+      if (!c) toast('演奏会が見つかりませんでした');
+      return c || null;
+    };
+    const xs = stagemaneLocal();
+    if (!xs.length) return fromFile();
+    const rank = c => (concert && c.concert === concert ? 0 : c.sample ? 2 : 1);
+    xs.sort((a, b) => rank(a) - rank(b) || String(b.date).localeCompare(String(a.date)));
+    return new Promise(res => {
+      let done = false;
+      const fin = v => { if (!done) { done = true; res(v); } };
+      const row = (c, i) => { const n = c.pieces.filter(p => !p.contOf).length, k = concertOf(c.concert);
+        return `<button type="button" class="item" data-sm="${i}"><div class="main"><div class="t1">${esc(c.title || '（名前なし）')}${c.sample ? ' <span class="chip warn">例</span>' : ''}${k ? ` <span class="chip ok">楽屋の本番：${esc(k.title)}</span>` : ''}</div><div class="t2">${esc([c.date && jpDate(c.date), c.venue, n ? n + '曲' : '曲はまだ'].filter(Boolean).join('　'))}</div></div></button>`; };
+      const sh = sheet({ title, content: `<p style="margin:0 0 10px">この端末のステマネにある演奏会です。ステマネで書き出したファイルからも選べます。</p><div class="list">${xs.map(row).join('')}</div>`,
+        actions: [{ label: 'ファイルから選ぶ', left: true, onClick: () => { fin(fromFile()); } }, { label: 'やめる', onClick: () => { fin(null); } }],
+        onClose: () => fin(null) });
+      $$('[data-sm]', sh.body).forEach(b => b.onclick = () => { fin(xs[+b.dataset.sm]); sh.close(); });
+    });
+  }
+
   /* ---------- CSV（Excelでそのまま開ける形） ---------- */
   const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
@@ -1468,7 +1504,7 @@ const GKY = (() => {
   }
 
   /* ---------- ほかのツールへのリンク ---------- */
-  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ（ステマネも）。Claudeの画面の中では下のアーティファクトのURLへ */
   const ARTIFACT_URLS = {
     gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
     tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
@@ -1478,8 +1514,7 @@ const GKY = (() => {
   const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
   const ON_PAGES = () => /\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   function linkTo(slug) {
-    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
-    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || PAGES_BASE + slug + '/';
     if (ON_PAGES()) return '../' + slug + '/';
     return PAGES_BASE + slug + '/';
   }
@@ -1768,7 +1803,7 @@ const GKY = (() => {
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
     ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
-    identify, APP_NAMES, stagemane, bamiri,
+    identify, APP_NAMES, stagemane, stagemaneLocal, pickStagemane, bamiri,
     saveFile, saveJSON, openFile, openJSON, decodeText, csv, parseCSV,
     toast, sheet, arm, copyText, tabs, fitTop, linkTo, targetOf, pageUrl, ARTIFACT_URLS, STANDALONE, SLUG, doc, about, offline, loadScript,
     packShare, unpackShare, shareUrl, readShare, qrSVG, shareSheet, viewer,
@@ -1781,8 +1816,11 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet, arm } = GKY;
-const APP_VERSION = '3', APP_DATE = '2026-10-11';
+const APP_VERSION = '4', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '4', d: '2026-10-11', items: [
+    '「ステマネから」：同じ場所のステマネ（公開ページ）の演奏会を、ファイルにしなくても選べるようにしました（ステマネで書き出したファイルからも選べます）。ステマネで楽屋の本番とつないだ演奏会は、この演奏会と同じ本番なら上に出ます',
+  ] },
   { v: '3', d: '2026-10-11', items: [
     'バミリに名前を入れるとき、パートごとに「席の数・人の数・席が足りない人・あまった席」の表を出すようにしました。足りない人の席を、同じパートの席のとなりに名前つきで足すこともできます。曲ごとの席の足りない人数も出します',
     '楽屋の「本番」とつなげるようにしました（演奏会の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の香盤表を開くか作ります',
@@ -2194,7 +2232,7 @@ function renderPieces() {
   $('#pieceList').innerHTML = p.pieces.length ? p.pieces.map((pc, i) => `<div class="item${pc.id === editPiece ? ' on' : ''}" data-pc="${esc(pc.id)}">
       <span class="ord">${i + 1}</span><button class="main" style="all:unset;flex:1;min-width:0;cursor:pointer" data-sel><div class="t1">${esc(pc.title || '無題')}</div><div class="t2">${esc(pc.composer || '')}　${pc.slots.length}人</div></button>
       <button class="ibtn" data-up title="上へ" aria-label="上へ" ${i ? '' : 'disabled'}>↑</button><button class="ibtn" data-down title="下へ" aria-label="下へ" ${i < p.pieces.length - 1 ? '' : 'disabled'}>↓</button></div>`).join('')
-    : `<div class="empty"><b>曲がまだありません</b>「＋ 曲を足す」か、ステマネのファイルから読み込んでください。</div>`;
+    : `<div class="empty"><b>曲がまだありません</b>「＋ 曲を足す」か、「ステマネから」で読み込んでください。</div>`;
   $$('#pieceList .item').forEach(row => {
     const id = row.dataset.pc;
     $('[data-sel]', row).onclick = () => { editPiece = id; renderPieces(); };
@@ -2301,12 +2339,9 @@ $('#btnAddPiece').onclick = () => {
   editPiece = id; renderPieces();
   setTimeout(() => { const t = $('#pcTitle'); if (t) { t.focus(); t.select(); } }, 50);
 };
-$('#btnImportStagemane').onclick = async () => {
-  const f = await GKY.openJSON(); if (!f) return;
-  if (f.kind !== 'stagemane') { toast(`これは${GKY.APP_NAMES[f.kind] || '別のツール'}のファイルです。ステマネで保存したファイルを選んでください`); return; }
-  const cs = GKY.stagemane(f.data);
-  if (!cs.length) { toast('演奏会が見つかりませんでした'); return; }
-  const c = cs[0];
+$('#btnImportStagemane').onclick = async () => { const c = await GKY.pickStagemane({ concert: P().concert }); if (c) importStagemane(c); };
+/* ステマネの演奏会（GKY.stagemane の形）の曲を、演奏する順に足す */
+function importStagemane(c) {
   const have = new Set(P().pieces.map(x => GKY.key(x.title)));
   const add = c.pieces.filter(x => !have.has(GKY.key(x.title)));
   sheet({ title: 'ステマネから曲を読み込む', content: `<p class="lead">「${esc(c.title || '演奏会')}」の曲を、演奏する順に足します。${add.length < c.pieces.length ? `すでにある${c.pieces.length - add.length}曲は足しません。` : ''}</p>
@@ -2320,11 +2355,11 @@ $('#btnImportStagemane').onclick = async () => {
       edit(pp => {
         pick.forEach(x => pp.pieces.push(newPiece({ title: x.title, composer: [x.composer, x.arranger && x.arranger + ' 編曲'].filter(Boolean).join('／'), conductor: x.conductor || '', part: x.part || '', note: x.encore ? 'アンコール' : '',
           slots: tpl.id === 'members' ? pp.members.filter(m => m.active && m.part).sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part)).map(m => newSlot(m.part)) : slotsFrom(tpl.spec) })));
-        if (info) { pp.title = c.title || pp.title; pp.date = c.date; pp.sample = false; }
+        if (info) { pp.title = c.title || pp.title; pp.date = c.date; pp.sample = false; if (c.concert && GKY.concertOf(c.concert) && !pp.concert) pp.concert = c.concert; }
       });
       toast(`${pick.length}曲を足しました`);
     } }] });
-};
+}
 $('#btnImportSongs').onclick = () => {
   const o = GKY.org();
   if (!o.songs.length) { toast(GKY.IN_VIEWER ? 'ここでは楽屋のデータを読めません。公開ページで開いてください' : '楽屋にまだ曲がありません。楽譜ライブラリで曲を入れて「楽屋に反映」すると使えます'); return; }
@@ -2714,7 +2749,7 @@ $('#saveCsv').onclick = saveCsv;
 $('#saveJson').onclick = () => { const p = P(); GKY.saveJSON(`コウバン_${p.title}_${GKY.stamp()}.json`, { app: 'kouban', format: 1, exportedAt: new Date().toISOString(), project: p }); };
 $('#openJson').onclick = async () => {
   const f = await GKY.openJSON(); if (!f) return;
-  if (f.kind === 'stagemane') { showTab('pieces'); $('#btnImportStagemane').click(); toast('ステマネのファイルは「曲と編成」の「ステマネのファイルから」で読み込めます'); return; }
+  if (f.kind === 'stagemane') { const c = GKY.stagemane(f.data)[0]; showTab('pieces'); if (c) importStagemane(c); else toast('演奏会が見つかりませんでした'); return; }
   if (f.kind !== 'kouban' || !f.data.project) { toast(`これは${GKY.APP_NAMES[f.kind] || '別のツール'}のファイルです。コウバンで保存したファイルを選んでください`); return; }
   const p = normalizeProject(f.data.project);
   if (S.projects[p.id]) p.id = uid('k');

@@ -8,7 +8,7 @@ const reopen = async (page, q = '?test') => { await page.goto('/index.html' + q)
 // WindowsのExcelで保存したCSV（Shift_JIS）：名前,学年,パート／山田 花子,中2,クラリネット／鈴木 太郎,1年,パーカス／佐藤 次郎,中3,フルート・ピッコロ
 const SJIS_CSV = 'lryRTyyKd5ROLINwgVuDZw0KjlKTYyCJ1I5xLJKGMiyDToOJg4qDbINig2cNCpfpltggkb6YWSwxlE4sg3CBW4NKg1gNCo2yk6Egjp+YWSyShjMsg3SDi4Fbg2eBRYNzg2KDUoONDQo=';
 
-test('ツールの一覧：14のツールが出て、同じツールは同じタブで開く。ステマネはClaudeの画面。置き方はなく、ご意見はバミリと同じフォーム', async ({ page }) => {
+test('ツールの一覧：14のツールが出て、同じツールは同じタブで開く。ステマネも同じ場所のページ。置き方はなく、ご意見はバミリと同じフォーム', async ({ page }) => {
   const errors = await openApp(page);
   await expect(page.locator('.tool')).toHaveCount(14);
   const kb = page.locator('.tool[data-slug="kouban"]');
@@ -18,9 +18,17 @@ test('ツールの一覧：14のツールが出て、同じツールは同じタ
   await expect(page.locator('.tool[data-slug="shukketsu"]')).toHaveAttribute('href', '../shukketsu/');
   await expect(page.locator('.tool[data-slug="kaikei"]')).toHaveAttribute('href', '../kaikei/');
   const sm = page.locator('.tool[data-slug="stagemane"]');
-  await expect(sm).toHaveAttribute('href', /claude\.ai\/artifact/);
-  await expect(sm).toContainText('Claudeの画面で開きます');
-  await expect(sm).not.toContainText('まだ使っていません');
+  await expect(sm).toHaveAttribute('href', '../stagemane/');
+  await expect(sm).toHaveAttribute('target', 'gky-stagemane');
+  await expect(sm).toContainText('まだ使っていません');
+  // ステマネに例の演奏会だけ → 「1演奏会（例）」、自分の演奏会を足すと「2演奏会」
+  await page.evaluate(() => { localStorage.setItem('stagemane.v1', JSON.stringify({ order: ['sample-sunsun11'], sample: true })); });
+  await reopen(page);
+  await expect(page.locator('.tool[data-slug="stagemane"]')).toContainText('1演奏会（例）');
+  await page.evaluate(() => { localStorage.setItem('stagemane.v1', JSON.stringify({ order: ['sample-sunsun11', 'c1'], sample: false })); });
+  await reopen(page);
+  await expect(page.locator('.tool[data-slug="stagemane"]')).toContainText('2演奏会');
+  await expect(page.locator('.tool[data-slug="stagemane"]')).not.toContainText('（例）');
   // 置き方のタブはなくした（?dev をつけても出ない）。ご意見はバミリと同じフォーム
   await reopen(page, '?test&dev');
   await expect(page.locator('[data-tab="setup"]')).toHaveCount(0);

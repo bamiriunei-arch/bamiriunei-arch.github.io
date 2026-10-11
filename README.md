@@ -14,6 +14,7 @@
 | テンポマップ | [`tempomap/`](tempomap/) | https://bamiriunei-arch.github.io/tempomap/ | 区間ごとの小節数・拍子・テンポ・くり返し・D.S.から演奏時間を計算し、コンクールなどのカット案を比べる。テンポの変化どおりに鳴る練習用クリックつき。通しの録音で演奏の長さを計り、実測に入れる |
 | コウバン | [`kouban/`](kouban/) | https://bamiriunei-arch.github.io/kouban/ | 演奏会で、曲ごとに誰がどのパートを受け持つかを決めて確かめる香盤表。出場人数の上限、見るだけのリンクで自分の出番。バミリの席が足りない人の表 |
 | 楽器決め・編成計画 | [`gakkigime/`](gakkigime/) | https://bamiriunei-arch.github.io/gakkigime/ | 新入部員の楽器の割り振り案を、希望・見立て・経験と定員から理由つきで出す。来年・再来年のパートの人数（一般の団体は欠員と募集） |
+| ステマネ | [`stagemane/`](stagemane/) | https://bamiriunei-arch.github.io/stagemane/ | 演奏会の司会原稿・進行表・タイムスケジュールを、1つの入力から作る。点検（時間の目安・抜け）、本番モード（いまの項目と次のきっかけを大きく）、PDF。楽屋の本番から開ける |
 | 仕込み図 | [`shikomi/`](shikomi/) | https://bamiriunei-arch.github.io/shikomi/ | 演奏会の音響・照明の打合せ資料。使うものを選ぶとインプットリストができ、配置図にマイクを置き、きっかけ表を作れる |
 | 楽器台帳 | [`gakki/`](gakki/) | https://bamiriunei-arch.github.io/gakki/ | 楽器・備品の台帳。状態、今年度の使う人（まとめて決める・使った人の記録）、修理・点検・貸し出しの記録、ほかの団体との貸し借り（貸出書・借用書）、写真、資産台帳、QRコードのラベル、消耗品の在庫 |
 | 搬入出リスト | [`hannyu/`](hannyu/) | https://bamiriunei-arch.github.io/hannyu/ | 演奏会やコンクールの楽器運搬。運ぶものの一覧、車の割り当て、積む順、行き帰りのチェックをスマホで。見るだけのリンクで運ぶ人もチェック |

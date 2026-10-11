@@ -1337,6 +1337,42 @@ const GKY = (() => {
     } catch (e) { toast('「' + f.name + '」はこのツールで読めるファイルではありません'); return null; }
   }
 
+  /* ---------- 同じ場所のステマネの演奏会 ----------
+     ステマネは localStorage の stagemane.v1（演奏会の順番）と stagemane.v1.c.〈id〉（演奏会ごと）に保存している */
+  const SM_KEY = 'stagemane.v1', SM_SAMPLE = 'sample-sunsun11';
+  /* この端末のステマネの演奏会（GKY.stagemane の形に、id・楽屋の本番・例かどうかを足したもの）。ステマネの並び順 */
+  function stagemaneLocal() {
+    if (IN_VIEWER) return [];
+    const idx = store.get(SM_KEY); if (!idx || !Array.isArray(idx.order)) return [];
+    return idx.order.map(id => store.get(SM_KEY + '.c.' + id)).filter(c => c && c.info && Array.isArray(c.program))
+      .map(c => Object.assign(stagemane(c)[0], { id: String(c.id), concert: String(c.info.concert || ''), sample: c.id === SM_SAMPLE, updatedAt: +c.updatedAt || 0 }));
+  }
+  /* ステマネの演奏会を1つ選ぶ。この端末のステマネに演奏会があれば一覧から（ファイルからも選べる）、なければファイルを選ぶ。
+     選んだ演奏会（GKY.stagemane の形）か null。concert（楽屋の本番の id）を渡すと、その本番とつないだ演奏会を上に出す */
+  async function pickStagemane({ title = 'ステマネの演奏会を選ぶ', concert = '' } = {}) {
+    const fromFile = async () => {
+      const f = await openJSON(); if (!f) return null;
+      if (f.kind !== 'stagemane') { toast(`これは${APP_NAMES[f.kind] || '別のツール'}のファイルです。ステマネで書き出したファイルを選んでください`); return null; }
+      const c = stagemane(f.data)[0];
+      if (!c) toast('演奏会が見つかりませんでした');
+      return c || null;
+    };
+    const xs = stagemaneLocal();
+    if (!xs.length) return fromFile();
+    const rank = c => (concert && c.concert === concert ? 0 : c.sample ? 2 : 1);
+    xs.sort((a, b) => rank(a) - rank(b) || String(b.date).localeCompare(String(a.date)));
+    return new Promise(res => {
+      let done = false;
+      const fin = v => { if (!done) { done = true; res(v); } };
+      const row = (c, i) => { const n = c.pieces.filter(p => !p.contOf).length, k = concertOf(c.concert);
+        return `<button type="button" class="item" data-sm="${i}"><div class="main"><div class="t1">${esc(c.title || '（名前なし）')}${c.sample ? ' <span class="chip warn">例</span>' : ''}${k ? ` <span class="chip ok">楽屋の本番：${esc(k.title)}</span>` : ''}</div><div class="t2">${esc([c.date && jpDate(c.date), c.venue, n ? n + '曲' : '曲はまだ'].filter(Boolean).join('　'))}</div></div></button>`; };
+      const sh = sheet({ title, content: `<p style="margin:0 0 10px">この端末のステマネにある演奏会です。ステマネで書き出したファイルからも選べます。</p><div class="list">${xs.map(row).join('')}</div>`,
+        actions: [{ label: 'ファイルから選ぶ', left: true, onClick: () => { fin(fromFile()); } }, { label: 'やめる', onClick: () => { fin(null); } }],
+        onClose: () => fin(null) });
+      $$('[data-sm]', sh.body).forEach(b => b.onclick = () => { fin(xs[+b.dataset.sm]); sh.close(); });
+    });
+  }
+
   /* ---------- CSV（Excelでそのまま開ける形） ---------- */
   const csvCell = v => { const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
@@ -1533,7 +1569,7 @@ const GKY = (() => {
   }
 
   /* ---------- ほかのツールへのリンク ---------- */
-  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ。Claudeの画面の中では下のアーティファクトのURLへ */
+  /* 公開ページ（GitHub Pages）では同じ場所のフォルダへ（ステマネも）。Claudeの画面の中では下のアーティファクトのURLへ */
   const ARTIFACT_URLS = {
     gakuya: 'https://claude.ai/artifact/Cg5y97QqsdHBDaf7NeXfmd', kouban: 'https://claude.ai/artifact/H1hGpyJjWksfa8FGJwphB5', gakufu: 'https://claude.ai/artifact/PnscX7G6quwCTvarRFjXWx',
     tempomap: 'https://claude.ai/artifact/D2DUbaya4JnAAzS8vsz5y4', shikomi: 'https://claude.ai/artifact/YBMKzc5FAZ8B34M1wYUJfB', gakki: 'https://claude.ai/artifact/TuGJ5xpuFiEpVd2KvMjL9D',
@@ -1543,8 +1579,7 @@ const GKY = (() => {
   const PAGES_BASE = 'https://bamiriunei-arch.github.io/';
   const ON_PAGES = () => /\.github\.io$/.test(location.hostname) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   function linkTo(slug) {
-    if (IN_VIEWER) return ARTIFACT_URLS[slug] || (slug === 'stagemane' ? '' : PAGES_BASE + slug + '/');
-    if (slug === 'stagemane') return ARTIFACT_URLS.stagemane;
+    if (IN_VIEWER) return ARTIFACT_URLS[slug] || PAGES_BASE + slug + '/';
     if (ON_PAGES()) return '../' + slug + '/';
     return PAGES_BASE + slug + '/';
   }
@@ -1833,7 +1868,7 @@ const GKY = (() => {
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
     ORG_KEY, org, hasOrg, saveOrg, onOrgChange, orgFile, normOrg, normMember, normSong,
-    identify, APP_NAMES, stagemane, bamiri,
+    identify, APP_NAMES, stagemane, stagemaneLocal, pickStagemane, bamiri,
     saveFile, saveJSON, openFile, openJSON, decodeText, csv, parseCSV,
     toast, sheet, arm, copyText, tabs, fitTop, linkTo, targetOf, pageUrl, ARTIFACT_URLS, STANDALONE, SLUG, doc, about, offline, loadScript,
     packShare, unpackShare, shareUrl, readShare, qrSVG, shareSheet, viewer,
@@ -1846,8 +1881,11 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '5', APP_DATE = '2026-10-11';
+const APP_VERSION = '6', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '6', d: '2026-10-11', items: [
+    'ステマネ（司会原稿・進行表・タイムスケジュール）も、ほかのツールと同じ公開ページ（stagemane/）で開くようにしました。楽屋の「本番」から、その本番の司会原稿・進行表を開く・作ることもできます',
+  ] },
   { v: '5', d: '2026-10-11', items: [
     '「本番」のタブを足しました。演奏会・コンクール・行事を、月ごと・年度ごとに見られます。本番から、そのスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。印刷・カレンダー（.ics）・CSV・見るだけのリンクも',
     'ほかのツールにある本番を見つけて、楽屋の本番の一覧に入れられるようにしました',
@@ -1887,7 +1925,7 @@ const TOOLS = [
   { slug: 'tempomap', name: 'テンポマップ', color: '#2B9457', phase: '本番までの準備', desc: '小節数・拍子・テンポ・くり返しから演奏時間。カット案と制限時間、練習用クリック', key: 'tempomap.v1', count: s => s && s.maps ? Object.keys(s.maps).length + '曲' : '' },
   { slug: 'kouban', name: 'コウバン', color: '#D23B45', phase: '本番までの準備', desc: '香盤表。曲ごとに誰がどのパートを受け持つか、空き・二重・休み・人数の上限を確かめる', key: 'kouban.v1', count: s => s && s.projects ? Object.keys(s.projects).length + '演奏会' : '' },
   { slug: 'gakkigime', name: '楽器決め・編成計画', color: '#C43F7D', phase: '本番までの準備', desc: '新入部員の楽器の割り振り案（理由つき）と、来年・再来年のパートの人数', key: 'gakkigime.v1', count: s => s && s.newbies ? s.newbies.length + '人' : '' },
-  { slug: 'stagemane', name: 'ステマネ', color: '#A3192B', phase: '本番の資料', desc: '司会原稿・進行表・タイムスケジュールを1つの入力から', old: true, viewer: true },
+  { slug: 'stagemane', name: 'ステマネ', color: '#A3192B', phase: '本番の資料', desc: '司会原稿・進行表・タイムスケジュールを1つの入力から。点検・本番モード・PDF', key: 'stagemane.v1', count: s => s && Array.isArray(s.order) ? s.order.length + '演奏会' : '' },
   { slug: 'bamiri', name: 'バミリ', color: '#E3B23C', phase: '本番の資料', desc: '吹奏楽・オーケストラ・バンドの舞台配置図', old: true, key: 'bamiri.current', count: s => s && s.items ? s.items.length + '個の部品' : '' },
   { slug: 'shikomi', name: '仕込み図', color: '#7A50C7', phase: '本番の資料', desc: '音響・照明の打合せ資料。インプットリスト・仕込み図・きっかけ表', key: 'shikomi.v1', count: s => s && s.events ? Object.keys(s.events).length + '本番' : '' },
   { slug: 'drillboard', name: 'ドリルボード', color: '#A26A00', phase: '本番の資料', desc: 'マーチングの隊形と動きを作って確かめる', old: true, key: 'drillboard.v1', count: s => s && s.sets ? s.sets.length + 'セット' : '' },
@@ -1901,13 +1939,14 @@ const urlOf = slug => slug === 'bamiri' || slug === 'drillboard' ? (GKY.IN_VIEWE
 const T = slug => TOOLS.find(t => t.slug === slug);
 const tn = slug => { const t = T(slug); return t ? `<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>` : esc(slug); };
 /* バックアップ・団体の切りかえで扱うデータ（ログインの記録・表示の好み・団体の切りかえの記録は入れかえない） */
-const PREFIX = ['gakuya.', 'kouban.', 'gakufu.', 'tempomap.', 'shikomi.', 'gakki.', 'gakkigime.', 'hannyu.', 'gassou.', 'gyakusan.', 'shukketsu.', 'kaikei.', 'bamiri.', 'drillboard.'];
+const PREFIX = ['gakuya.', 'kouban.', 'gakufu.', 'tempomap.', 'shikomi.', 'gakki.', 'gakkigime.', 'hannyu.', 'gassou.', 'gyakusan.', 'shukketsu.', 'kaikei.', 'stagemane.', 'bamiri.', 'drillboard.'];
 const NOT_DATA = new Set(['bamiri.auth', 'bamiri.survey', 'gakuya.ui', 'gakuya.profiles']);
 /* 楽屋の本番とつなぐツール：記録の一覧（recs）と、本番の札に出す一言（info） */
 const LINKS = [
   { slug: 'gyakusan', what: '準備のスケジュール', recs: s => s && s.plans ? Object.values(s.plans).filter(Boolean) : [], info: r => { const t = r.tasks || []; return t.length ? `やること ${t.filter(x => x.done).length}/${t.length}` : ''; }, kind: r => ({ contest: 'contest', ensemble: 'contest', event: 'event', school: 'school', newcomer: 'school' })[r.kind] || 'concert' },
   { slug: 'kouban', what: '香盤表', recs: s => s && s.projects ? Object.values(s.projects).filter(Boolean) : [], info: r => r.pieces && r.pieces.length ? `曲 ${r.pieces.length}` : '' },
   { slug: 'gakufu', what: '曲目一覧', recs: s => s && Array.isArray(s.setlists) ? s.setlists.filter(l => l && (!s.sample || l.concert)) : [], info: r => r.ids && r.ids.length ? `曲 ${r.ids.length}` : '' },
+  { slug: 'stagemane', what: '司会原稿・進行表', recs: s => s && Array.isArray(s.order) ? GKY.stagemaneLocal().map(c => Object.assign({}, c, { n: c.pieces.filter(p => !p.contOf).length })) : [], info: r => r.n ? `曲 ${r.n}` : '' },
   { slug: 'shikomi', what: '音響・照明の資料', recs: s => s && s.events ? Object.values(s.events).filter(Boolean) : [], info: r => r.inputs && r.inputs.length ? `入力 ${r.inputs.length}` : '' },
   { slug: 'hannyu', what: '積み込みリスト', recs: s => s && s.trips ? Object.values(s.trips).filter(Boolean).map(r => Object.assign({}, r, { venue: r.to && r.to !== '会場' ? r.to : '' })) : [], info: r => r.items && r.items.length ? `運ぶもの ${r.items.length}` : '' },
   { slug: 'shukketsu', what: '出欠', recs: s => s && !s.sample && Array.isArray(s.events) ? s.events.filter(e => e && (e.kind === 'show' || e.concert)).map(e => Object.assign({}, e, { venue: e.place })) : [], info: (r, s) => { const n = Object.keys(((s && s.att) || {})[r.id] || {}).length; return n ? `出欠 ${n}人` : ''; } },
@@ -1993,7 +2032,7 @@ function renderTools() {
   const lastOk = last && (!mem || cfg.tools.includes(last.slug));
   $('#toolGrid').innerHTML = (lastOk ? `<div class="btnrow" style="margin-bottom:10px"><span class="muted" style="font-size:13px">つづきから</span><a class="btn sm primary" href="${esc(urlOf(last.slug))}" id="lastTool">${esc(last.name)}を開く</a></div>` : '') + (mem ? (list.length ? '' : `<div class="empty"><b>${esc(w.member)}の端末で使うツールは、まだ決まっていません</b>${esc(w.staff)}・代表者に聞いてください。</div>`) : `<div class="sums"><span class="sum">${esc(w.member)} <b>${o.members.filter(m => m.status === 'active').length}</b>人</span><span class="sum">本番 <b>${o.concerts.length}</b></span><span class="sum">曲 <b>${o.songs.length}</b>曲</span><span class="sum">楽器 <b>${o.instruments.length}</b>台</span></div>`) + phases.map(ph => `<div class="phase"><h2>${esc(ph)}</h2><div class="tools">${list.filter(t => t.phase === ph).map(t => {
     const s = sOf(t), cnt = t.count ? t.count(s) : '', sample = s && s.sample;
-    const chip = t.viewer ? '<span class="chip">Claudeの画面で開きます</span>' : cnt ? `<span class="chip ${sample ? 'warn' : 'ok'}">${esc(cnt)}${sample ? '（例）' : ''}</span>` : GKY.IN_VIEWER ? '' : '<span class="chip">まだ使っていません</span>';
+    const chip = cnt ? `<span class="chip ${sample ? 'warn' : 'ok'}">${esc(cnt)}${sample ? '（例）' : ''}</span>` : GKY.IN_VIEWER ? '' : '<span class="chip">まだ使っていません</span>';
     return `<a class="tool" href="${esc(urlOf(t.slug))}" target="${GKY.targetOf(t.slug)}" style="--c:${t.color}" data-slug="${esc(t.slug)}"><span class="tp"><i></i><b>${esc(t.name)}</b></span><p>${esc(t.desc)}</p><span class="st">${chip}</span></a>`;
   }).join('')}</div></div>`).join('');
 }
@@ -2488,7 +2527,7 @@ const MEMBER_FEATS = [['concerts', '本番の予定を見る', '楽屋の「本�
 function renderRole(o) {
   const cfg = o.org.member, w = GKY.words(o.org.type);
   $('#roleLead').textContent = `${w.member}の端末で使うツールと、できることを決めます。決めたら「${w.member}用の設定リンク」を${w.member}に送ってください。この端末は「代表者・顧問用」のままです。`;
-  $('#roleTools').innerHTML = TOOLS.filter(t => !t.viewer).map(t => `<label><input type="checkbox" data-rt="${esc(t.slug)}"${cfg.tools.includes(t.slug) ? ' checked' : ''}><span><b>${esc(t.name)}</b><small>${esc(MEMBER_DESC[t.slug] || t.desc)}</small></span></label>`).join('');
+  $('#roleTools').innerHTML = TOOLS.map(t => `<label><input type="checkbox" data-rt="${esc(t.slug)}"${cfg.tools.includes(t.slug) ? ' checked' : ''}><span><b>${esc(t.name)}</b><small>${esc(MEMBER_DESC[t.slug] || t.desc)}</small></span></label>`).join('');
   $('#roleFeats').innerHTML = MEMBER_FEATS.map(([k, l, d]) => `<label><input type="checkbox" data-rf="${k}"${cfg[k] ? ' checked' : ''}><span><b>${esc(l)}</b><small>${esc(d)}</small></span></label>`).join('');
   if (document.activeElement !== $('#roleMsg')) $('#roleMsg').value = cfg.msg;
   const save = () => { const c = GKY.memberCfg(); c.tools = $$('#roleTools [data-rt]').filter(x => x.checked).map(x => x.dataset.rt); MEMBER_FEATS.forEach(([k]) => { c[k] = !!($(`#roleFeats [data-rf="${k}"]`) || {}).checked; }); c.msg = $('#roleMsg').value; GKY.saveOrg('org', { member: c }); };
@@ -2640,7 +2679,7 @@ function renderLinks() {
     card(`本番（${o.concerts.length}）`, '#44539E', [['入れる所', '<span class="tn">楽屋（本番）</span>' + LINKS.map(L => tn(L.slug)).join('')], ['使う所', LINKS.map(L => tn(L.slug)).join('')], ['使い方', '楽屋の「本番」から、その本番のスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。各ツールの「楽屋の本番」の欄でつなぎます（日付が同じ記録は、自動でその本番のものになります）']]),
     card(`曲（${o.songs.length}曲）`, '#2F6CC8', [['入れる所', tn('gakufu')], ['使う所', ['kouban', 'tempomap'].map(tn).join('')], ['使い方', '楽譜に入れた編成が、コウバンの受け持ちになります。テンポマップで新しい曲を作るときに選べます']]),
     card(`楽器（${o.instruments.length}台）`, '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', ['hannyu', 'gakkigime'].map(tn).join('')], ['使い方', '運ぶ楽器を台帳から選べます。楽器決めでは、学校・団体の楽器の台数を募集人数の目安にします']]),
-    card('ステマネのファイル', '#A3192B', [['作る所', tn('stagemane')], ['使う所', ['kouban', 'shikomi', 'gakufu'].map(tn).join('')], ['使い方', '曲の順番（コウバン）、きっかけ表（仕込み図）、演奏の記録と曲目一覧（楽譜ライブラリ）']]),
+    card('ステマネのファイル', '#A3192B', [['作る所', tn('stagemane')], ['使う所', ['kouban', 'shikomi', 'gakufu'].map(tn).join('')], ['使い方', '曲の順番（コウバン）、きっかけ表（仕込み図）、演奏の記録と曲目一覧（楽譜ライブラリ）。同じ場所なら、ファイルにしなくても、この端末のステマネの演奏会から選べます']]),
     card('バミリの配置図', '#E3B23C', [['作る所', tn('bamiri')], ['使う所', ['kouban', 'shikomi', 'hannyu'].map(tn).join('')], ['使い方', '席に名前を入れて返す（コウバン）、仕込み図の下絵（仕込み図）、運ぶ打楽器と譜面台の数（搬入出リスト）。同じ場所なら、バミリで開いている配置図をそのまま使えます']]),
     card('テンポマップの共有コード', '#2B9457', [['作る所', tn('tempomap')], ['使う所', tn('gassou')], ['使い方', '録音に小節の目印をつける（テンポや拍子が変わる曲、くり返しやカットのある曲も）']]),
     card('録音・楽譜のファイル', '#2B9457', [['入れる所', ['tempomap', 'gassou', 'gakufu', 'drillboard'].map(tn).join('')], ['使う所', ['gassou', 'drillboard', 'gakufu'].map(tn).join('')], ['使い方', 'テンポマップで録った通しの録音を、合奏ノートで小節の目印つきで聞けます（ドリルボードの音源にも）。楽譜ライブラリのPDFは、パートごとにまとめて送れます。ファイルはこの端末の中（ファイル置き場）にあります']]),
@@ -2728,7 +2767,7 @@ $('#hoPrint').onclick = () => {
   const cnt = Object.keys(GKY.STATUS).map(st => [st, o.members.filter(m => m.status === st).length]).filter(x => x[1]);
   d.block(`<h3>${esc(w.member)}</h3><p>${cnt.map(([st, n]) => `${esc(GKY.statusName(st, o.org.type))} ${n}人`).join('　') || 'なし'}</p>`);
   d.block('<h3>ツールごとのデータ</h3>', { keep: true });
-  d.table({ cols: [{ h: 'ツール', w: '30%' }, { h: '入っているもの', w: '25%' }, { h: '開くところ', w: '45%' }], rows: TOOLS.filter(t => !t.viewer).map(t => { const s = GKY.store.get(t.key); return [esc(t.name), esc(t.count ? (t.count(s) || 'なし') : '—'), esc('https://bamiriunei-arch.github.io/' + t.slug + '/')]; }) });
+  d.table({ cols: [{ h: 'ツール', w: '30%' }, { h: '入っているもの', w: '25%' }, { h: '開くところ', w: '45%' }], rows: TOOLS.map(t => { const s = GKY.store.get(t.key); return [esc(t.name), esc(t.count ? (t.count(s) || 'なし') : '—'), esc('https://bamiriunei-arch.github.io/' + t.slug + '/')]; }) });
   d.block(`<h3>引き継ぎのメモ</h3><div class="box" style="white-space:pre-wrap;min-height:120px">${esc(memo || '（なし）')}</div>`);
   d.block('<h3>データの移し方</h3><p>1. 前の人が楽屋の「バックアップ」→「引き継ぎファイルを保存」でファイルを作り、次の人に渡す（メール・USBメモリ・共有ドライブなど）。<br>2. 次の人は自分の端末で楽屋を開き、「バックアップ」→「バックアップから戻す」でそのファイルを選ぶ。<br>3. データは端末の中だけにあるので、次の人もときどきバックアップを保存する。</p>');
   d.show();

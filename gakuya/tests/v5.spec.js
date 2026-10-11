@@ -11,6 +11,11 @@ test('本番：足す・月ごと／年度ごと・押すとツールごとの�
   const errors = await openApp(page);
   await setOrg(page, { org: { name: 'テスト中学', type: 'chu' }, concerts: [{ id: 'c1', title: '第13回 定期演奏会', date: '2026-10-31', start: '14:00', venue: '市民会館', kind: 'concert' }, { id: 'c2', title: '地区大会', date: '2026-08-01', kind: 'contest' }, { id: 'c3', title: '新春コンサート', date: '2027-01-10', kind: 'event' }, { id: 'c0', title: '前の年の定演', date: '2026-03-20' }] });
   await page.evaluate(() => localStorage.setItem('kouban.v1', JSON.stringify({ v: 1, current: 'k1', order: ['k1'], projects: { k1: { id: 'k1', title: '定演の香盤表', date: '2026-10-31', pieces: [{ id: 'p', title: '宝島', slots: [] }], members: [], absent: [], assign: {} } } })));
+  // ステマネ：楽屋の本番 c1 とつないだ演奏会（日付はちがっても c1 のもの）と、例の演奏会（同じ日付でも出さない）
+  await page.evaluate(() => { const C = (id, title, date, concert, prog) => ({ id, v: 1, info: { title, date, concert }, program: prog, timetable: { cols: [], rows: [] } });
+    localStorage.setItem('stagemane.v1', JSON.stringify({ order: ['sample-sunsun11', 's1'] }));
+    localStorage.setItem('stagemane.v1.c.sample-sunsun11', JSON.stringify(C('sample-sunsun11', '第11回 スプリングコンサート', '2026-08-01', '', [])));
+    localStorage.setItem('stagemane.v1.c.s1', JSON.stringify(C('s1', '定演の司会原稿', '2026-10-30', 'c1', [{ id: 'a', type: 'piece', title: '宝島' }, { id: 'b', type: 'piece', title: 'ふるさと' }, { id: 'c', type: 'piece', contOf: 'b' }]))); });
   await reopen(page);
   await expect(page.locator('#cntC')).toHaveText('2');            // これからの本番
   await page.click('[data-tab="concerts"]');
@@ -21,8 +26,10 @@ test('本番：足す・月ごと／年度ごと・押すとツールごとの�
   // 同じ日付のコウバンの演奏会は、つないでいなくてもこの本番のものとして出る
   const row = page.locator('#cList .crow[data-c="c1"]');
   await expect(row).toContainText('あと20日');
-  await expect(row.locator('.tl')).toHaveText(['コウバン']);
-  await expect(row.locator('.tl')).toHaveAttribute('href', '../kouban/#concert=c1');
+  await expect(row.locator('.tl')).toHaveText(['コウバン', 'ステマネ']);
+  await expect(row.locator('.tl').first()).toHaveAttribute('href', '../kouban/#concert=c1');
+  await expect(row.locator('.tl').nth(1)).toHaveAttribute('href', '../stagemane/#concert=c1');
+  await expect(page.locator('#cList .crow[data-c="c2"] .tl')).toHaveCount(0);
   // 1月はじまり（年）にすると、2026年には8月と10月、新春コンサート（2027年）は出ない
   await page.locator('#cStart').selectOption('1');
   await expect(page.locator('#cList .crow')).toHaveCount(3);       // 3/20・8/1・10/31
@@ -36,8 +43,11 @@ test('本番：足す・月ごと／年度ごと・押すとツールごとの�
   // 押すと：ツールごとの記録（あるものは「開く」、ないものは「作る」）
   await row.locator('.t1').click();
   const sh = page.locator('.gky-sheet', { hasText: 'ツールごとの記録' });
-  await expect(sh.locator('.ctool')).toHaveCount(7);
+  await expect(sh.locator('.ctool')).toHaveCount(8);
   await expect(sh.locator('.ctool', { hasText: 'コウバン' })).toContainText('定演の香盤表　曲 1');
+  await expect(sh.locator('.ctool', { hasText: 'ステマネ' })).toContainText('司会原稿・進行表');
+  await expect(sh.locator('.ctool', { hasText: 'ステマネ' })).toContainText('定演の司会原稿　曲 2');
+  await expect(sh.locator('.ctool', { hasText: 'ステマネ' }).locator('a')).toHaveText('開く');
   await expect(sh.locator('.ctool', { hasText: 'コウバン' }).locator('a')).toHaveText('開く');
   await expect(sh.locator('.ctool', { hasText: '本番逆算' }).locator('a')).toHaveText('作る');
   await expect(sh.locator('.ctool', { hasText: '本番逆算' }).locator('a')).toHaveAttribute('href', '../gyakusan/#concert=c1');
