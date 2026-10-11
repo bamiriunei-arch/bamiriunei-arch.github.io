@@ -1013,7 +1013,15 @@ const GKY = (() => {
     const m = location.hash.match(/^#concert=([A-Za-z0-9_-]+)$/);
     if (!m) return null;
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
-    return concertOf(m[1]);
+    const c = concertOf(m[1]);
+    if (!c) toast('楽屋の本番が見つかりませんでした（消されたのかもしれません）');
+    return c;
+  }
+  /* 楽屋の本番から開いたとき（ページを開いたときと、開いたままアドレスが変わったとき）に fn(本番) を呼ぶ */
+  function watchConcertUrl(fn) {
+    const go = () => { const c = concertFromUrl(); if (c) fn(c); };
+    window.addEventListener('hashchange', go);
+    go();
   }
   const concertUrl = (slug, id) => linkTo(slug) + '#concert=' + encodeURIComponent(id);
   /* 楽屋の本番から開いたときの動き：その本番の記録があれば開き、なければ作るか聞く
@@ -1580,10 +1588,11 @@ const GKY = (() => {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + m * 2} ${n + m * 2}" shape-rendering="crispEdges" width="${size}" height="${size}" role="img" aria-label="QRコード"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
   }
   /* リンクを配る画面：リンク（コピー・送る）と、入りきればQRコード */
-  function shareSheet({ title = '見るだけのリンク', url, note = '' }) {
+  /* keep：開いた端末に入るリンク（部員用の設定・合奏ノートの提出など）のとき true */
+  function shareSheet({ title = '見るだけのリンク', url, note = '', keep = false }) {
     let qr = '';
     if (url.length <= 2300) { try { qr = qrSVG(url, 180); } catch (e) { qr = ''; } }
-    return sheet({ title, content: `${note ? `<p class="lead">${note}</p>` : ''}<div class="gky-share">${qr ? `<div class="qr">${qr}</div>` : ''}<div class="url"><textarea readonly aria-label="リンク">${esc(url)}</textarea><p class="note">${qr ? 'QRコードをスマホのカメラで読むと開けます。' : '中身が多いので、QRコードには入りきりません。リンクをコピーして、LINEなどで送ってください。'}受け取った人の端末には保存されません（見るだけ）。</p></div></div>`,
+    return sheet({ title, content: `${note ? `<p class="lead">${note}</p>` : ''}<div class="gky-share">${qr ? `<div class="qr">${qr}</div>` : ''}<div class="url"><textarea readonly aria-label="リンク">${esc(url)}</textarea><p class="note">${qr ? 'QRコードをスマホのカメラで読むと開けます。' : '中身が多いので、QRコードには入りきりません。リンクをコピーして、LINEなどで送ってください。'}${keep ? '開いた端末で「入れる」を押すと、その端末に入ります。' : '受け取った人の端末には保存されません（見るだけ）。'}</p></div></div>`,
       actions: [...(navigator.share ? [{ label: '送る', keep: true, onClick: () => { navigator.share({ title, url }).catch(() => {}); return false; } }] : []), { label: '閉じる' }, { label: 'リンクをコピー', primary: true, keep: true, onClick: () => { copyText(url, 'リンクをコピーしました'); return false; } }] });
   }
   /* 見るだけのページ：上のタブとふだんの画面をかくし、受け取った中身だけを出す。中身を入れる要素を返す */
@@ -1667,7 +1676,7 @@ const GKY = (() => {
     store, usage, LIMIT, guard, pref, setPref, applyUI,
     SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, readPart,
     ORG_TYPES, GRADES, GRADE_ORDER, gradeRank, gradesOf, gradeLabel, orgType, words, isSchool, STATUS, statusName, setStatus, PLAYS, nextGrade, nextGradeOf, yearsLeft,
-    CONCERT_KINDS, normConcert, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
+    CONCERT_KINDS, normConcert, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, watchConcertUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
     role, isMember, memberCfg, normMemberCfg, MEMBER_TOOLS, applyRole, myName,
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,

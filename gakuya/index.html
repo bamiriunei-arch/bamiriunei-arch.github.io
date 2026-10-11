@@ -362,9 +362,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .flowc .row span:first-child{color:var(--muted)}
 .tn{display:inline-flex; align-items:center; gap:5px; margin:0 6px 4px 0; font-weight:700; font-size:12.5px; white-space:nowrap}
 .tn i{display:inline-block; width:16px; height:6px; transform:rotate(-8deg); background:var(--c)}
-.steps{margin:0; padding-left:1.3em; font-size:13px; line-height:1.8}
 .tbl td.c,.tbl th.c{text-align:center}
-.steps code,[data-panel="setup"] .note code,[data-panel="setup"] .lead code{font-family:var(--f-mono); font-size:12px; background:var(--surface-2); padding:1px 5px; border-radius:4px}
 .keys{font-family:var(--f-mono); font-size:12px}
 .profs{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
 .prof{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
@@ -372,6 +370,67 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .prof .t1{font-weight:700} .prof .t2{font-size:12px; color:var(--muted)}
 .promo .yr{font-family:var(--f-mono); font-size:22px; font-weight:600}
 .promo .arrow{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:2px 0 10px}
+/* 見かたの切りかえ（月ごと・年度ごと など） */
+.seg{display:inline-flex; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; flex:none}
+.seg button{min-height:34px; padding:0 12px; border:0; border-left:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:13px; cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--tape); color:var(--tape-ink); font-weight:700}
+.h3s{font-size:13px; margin:12px 0 6px}
+/* 本番 */
+.cmonth{margin:0 0 14px}
+.cmonth.none{margin:0 0 6px}
+.cmonth>h3{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin:0 0 6px}
+.cmonth.none>h3{opacity:.65}
+.cmonth .none-row{font-size:12.5px; color:var(--muted); padding:0 0 0 4px}
+.cyear{margin:0 0 12px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+.cyear>summary{cursor:pointer; font-weight:700; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; list-style:none}
+.cyear>summary::-webkit-details-marker{display:none}
+.cyear>summary::before{content:"▸"; color:var(--muted); font-size:12px}
+.cyear[open]>summary::before{content:"▾"}
+.cyear>summary small{font-weight:400; color:var(--muted); font-size:12px}
+.cyear .crows{margin-top:8px}
+.crow{display:grid; grid-template-columns:4.4em minmax(0,1fr) auto; gap:4px 12px; align-items:start; padding:9px 10px; margin-bottom:6px; background:var(--surface); border:1px solid var(--line); border-radius:8px; cursor:pointer}
+.cyear .crow{background:var(--surface-2)}
+.crow:hover{border-color:var(--line-strong)}
+.crow.past{opacity:.72}
+.crow.hid{border-style:dashed}
+.crow .d{font-family:var(--f-mono); font-weight:600; font-size:15px; line-height:1.2; text-align:center}
+.crow .d small{display:block; font-family:var(--f-ui); font-size:11px; font-weight:500; color:var(--muted)}
+.crow .t1{font-weight:700; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px}
+.crow .t1 .chip{height:20px; font-size:11px; padding:0 7px}
+.crow .t2{font-size:12px; color:var(--muted)}
+.crow .tls{display:flex; flex-wrap:wrap; gap:4px; margin-top:5px}
+.crow .cd{font-size:12px; font-weight:700; white-space:nowrap; color:var(--muted)}
+.crow .cd.soon{color:var(--tape)}
+.tl{display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; font-size:11.5px; border:1px solid var(--line); background:var(--surface); color:var(--ink); text-decoration:none; white-space:nowrap}
+.tl i{display:inline-block; width:12px; height:5px; transform:rotate(-8deg); background:var(--c)}
+.tl:hover{border-color:var(--line-strong)}
+.ctools{display:flex; flex-direction:column; gap:6px}
+.ctool{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+.ctool .t2{font-size:12px; color:var(--muted)}
+.found{margin:0 0 12px; background:var(--surface); border:1px dashed var(--line-strong); border-radius:10px; padding:10px 12px}
+.found>summary{cursor:pointer; font-weight:700; font-size:13.5px}
+.found .frow{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px}
+.found .frow:last-child{border-bottom:0}
+/* 部員：まとめて変える */
+.bulkbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0; padding:8px 10px; border-radius:var(--r); background:var(--tape-soft); border:1px solid var(--tape-line); font-size:13px}
+.bulkbar select,.bulkbar input{width:auto; min-height:32px; padding:3px 6px; font-size:13px}
+.mt td.sel,.mt th.sel{width:34px; text-align:center}
+.mt td.sel input,.mt th.sel input{width:18px; height:18px; accent-color:var(--tape)}
+.mt tr.picked{background:var(--tape-soft)}
+.mt tr.picked td{background:transparent}
+/* 代表者・顧問用と部員用 */
+.rtools{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:4px 12px}
+.rtools label{display:flex; align-items:flex-start; gap:6px; font-size:13px; padding:3px 0}
+.rtools label small{display:block; color:var(--muted); font-size:11.5px}
+.rtools input{margin-top:3px; width:16px; height:16px; accent-color:var(--tape); flex:none}
+.member-note{margin:0 0 14px}
+.member-note .msg{white-space:pre-wrap; margin-top:4px}
+/* アンケートのお願い（バミリと同じ） */
+.gky-survey{position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); max-width:360px; z-index:15; display:flex; flex-direction:column; gap:10px; padding:14px; background:var(--surface); color:var(--ink); border:1px solid var(--tape); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.gky-survey p{margin:0; font-size:13px; line-height:1.6}
+@media (max-width:520px){ .gky-survey{left:16px; right:16px; max-width:none} }
+@media (max-width:600px){ .crow{grid-template-columns:3.6em minmax(0,1fr)} .crow .act{grid-column:2} }
 </style>
 </head>
 <body>
@@ -382,28 +441,54 @@ a.gky-cchip:hover{border-color:var(--tape)}
   </header>
   <nav class="gky-tabs" id="tabs" role="tablist">
     <button data-tab="tools">ツール</button>
+    <button data-tab="concerts">本番<span class="count ok" id="cntC"></span></button>
     <button data-tab="members"><span id="wMember">部員</span><span class="count ok" id="cntM"></span></button>
     <button data-tab="org">団体・年度</button>
-    <button data-tab="links">つながり</button>
+    <button data-tab="links" data-staff>つながり</button>
     <button data-tab="backup">バックアップ<span class="count" id="cntBk"></span></button>
-    <button data-tab="setup" hidden>置き方</button>
   </nav>
   <main class="gky-main">
     <div id="viewerNote"></div>
 
     <section data-panel="tools" hidden>
       <div class="hello"><div><h1>楽屋</h1><p id="helloP">部員・曲・楽器のデータをここ（楽屋）に入れておくと、同じ場所に置いた全部のツールで使えます。データはこの端末のブラウザの中だけに保存され、どこにも送られません。</p></div><span class="org" id="orgName"></span></div>
-      <div id="typeAsk"></div>
+      <div id="memberNote"></div>
+      <div id="typeAsk" data-staff></div>
       <div id="bkRemind"></div>
-      <div id="firstBox"></div>
+      <div id="firstBox" data-staff></div>
+      <div id="nextBox"></div>
       <div id="toolGrid"></div>
+      <div class="sec fb-sec" id="fbBox">
+        <h2>ご意見・アンケート<small>Googleフォーム・1分・名前は不要</small></h2>
+        <p class="lead">楽屋シリーズを使ってみての感想、困ったこと、ほしい機能を教えてください。所属や使い方のアンケートも同じフォームです。答えるかどうかは自由で、答えなくてもすべての機能を使えます。</p>
+        <div class="btnrow"><a class="btn primary" id="fbGo" href="#" target="_blank" rel="noopener">ご意見・アンケートに答える</a></div>
+      </div>
+    </section>
+
+    <section data-panel="concerts" hidden>
+      <div class="sec">
+        <h2>本番<small id="cSum"></small></h2>
+        <p class="lead" id="cLead"></p>
+        <div class="btnrow" style="margin-bottom:10px">
+          <button class="btn primary" id="cAdd" data-staff>＋ 本番を足す</button>
+          <div class="seg" role="group" aria-label="見かた" id="cView"><button data-v="month">月ごと</button><button data-v="year">年度ごと</button></div>
+          <select id="cYear" aria-label="どの年度を出すか"></select>
+          <select id="cStart" aria-label="年度の区切り"><option value="4">4月はじまり（年度）</option><option value="1">1月はじまり（年）</option></select>
+        </div>
+        <div id="cFound" data-staff></div>
+        <div id="cList"></div>
+        <div class="btnrow" style="margin-top:12px">
+          <button class="btn" id="cPrint">一覧を印刷・PDF</button><button class="btn" id="cIcs">カレンダーに入れる（.ics）</button><button class="btn" id="cCsv">CSVで保存</button><button class="btn" id="cCopy">文でコピー</button><button class="btn" id="cShare" data-staff>見るだけのリンク</button>
+        </div>
+        <p class="note" data-staff>「部員に見せない」にした本番は、見るだけのリンクと部員用の設定リンクに入りません。カレンダー（.ics）は、iPhone・Googleカレンダーなどに入れられます。</p>
+      </div>
     </section>
 
     <section data-panel="members" hidden>
       <div class="sec">
         <h2><span id="mTitle">部員</span><small id="mSum"></small></h2>
         <p class="lead" id="mLead"></p>
-        <div class="btnrow" style="margin-bottom:10px"><button class="btn primary" id="mAdd">＋ 1人足す</button><button class="btn" id="mMany">まとめて足す</button><button class="btn" id="mCsv">CSVから読み込む</button><button class="btn" id="mCsvOut">CSVで保存</button><button class="btn" id="mTpl">見本のCSV</button></div>
+        <div class="btnrow" style="margin-bottom:10px" data-staff><button class="btn primary" id="mAdd">＋ 1人足す</button><button class="btn" id="mMany">まとめて足す</button><button class="btn" id="mCsv">CSVから読み込む</button><button class="btn" id="mCsvOut">CSVで保存</button><button class="btn" id="mTpl">見本のCSV</button></div>
         <div class="mbar">
           <input type="search" id="mQ" placeholder="名前・よみ・メモでさがす" aria-label="さがす">
           <select id="mFSt" aria-label="状態でしぼる"></select>
@@ -411,9 +496,11 @@ a.gky-cchip:hover{border-color:var(--tape)}
           <select id="mFGrade" aria-label="学年でしぼる"></select>
           <select id="mFRole" aria-label="役職でしぼる"></select>
           <select id="mSort" aria-label="並べ方"></select>
-          <label class="chk"><input type="checkbox" id="mStaff"> <span id="mStaffL">指導者メモを出す</span></label>
+          <label class="chk" data-staff><input type="checkbox" id="mStaff"> <span id="mStaffL">指導者メモを出す</span></label>
+          <button class="btn sm" id="mSelMode" aria-pressed="false" data-staff>えらんでまとめて変える</button>
         </div>
         <div class="cnts" id="mCnts"></div>
+        <div class="bulkbar" id="mBulk" hidden data-staff></div>
         <div class="tbl-wrap" style="margin-top:10px"><table class="tbl mt cards" id="mTable"></table></div>
         <p class="note" id="mNote"></p>
       </div>
@@ -422,7 +509,11 @@ a.gky-cchip:hover{border-color:var(--tape)}
     <section data-panel="org" hidden>
       <div class="gky-cols">
         <div>
-          <div class="sec">
+          <div class="sec" data-member>
+            <h2>この端末<small id="meOrg"></small></h2>
+            <div id="meBox"></div>
+          </div>
+          <div class="sec" data-staff>
             <h2>団体</h2>
             <h3 style="font-size:13px;margin:0 0 6px">団体の種類</h3>
             <div class="types" id="oTypes" role="group" aria-label="団体の種類"></div>
@@ -448,14 +539,25 @@ a.gky-cchip:hover{border-color:var(--tape)}
           </div>
         </div>
         <div>
-          <div class="sec promo">
+          <div class="sec" id="roleSec" data-staff>
+            <h2>代表者・顧問用と部員用<small>部員の端末に出すものを決める</small></h2>
+            <p class="lead" id="roleLead"></p>
+            <h3 class="h3s">部員の端末に出すツール</h3>
+            <div class="rtools" id="roleTools"></div>
+            <h3 class="h3s">部員の端末でできること</h3>
+            <div class="rtools" id="roleFeats"></div>
+            <label class="fld" style="margin-top:10px"><span>部員へのお知らせ（楽屋のいちばん上に出ます）</span><textarea id="roleMsg" style="min-height:64px" placeholder="例：合奏ノートは、合奏のあとに書いて提出してください。"></textarea></label>
+            <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="joinLink">部員用の設定リンクを作る</button></div>
+            <p class="note">リンク（QRコード）を開いた端末の楽屋に、団体の名前・本番の予定・決めた設定が入り、部員用の画面になります。本番や設定を変えたら、リンクを作り直して配り直してください。見せる画面を分けるためのしくみで、パスワードのような守りではありません（部員の端末から、この端末のデータが見えることはありません）。</p>
+          </div>
+          <div class="sec promo" data-staff>
             <h2>年度がかわったら（進級）</h2>
             <div id="promote"></div>
           </div>
-          <div class="sec">
+          <div class="sec" data-staff>
             <h2>引退させる</h2>
             <p class="lead" id="rtLead"></p>
-            <div class="btnrow"><select id="rtGrade" aria-label="引退させる学年"></select><button class="btn" id="doRetire">この学年を引退にする</button><button class="btn ghost" id="undoRetire">引退の人を在籍にもどす</button></div>
+            <div class="btnrow"><select id="rtGrade" aria-label="引退させる学年"></select><button class="btn" id="doSemi">この学年を仮引退にする</button><button class="btn" id="doRetire">この学年を引退にする</button><button class="btn ghost" id="undoRetire">引退・仮引退の人を在籍にもどす</button></div>
           </div>
         </div>
       </div>
@@ -476,22 +578,23 @@ a.gky-cchip:hover{border-color:var(--tape)}
             <div id="bkList"></div>
             <label class="chk" style="margin:8px 0"><input type="checkbox" id="bkPhotos" checked> 楽器台帳の写真も入れる</label>
             <div class="btnrow"><button class="btn primary" id="bkSave">バックアップを保存</button><button class="btn" id="bkLoad">バックアップから戻す</button></div>
-            <p class="note">合奏ノート・ドリルボードの録音・音源はバックアップに入りません（元のファイルを残しておいてください）。</p>
+            <p class="note">録音（テンポマップ・合奏ノート）と楽譜のPDF（楽譜ライブラリ）は、この端末の「ファイル置き場」にあり、このバックアップには入りません。楽譜ライブラリの「PDFをまとめて保存」、合奏ノートの「録音とコメントのファイル」で、別に保存できます。</p>
           </div>
           <div class="sec">
             <h2>保存している量</h2>
             <div id="usage"></div>
+            <div id="mediaUsage"></div>
           </div>
         </div>
         <div>
-          <div class="sec">
+          <div class="sec" data-staff>
             <h2>引き継ぎ<small>幹部・係・顧問の交代のときに</small></h2>
             <p class="lead">全部のツールのデータと、次の人へのメモを1つのファイルにまとめます。次の人は、自分の端末の楽屋で「バックアップから戻す」で開くと、そのまま続きから使えます。</p>
             <label class="fld"><span>次の人へのメモ（やりかけのこと・気をつけること・連絡先など）</span><textarea id="hoMemo" style="min-height:120px" placeholder="例：楽器運搬のトラックは〇〇楽器さん（毎年6月に予約）。&#10;楽譜のレンタルは12月に返す。"></textarea></label>
             <label class="chk" style="margin:8px 0"><input type="checkbox" id="hoStaff"> <span id="hoStaffL">指導者メモも入れる</span></label>
             <div class="btnrow"><button class="btn primary" id="hoSave">引き継ぎファイルを保存</button><button class="btn" id="hoPrint">引き継ぎのしおりを印刷</button></div>
           </div>
-          <div class="sec">
+          <div class="sec" data-staff>
             <h2>楽屋のデータだけ</h2>
             <p class="lead">部員・曲・楽器の楽屋データだけを保存・読み込みします。ほかの端末の楽屋に渡すときに使います。</p>
             <label class="chk" style="margin:0 0 8px"><input type="checkbox" id="orgStaff"> <span id="orgStaffL">指導者メモも入れる</span></label>
@@ -501,30 +604,11 @@ a.gky-cchip:hover{border-color:var(--tape)}
       </div>
     </section>
 
-    <section data-panel="setup" hidden>
-      <div class="gky-cols">
-        <div>
-          <div class="sec">
-            <h2>GitHub Pages に置く（はじめの1回）</h2>
-            <p class="lead">開発する人向けの手順です（アドレスに <code>?dev</code> をつけたときだけ出ます）。楽屋シリーズは、全部のツールを<b>1つのリポジトリ</b>に入れます。フォルダ1つがツール1つです。くわしくはリポジトリのいちばん上の <code>README.md</code> にあります。</p>
-            <ol class="steps">
-              <li>GitHub（bamiriunei-arch）で「New repository」を押し、名前を <code>bamiriunei-arch.github.io</code>（このとおり）にして、<b>Public</b> で作ります。</li>
-              <li>「uploading an existing file」を押し、配ったフォルダの中身を入れて「Commit changes」。1回に上げられるのは100ファイルまでなので、右の表のとおり分けます。</li>
-              <li>自動テストの設定 <code>.github/workflows/test.yml</code> は、「Add file」→「Create new file」で名前に <code>.github/workflows/test.yml</code> と入れ、中身を貼って作るのが確実です。</li>
-              <li>「Settings」→「Pages」で、Branch が <code>main</code>・フォルダが <code>/ (root)</code> になっているか確かめます。</li>
-              <li>数分すると <code>https://bamiriunei-arch.github.io/gakuya/</code> で楽屋が開けます。「Actions」タブで「自動テスト」に緑のチェック（✓）が付けば、正しく動いています。</li>
-            </ol>
-          </div>
-        </div>
-        <div>
-          <div class="sec">
-            <h2>フォルダと公開ページ</h2>
-            <div class="tbl-wrap"><table class="tbl" id="repoTable"></table></div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
+</div>
+<div class="gky-survey" id="survey" hidden role="region" aria-label="利用者アンケートのお願い">
+  <p><b>楽屋シリーズを使ってくれてありがとうございます</b><br>今後の改善のため、所属や使い方を教えてください（1分・任意・名前は不要）。</p>
+  <div class="btnrow"><a class="btn primary sm" id="svGo" href="#" target="_blank" rel="noopener">アンケートに答える</a><button class="btn sm" id="svLater">あとで</button><button class="btn sm ghost" id="svNever">今後表示しない</button></div>
 </div>
 
 <script>
@@ -1078,7 +1162,15 @@ const GKY = (() => {
     const m = location.hash.match(/^#concert=([A-Za-z0-9_-]+)$/);
     if (!m) return null;
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
-    return concertOf(m[1]);
+    const c = concertOf(m[1]);
+    if (!c) toast('楽屋の本番が見つかりませんでした（消されたのかもしれません）');
+    return c;
+  }
+  /* 楽屋の本番から開いたとき（ページを開いたときと、開いたままアドレスが変わったとき）に fn(本番) を呼ぶ */
+  function watchConcertUrl(fn) {
+    const go = () => { const c = concertFromUrl(); if (c) fn(c); };
+    window.addEventListener('hashchange', go);
+    go();
   }
   const concertUrl = (slug, id) => linkTo(slug) + '#concert=' + encodeURIComponent(id);
   /* 楽屋の本番から開いたときの動き：その本番の記録があれば開き、なければ作るか聞く
@@ -1645,10 +1737,11 @@ const GKY = (() => {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + m * 2} ${n + m * 2}" shape-rendering="crispEdges" width="${size}" height="${size}" role="img" aria-label="QRコード"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
   }
   /* リンクを配る画面：リンク（コピー・送る）と、入りきればQRコード */
-  function shareSheet({ title = '見るだけのリンク', url, note = '' }) {
+  /* keep：開いた端末に入るリンク（部員用の設定・合奏ノートの提出など）のとき true */
+  function shareSheet({ title = '見るだけのリンク', url, note = '', keep = false }) {
     let qr = '';
     if (url.length <= 2300) { try { qr = qrSVG(url, 180); } catch (e) { qr = ''; } }
-    return sheet({ title, content: `${note ? `<p class="lead">${note}</p>` : ''}<div class="gky-share">${qr ? `<div class="qr">${qr}</div>` : ''}<div class="url"><textarea readonly aria-label="リンク">${esc(url)}</textarea><p class="note">${qr ? 'QRコードをスマホのカメラで読むと開けます。' : '中身が多いので、QRコードには入りきりません。リンクをコピーして、LINEなどで送ってください。'}受け取った人の端末には保存されません（見るだけ）。</p></div></div>`,
+    return sheet({ title, content: `${note ? `<p class="lead">${note}</p>` : ''}<div class="gky-share">${qr ? `<div class="qr">${qr}</div>` : ''}<div class="url"><textarea readonly aria-label="リンク">${esc(url)}</textarea><p class="note">${qr ? 'QRコードをスマホのカメラで読むと開けます。' : '中身が多いので、QRコードには入りきりません。リンクをコピーして、LINEなどで送ってください。'}${keep ? '開いた端末で「入れる」を押すと、その端末に入ります。' : '受け取った人の端末には保存されません（見るだけ）。'}</p></div></div>`,
       actions: [...(navigator.share ? [{ label: '送る', keep: true, onClick: () => { navigator.share({ title, url }).catch(() => {}); return false; } }] : []), { label: '閉じる' }, { label: 'リンクをコピー', primary: true, keep: true, onClick: () => { copyText(url, 'リンクをコピーしました'); return false; } }] });
   }
   /* 見るだけのページ：上のタブとふだんの画面をかくし、受け取った中身だけを出す。中身を入れる要素を返す */
@@ -1732,7 +1825,7 @@ const GKY = (() => {
     store, usage, LIMIT, guard, pref, setPref, applyUI,
     SECTIONS, PARTS, PERC, partOf, baseOf, familyOf, partName, sectionOf, partOrder, readPart,
     ORG_TYPES, GRADES, GRADE_ORDER, gradeRank, gradesOf, gradeLabel, orgType, words, isSchool, STATUS, statusName, setStatus, PLAYS, nextGrade, nextGradeOf, yearsLeft,
-    CONCERT_KINDS, normConcert, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
+    CONCERT_KINDS, normConcert, concerts, concertOf, concertLabel, concertFor, saveConcert, ensureConcert, concertFromUrl, watchConcertUrl, concertUrl, openForConcert, recForConcert, concertField, wireConcertField, readConcertField, concertChip,
     role, isMember, memberCfg, normMemberCfg, MEMBER_TOOLS, applyRole, myName,
     media, bytes, zipMake, zipRead, crc32, shareFiles,
     readGrade, readStatus, readRole, roleHints, parseMemberLine, membersFromRows, previewMembers,
@@ -1750,8 +1843,19 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '4', APP_DATE = '2026-10-06';
+const APP_VERSION = '5', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '5', d: '2026-10-11', items: [
+    '「本番」のタブを足しました。演奏会・コンクール・行事を、月ごと・年度ごとに見られます。本番から、そのスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。印刷・カレンダー（.ics）・CSV・見るだけのリンクも',
+    'ほかのツールにある本番を見つけて、楽屋の本番の一覧に入れられるようにしました',
+    '代表者・顧問用と部員用を分けられるようにしました。部員の端末に出すツールとできることを団体ごとに決め、「部員用の設定リンク」（QRコード）で配れます',
+    'まとめて足すときに、先に楽器・学年・状態を選べるようにしました。足す前に確かめる表で、チェックした行をまとめてそろえられます',
+    '部員の表で「えらんでまとめて変える」：学年・楽器・状態・役職を何人分もまとめて変えられます',
+    '状態に「仮引退」を足しました（休部もあります）。学年ごとに仮引退にできます',
+    '置き方のタブをなくしました（手順はリポジトリの README にあります）',
+    'ご意見・アンケートのフォーム（バミリと同じ）を、ツールの一覧の下と、ときどき出るお願いに入れました',
+    '保存している量に、録音・楽譜のPDFの「ファイル置き場」の量も出すようにしました',
+  ] },
   { v: '4', d: '2026-10-06', items: [
     '団体の種類（中学校・高校・中高一貫・大学・一般・地域クラブ）を選べるようにしました。学年の選び方・進級・呼び方（部員／団員）が種類に合わせて変わります',
     '部員に「状態」（在籍・休部・引退・エキストラ・賛助・卒業）、役職、入団した年、指導者メモを足しました',
@@ -1771,7 +1875,6 @@ const CHANGELOG = [
   { v: '1', d: '2026-10-04', items: ['はじめての版：ツールの一覧、部員（CSV・進級）、団体と年度、つながりの説明、まとめてバックアップ、GitHub Pages への置き方'] },
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（GKY.FEEDBACK_URL・バミリと同じ）を使います
-const DEV = /[?&]dev\b/.test(location.search);
 
 /* ---------- ツールの一覧（楽屋シリーズ＋前からあるツール） ---------- */
 const TOOLS = [
@@ -1796,6 +1899,17 @@ const tn = slug => { const t = T(slug); return t ? `<span class="tn" style="--c:
 /* バックアップ・団体の切りかえで扱うデータ（ログインの記録・表示の好み・団体の切りかえの記録は入れかえない） */
 const PREFIX = ['gakuya.', 'kouban.', 'gakufu.', 'tempomap.', 'shikomi.', 'gakki.', 'gakkigime.', 'hannyu.', 'gassou.', 'gyakusan.', 'shukketsu.', 'kaikei.', 'bamiri.', 'drillboard.'];
 const NOT_DATA = new Set(['bamiri.auth', 'bamiri.survey', 'gakuya.ui', 'gakuya.profiles']);
+/* 楽屋の本番とつなぐツール：記録の一覧（recs）と、本番の札に出す一言（info） */
+const LINKS = [
+  { slug: 'gyakusan', what: '準備のスケジュール', recs: s => s && s.plans ? Object.values(s.plans).filter(Boolean) : [], info: r => { const t = r.tasks || []; return t.length ? `やること ${t.filter(x => x.done).length}/${t.length}` : ''; }, kind: r => ({ contest: 'contest', ensemble: 'contest', event: 'event', school: 'school', newcomer: 'school' })[r.kind] || 'concert' },
+  { slug: 'kouban', what: '香盤表', recs: s => s && s.projects ? Object.values(s.projects).filter(Boolean) : [], info: r => r.pieces && r.pieces.length ? `曲 ${r.pieces.length}` : '' },
+  { slug: 'gakufu', what: '曲目一覧', recs: s => s && !s.sample && Array.isArray(s.setlists) ? s.setlists.filter(Boolean) : [], info: r => r.ids && r.ids.length ? `曲 ${r.ids.length}` : '' },
+  { slug: 'shikomi', what: '音響・照明の資料', recs: s => s && s.events ? Object.values(s.events).filter(Boolean) : [], info: r => r.inputs && r.inputs.length ? `入力 ${r.inputs.length}` : '' },
+  { slug: 'hannyu', what: '積み込みリスト', recs: s => s && s.trips ? Object.values(s.trips).filter(Boolean).map(r => Object.assign({}, r, { venue: r.to && r.to !== '会場' ? r.to : '' })) : [], info: r => r.items && r.items.length ? `運ぶもの ${r.items.length}` : '' },
+  { slug: 'shukketsu', what: '出欠', recs: s => s && !s.sample && Array.isArray(s.events) ? s.events.filter(e => e && (e.kind === 'show' || e.concert)).map(e => Object.assign({}, e, { venue: e.place })) : [], info: (r, s) => { const n = Object.keys(((s && s.att) || {})[r.id] || {}).length; return n ? `出欠 ${n}人` : ''; } },
+  { slug: 'kaikei', what: '予算', recs: s => s && !s.sample && Array.isArray(s.budgets) ? s.budgets.filter(Boolean).map(b => Object.assign({}, b, { title: b.name })) : [], info: r => r.lines && r.lines.length ? `科目 ${r.lines.length}` : '' },
+];
+const loadStates = () => Object.fromEntries(LINKS.map(L => [L.slug, GKY.IN_VIEWER ? null : GKY.store.get(T(L.slug).key)]));
 const myKeys = () => GKY.store.keys().filter(k => PREFIX.some(p => k.startsWith(p)) && k !== 'bamiri.auth').sort();
 const isDataKey = k => PREFIX.some(p => k.startsWith(p)) && !NOT_DATA.has(k) && !k.startsWith('gakuya.profile.');
 
@@ -1805,17 +1919,24 @@ const showTab = GKY.tabs($('#tabs'), id => { tab = id; renderTab(); });
 const ty = () => GKY.orgType();
 const W = () => GKY.words(ty());
 function renderAll() {
-  const o = GKY.org(), w = GKY.words(o.org.type);
-  $('#orgTop').textContent = o.org.name ? o.org.name + (o.org.year ? '　' + o.org.year + '年度' : '') : '';
-  $('#wMember').textContent = w.member;
+  const o = GKY.org(), w = GKY.words(o.org.type), mem = GKY.isMember(), cfg = o.org.member;
+  GKY.applyRole();
+  $('#orgTop').textContent = o.org.name ? o.org.name + (o.org.year && !mem ? '　' + o.org.year + '年度' : '') + (mem ? `　${w.member}用` : '') : '';
+  $('#wMember').textContent = mem ? '名簿' : w.member;
+  // 部員用の端末：決めたものだけ出す
+  $('[data-tab="concerts"]').hidden = mem && !cfg.concerts;
+  $('[data-tab="members"]').hidden = mem && !cfg.roster;
+  if ((tab === 'concerts' && mem && !cfg.concerts) || (tab === 'members' && mem && !cfg.roster) || (tab === 'links' && mem)) { showTab('tools'); return; }
   const act = o.members.filter(m => m.status === 'active').length;
-  $('#cntM').textContent = act ? String(act) : '';
+  $('#cntM').textContent = act && !mem ? String(act) : '';
+  const up = o.concerts.filter(c => c.date && c.date >= GKY.ymd()).length;
+  $('#cntC').textContent = up ? String(up) : '';
   const d = bkDays(), need = hasData() && (d == null || d >= remindDays());
   $('#cntBk').textContent = need ? '!' : ''; $('#cntBk').title = need ? 'バックアップのお知らせ' : '';
   $('#viewerNote').innerHTML = GKY.IN_VIEWER ? '<div class="intro"><p>Claudeの画面の中では、ツールどうしがデータを共有できません（それぞれ別の場所として開くため）。部員・曲・楽器を全部のツールで使うには、公開ページ（bamiriunei-arch.github.io）に置いて開いてください。ここでは、各ツールをためしに開いたり、楽屋のデータをファイルに保存したりできます。</p></div>' : '';
   renderTab();
 }
-function renderTab() { ({ tools: renderTools, members: renderMembers, org: renderOrg, links: renderLinks, backup: renderBackup, setup: renderSetup })[tab](); }
+function renderTab() { ({ tools: renderTools, concerts: renderConcerts, members: renderMembers, org: renderOrg, links: renderLinks, backup: renderBackup })[tab](); }
 
 /* --- バックアップのお知らせ --- */
 const bkDays = () => { const t = +GKY.pref('lastBackup', 0); return t ? Math.floor((Date.now() - t) / 86400000) : null; };
@@ -1829,13 +1950,21 @@ function firstSteps(o) {
   return [
     { done: !!(o.org.type && o.org.name), t: '団体の種類と名前を入れる', s: '学年の選び方・進級・呼び方（部員・団員）が、団体の種類に合わせて変わります', b: '団体・年度へ', go: () => showTab('org') },
     { done: o.members.length > 0, t: `${w.member}を入れる`, s: '1行に1人で「まとめて足す」か、Excelの名簿（CSV）から読み込めます', b: w.member + 'へ', go: () => showTab('members') },
+    { done: o.concerts.length > 0, t: '「本番」に、今年の本番を入れる', s: '演奏会・コンクール・行事を入れておくと、ほかのツールで選べて、楽屋からまとめて開けます', b: '本番へ', go: () => showTab('concerts') },
     { done: !!(gf && !gf.sample && o.songs.some(s => s.parts.length)), t: '楽譜ライブラリで、例を消して自分の曲と編成を入れる', s: '編成（パート）を入れた曲が、コウバンの「楽屋の曲から」に出ます', b: '楽譜ライブラリ', slug: 'gakufu' },
     { done: !!(kb && kb.projects && Object.values(kb.projects).some(p => p && !p.sample)), t: 'コウバンで演奏会を作る', s: '「演奏会の設定」→「楽屋の部員で作る」。曲は「曲と編成」→「楽屋の曲から」', b: 'コウバン', slug: 'kouban' },
     { done: !!GKY.pref('lastBackup', 0), t: 'バックアップを保存する', s: 'データはこの端末の中だけにあります。ときどきファイルに残してください', b: 'バックアップへ', go: () => showTab('backup') },
   ];
 }
 function renderTools() {
-  const o = GKY.org(), w = GKY.words(o.org.type);
+  const o = GKY.org(), w = GKY.words(o.org.type), mem = GKY.isMember(), cfg = o.org.member;
+  $('#memberNote').innerHTML = mem ? `<div class="intro member-note"><span class="sample-flag">${esc(w.member)}用</span><div><p style="margin:0">この端末は${esc(o.org.name || '団体')}の${esc(w.member)}用です。${esc(w.staff)}・代表者が決めたツールだけを出しています${cfg.at ? `（${esc(cfg.at)}に受け取った設定）` : ''}。</p>${cfg.msg ? `<div class="msg"><b>お知らせ：</b>${esc(cfg.msg)}</div>` : ''}</div></div>` : '';
+  // 次の本番
+  const today = GKY.ymd(), nexts = mem && !cfg.concerts ? [] : o.concerts.filter(c => c.date && c.date >= today).slice(0, 2);
+  $('#nextBox').innerHTML = nexts.length ? `<div class="sec"><h2>次の本番<small><button class="btn sm ghost" id="goConcerts">本番の一覧へ</button></small></h2>${nexts.map(c => concertRow(c, mem ? null : loadStates())).join('')}</div>` : '';
+  const gc = $('#goConcerts'); if (gc) gc.onclick = () => showTab('concerts');
+  wireRows($('#nextBox'));
+  $('#fbGo').href = FEEDBACK_URL || GKY.FEEDBACK_URL;
   $('#orgName').innerHTML = o.org.name ? esc(o.org.name) : '<button class="btn sm" id="setOrg">団体の名前を入れる</button>';
   const so = $('#setOrg'); if (so) so.onclick = () => showTab('org');
   $('#helloP').textContent = `${w.member}・曲・楽器のデータをここ（楽屋）に入れておくと、同じ場所に置いた全部のツールで使えます。データはこの端末のブラウザの中だけに保存され、どこにも送られません。`;
@@ -1848,15 +1977,17 @@ function renderTools() {
   const bn = $('#bkNow'); if (bn) bn.onclick = () => backupSave();
   // はじめにやること
   const fs = firstSteps(o), n = fs.filter(x => x.done).length;
-  $('#firstBox').innerHTML = GKY.IN_VIEWER || GKY.pref('firstHide', false) || n === fs.length ? '' : `<div class="sec"><h2>はじめにやること<small>${n} / ${fs.length}</small><span style="flex:1"></span><button class="btn sm ghost" id="firstHide">もう出さない</button></h2><div class="firsts">${fs.map((x, i) => `<div class="first${x.done ? ' done' : ''}"><span class="ck" aria-label="${x.done ? 'すんだ' : 'まだ'}">✓</span><div><div class="t">${i + 1}. ${esc(x.t)}</div><div class="s">${esc(x.s)}</div></div>${x.slug ? `<a class="btn sm" href="${esc(urlOf(x.slug))}" target="${GKY.targetOf(x.slug)}">${esc(x.b)}</a>` : `<button class="btn sm" data-first="${i}">${esc(x.b)}</button>`}</div>`).join('')}</div></div>`;
+  $('#firstBox').innerHTML = GKY.IN_VIEWER || mem || GKY.pref('firstHide', false) || n === fs.length ? '' : `<div class="sec"><h2>はじめにやること<small>${n} / ${fs.length}</small><span style="flex:1"></span><button class="btn sm ghost" id="firstHide">もう出さない</button></h2><div class="firsts">${fs.map((x, i) => `<div class="first${x.done ? ' done' : ''}"><span class="ck" aria-label="${x.done ? 'すんだ' : 'まだ'}">✓</span><div><div class="t">${i + 1}. ${esc(x.t)}</div><div class="s">${esc(x.s)}</div></div>${x.slug ? `<a class="btn sm" href="${esc(urlOf(x.slug))}" target="${GKY.targetOf(x.slug)}">${esc(x.b)}</a>` : `<button class="btn sm" data-first="${i}">${esc(x.b)}</button>`}</div>`).join('')}</div></div>`;
   $$('[data-first]').forEach(b => b.onclick = () => fs[+b.dataset.first].go());
   const fh = $('#firstHide'); if (fh) fh.onclick = () => { GKY.setPref('firstHide', true); renderTools(); };
-  // ツールの一覧
-  const phases = [...new Set(TOOLS.map(t => t.phase))];
+  // ツールの一覧（部員用の端末では、決めたツールだけ）
+  const list = mem ? TOOLS.filter(t => cfg.tools.includes(t.slug)) : TOOLS;
+  const phases = [...new Set(list.map(t => t.phase))];
   const sOf = t => !GKY.IN_VIEWER && t.key ? GKY.store.get(t.key) : null;
   // ホーム画面のアプリで開いたときは、前に開いていたツールへの近道
   const last = GKY.STANDALONE ? T(GKY.pref('lastTool', '')) : null;
-  $('#toolGrid').innerHTML = (last ? `<div class="btnrow" style="margin-bottom:10px"><span class="muted" style="font-size:13px">つづきから</span><a class="btn sm primary" href="${esc(urlOf(last.slug))}" id="lastTool">${esc(last.name)}を開く</a></div>` : '') + `<div class="sums"><span class="sum">${esc(w.member)} <b>${o.members.filter(m => m.status === 'active').length}</b>人</span><span class="sum">曲 <b>${o.songs.length}</b>曲</span><span class="sum">楽器 <b>${o.instruments.length}</b>台</span></div>` + phases.map(ph => `<div class="phase"><h2>${esc(ph)}</h2><div class="tools">${TOOLS.filter(t => t.phase === ph).map(t => {
+  const lastOk = last && (!mem || cfg.tools.includes(last.slug));
+  $('#toolGrid').innerHTML = (lastOk ? `<div class="btnrow" style="margin-bottom:10px"><span class="muted" style="font-size:13px">つづきから</span><a class="btn sm primary" href="${esc(urlOf(last.slug))}" id="lastTool">${esc(last.name)}を開く</a></div>` : '') + (mem ? (list.length ? '' : `<div class="empty"><b>${esc(w.member)}の端末で使うツールは、まだ決まっていません</b>${esc(w.staff)}・代表者に聞いてください。</div>`) : `<div class="sums"><span class="sum">${esc(w.member)} <b>${o.members.filter(m => m.status === 'active').length}</b>人</span><span class="sum">本番 <b>${o.concerts.length}</b></span><span class="sum">曲 <b>${o.songs.length}</b>曲</span><span class="sum">楽器 <b>${o.instruments.length}</b>台</span></div>`) + phases.map(ph => `<div class="phase"><h2>${esc(ph)}</h2><div class="tools">${list.filter(t => t.phase === ph).map(t => {
     const s = sOf(t), cnt = t.count ? t.count(s) : '', sample = s && s.sample;
     const chip = t.viewer ? '<span class="chip">Claudeの画面で開きます</span>' : cnt ? `<span class="chip ${sample ? 'warn' : 'ok'}">${esc(cnt)}${sample ? '（例）' : ''}</span>` : GKY.IN_VIEWER ? '' : '<span class="chip">まだ使っていません</span>';
     return `<a class="tool" href="${esc(urlOf(t.slug))}" target="${GKY.targetOf(t.slug)}" style="--c:${t.color}" data-slug="${esc(t.slug)}"><span class="tp"><i></i><b>${esc(t.name)}</b></span><p>${esc(t.desc)}</p><span class="st">${chip}</span></a>`;
@@ -1873,6 +2004,257 @@ function wireTypes(root) {
   });
 }
 
+/* --- 本番 --- */
+let cy = null;   // 月ごとに出す年度
+const cStart = () => +GKY.pref('cStart', 4) === 1 ? 1 : 4;
+const fyOf = (d, st = cStart()) => { const x = GKY.parseYmd(d); return !x ? null : x.getMonth() + 1 >= st ? x.getFullYear() : x.getFullYear() - 1; };
+const yLabel = (y, st = cStart()) => st === 1 ? `${y}年` : `${y}年度`;
+const ySpan = (y, st = cStart()) => st === 1 ? `${y}年1月〜12月` : `${y}年4月〜${y + 1}年3月`;
+const kindCnt = xs => Object.entries(GKY.CONCERT_KINDS).map(([k, v]) => [v, xs.filter(c => c.kind === k).length]).filter(x => x[1]).map(([v, n]) => `${v}${n}`).join('・');
+/* 本番の1行。states があれば、つないだツールの札も出す */
+function concertRow(c, states) {
+  const today = GKY.ymd(), d = GKY.parseYmd(c.date), past = c.date && c.date < today, left = c.date ? GKY.daysBetween(today, c.date) : null;
+  const tl = states ? LINKS.map(L => ({ L, r: GKY.recForConcert(L.recs(states[L.slug]), c) })).filter(x => x.r) : [];
+  return `<div class="crow${past ? ' past' : ''}${c.hide ? ' hid' : ''}" data-c="${esc(c.id)}" tabindex="0" role="button" aria-label="${esc(GKY.concertLabel(c))}">
+    <div class="d">${d ? `${d.getMonth() + 1}/${d.getDate()}<small>${GKY.WD[d.getDay()]}${d.getFullYear() !== new Date().getFullYear() ? '・' + d.getFullYear() : ''}</small>` : '<small>日付は<br>まだ</small>'}</div>
+    <div style="min-width:0"><div class="t1">${esc(c.title)}<span class="chip">${esc(GKY.CONCERT_KINDS[c.kind])}</span>${c.hide ? '<span class="chip warn" data-staff>部員に見せない</span>' : ''}</div>
+      ${c.start || c.venue || c.note ? `<div class="t2">${esc([c.start && c.start + '〜', c.venue, c.note.split('\n')[0]].filter(Boolean).join('　'))}</div>` : ''}
+      ${tl.length ? `<div class="tls">${tl.map(x => { const t = T(x.L.slug); return `<a class="tl" href="${esc(GKY.concertUrl(x.L.slug, c.id))}" target="${GKY.targetOf(x.L.slug)}" style="--c:${t.color}" data-stop title="${esc(t.name)}：${esc(x.r.title || '')}"><i></i>${esc(t.name)}</a>`; }).join('')}</div>` : ''}</div>
+    <div class="act">${left != null && left >= 0 ? `<span class="cd${left <= 14 ? ' soon' : ''}">${left === 0 ? '今日' : 'あと' + left + '日'}</span>` : ''}</div>
+  </div>`;
+}
+function wireRows(root) {
+  $$('.crow', root).forEach(r => {
+    r.onclick = e => { if (e.target.closest('[data-stop]')) return; concertSheet(r.dataset.c); };
+    r.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); concertSheet(r.dataset.c); } };
+  });
+}
+/* ほかのツールにあって、楽屋の本番の一覧にない本番（日付ごとにまとめる） */
+function foundConcerts(states) {
+  const cs = GKY.org().concerts, by = new Map();
+  LINKS.forEach(L => L.recs(states[L.slug]).forEach(r => {
+    if (!r || r.sample || !r.date || /^(（例）|\(例\))/.test(norm(r.title || ''))) return;
+    if (GKY.concertFor(r, cs)) return;
+    const x = by.get(r.date) || { date: r.date, title: '', venue: '', kind: '', tools: [] };
+    const t = norm(r.title || ''); if (t.length > x.title.length) x.title = t;
+    if (!x.venue && r.venue) x.venue = norm(r.venue);
+    if (!x.kind && L.kind) x.kind = L.kind(r);
+    if (!x.tools.includes(L.slug)) x.tools.push(L.slug);
+    by.set(r.date, x);
+  }));
+  return [...by.values()].map(x => Object.assign(x, { title: x.title || '本番', kind: x.kind || 'concert' })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function renderConcerts() {
+  const o = GKY.org(), mem = GKY.isMember(), w = GKY.words(o.org.type), st = cStart(), view = GKY.pref('cView', 'month') === 'year' ? 'year' : 'month', today = GKY.ymd(), cur = fyOf(today);
+  const cs = mem ? o.concerts.filter(c => !c.hide) : o.concerts, states = mem ? null : loadStates();
+  $('#cLead').textContent = mem ? `${o.org.name || '団体'}の本番の予定です（${w.staff}・代表者から受け取ったもの）。押すと、くわしく見られます。`
+    : '演奏会・コンクール・行事などの本番を、ここにまとめて入れておきます。本番逆算・コウバン・搬入出リスト・仕込み図・楽譜ライブラリ（曲目一覧）・出欠・会計で「楽屋の本番」を選ぶと、ここからその本番の記録を開けます。本番を押すと、ツールごとの記録を開いたり作ったりできます。';
+  const years = [...new Set(cs.map(c => fyOf(c.date)).filter(y => y != null).concat([cur]))].sort((a, b) => b - a);
+  if (cy == null || !years.includes(cy)) cy = cur;
+  $('#cYear').innerHTML = years.map(y => `<option value="${y}"${y === cy ? ' selected' : ''}>${esc(yLabel(y))}${y === cur ? '（いま）' : ''}</option>`).join('');
+  $('#cYear').hidden = view === 'year';
+  $('#cStart').value = String(st);
+  $$('#cView [data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === view)));
+  const up = cs.filter(c => c.date && c.date >= today).length;
+  $('#cSum').textContent = cs.length ? `全部で${cs.length}・これから${up}` : '';
+  let html = '';
+  if (!cs.length) html = `<div class="empty"><b>まだ本番がありません</b>${mem ? '' : '「＋ 本番を足す」から、演奏会・コンクール・行事を入れてください。'}</div>`;
+  else if (view === 'month') {
+    const und = cs.filter(c => !c.date);
+    if (und.length && cy === cur) html += `<div class="cmonth"><h3><span class="tape">日付はまだ</span></h3>${und.map(c => concertRow(c, states)).join('')}</div>`;
+    for (let i = 0; i < 12; i++) {
+      const m = (st - 1 + i) % 12 + 1, y = st === 1 || m >= st ? cy : cy + 1, ym = `${y}-${String(m).padStart(2, '0')}`;
+      const xs = cs.filter(c => c.date && c.date.slice(0, 7) === ym);
+      html += `<div class="cmonth${xs.length ? '' : ' none'}"><h3><span class="tape">${m}月</span>${y}年${xs.length ? '' : '<span class="none-row">本番なし</span>'}</h3>${xs.map(c => concertRow(c, states)).join('')}</div>`;
+    }
+  } else {
+    html = years.map(y => {
+      const xs = cs.filter(c => c.date && fyOf(c.date) === y);
+      if (!xs.length && y !== cur) return '';
+      return `<details class="cyear"${y >= cur ? ' open' : ''}><summary>${esc(yLabel(y))}<small>${esc(ySpan(y))}　本番 ${xs.length}${xs.length ? '（' + esc(kindCnt(xs)) + '）' : ''}</small></summary><div class="crows">${xs.length ? xs.map(c => concertRow(c, states)).join('') : '<p class="muted" style="font-size:13px;margin:0">本番はありません。</p>'}</div></details>`;
+    }).join('') + (cs.some(c => !c.date) ? `<details class="cyear" open><summary>日付がまだの本番</summary><div class="crows">${cs.filter(c => !c.date).map(c => concertRow(c, states)).join('')}</div></details>` : '');
+  }
+  $('#cList').innerHTML = html;
+  wireRows($('#cList'));
+  // ほかのツールで見つけた本番
+  const fs = mem ? [] : foundConcerts(states);
+  $('#cFound').innerHTML = fs.length ? `<details class="found"${o.concerts.length ? '' : ' open'}><summary>ほかのツールで見つけた本番（${fs.length}）</summary><p class="note" style="margin:6px 0">ほかのツールにある本番のうち、楽屋の本番の一覧にまだないものです。入れると、楽屋からそのツールの記録を開けるようになります（同じ日付の記録が、その本番のものになります）。</p>${fs.map((f, i) => `<div class="frow"><div><b>${esc(GKY.jpDate(f.date))}</b>　${esc(f.title)}<div style="margin-top:2px">${f.tools.map(tn).join('')}</div></div><button class="btn sm" data-found="${i}">入れる</button></div>`).join('')}${fs.length > 1 ? '<div class="btnrow" style="margin-top:8px"><button class="btn sm primary" id="foundAll">全部入れる</button></div>' : ''}</details>` : '';
+  const addFound = xs => { const before = GKY.org().concerts; xs.forEach(f => GKY.ensureConcert({ title: f.title, date: f.date, venue: f.venue, kind: f.kind })); renderAll(); toast(`${xs.length}つの本番を入れました`, '元に戻す', () => { GKY.saveOrg('concerts', before); renderAll(); }); };
+  $$('[data-found]').forEach(b => b.onclick = () => addFound([fs[+b.dataset.found]]));
+  const fa = $('#foundAll'); if (fa) fa.onclick = () => addFound(fs);
+}
+$$('#cView [data-v]').forEach(b => b.onclick = () => { GKY.setPref('cView', b.dataset.v); renderConcerts(); });
+$('#cYear').onchange = e => { cy = +e.target.value; renderConcerts(); };
+$('#cStart').onchange = e => { GKY.setPref('cStart', +e.target.value); cy = null; renderConcerts(); };
+$('#cAdd').onclick = () => editConcert(null);
+/* 本番を押したとき：くわしく見る・ツールごとの記録を開く／作る */
+function concertSheet(id) {
+  const c = GKY.concertOf(id); if (!c) return;
+  const mem = GKY.isMember(), states = mem ? null : loadStates(), today = GKY.ymd(), left = c.date ? GKY.daysBetween(today, c.date) : null;
+  const rows = mem ? '' : LINKS.map(L => { const s = states[L.slug], r = GKY.recForConcert(L.recs(s), c), t = T(L.slug), info = r ? L.info(r, s) : ''; return `<div class="ctool"><div><span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span><span class="muted" style="font-size:12.5px">${esc(L.what)}</span><div class="t2">${r ? esc((r.title || '') + (info ? '　' + info : '')) : 'まだありません'}</div></div><a class="btn sm${r ? ' primary' : ''}" href="${esc(GKY.concertUrl(L.slug, c.id))}" target="${GKY.targetOf(L.slug)}">${r ? '開く' : '作る'}</a></div>`; }).join('');
+  const sh = sheet({ title: c.title, content: `<p style="margin:0 0 4px"><b>${esc(c.date ? GKY.jpDate(c.date) : '日付はまだ')}</b>${c.start ? '　' + esc(c.start) + '〜' : ''}${left != null && left >= 0 ? `　<span class="chip${left <= 14 ? ' warn' : ''}">${left === 0 ? '今日' : 'あと' + left + '日'}</span>` : ''}</p>
+    <p class="muted" style="margin:0 0 8px">${esc([GKY.CONCERT_KINDS[c.kind], c.venue].filter(Boolean).join('　'))}${c.hide && !mem ? '　<span class="chip warn">部員に見せない</span>' : ''}</p>
+    ${c.note ? `<p style="white-space:pre-wrap;margin:0 0 8px">${esc(c.note)}</p>` : ''}
+    ${rows ? `<h3 class="h3s">ツールごとの記録</h3><div class="ctools">${rows}</div><p class="note">「作る」を押すと、そのツールが開いて、この本番の名前と日付で作れます。同じ日付の記録は、自動でこの本番のものになります。</p>` : ''}`,
+    actions: mem ? [{ label: '閉じる', primary: true }] : [{ label: '直す', left: true, onClick: () => { setTimeout(() => editConcert(c.id), 0); } }, { label: '閉じる', primary: true }] });
+  $$('a.btn', sh.body).forEach(a => a.addEventListener('click', () => setTimeout(sh.close, 50)));
+}
+function editConcert(id, preset = {}) {
+  const c = id ? GKY.concertOf(id) : GKY.normConcert(Object.assign({ kind: 'concert' }, preset));
+  if (!c) return;
+  const sh = sheet({ title: id ? '本番を直す' : '本番を足す', content: `<div class="grid">
+      <label class="fld wide"><span>名前</span><input type="text" id="ceT" value="${esc(id || preset.title ? c.title : '')}" placeholder="例：第13回 定期演奏会・吹奏楽コンクール地区大会・文化祭"></label>
+      <label class="fld"><span>日付</span><input type="date" id="ceD" value="${esc(c.date)}"></label>
+      <label class="fld"><span>開演（はじまり）</span><input type="time" id="ceS" value="${esc(c.start)}"></label>
+      <label class="fld"><span>種類</span><select id="ceK">${Object.entries(GKY.CONCERT_KINDS).map(([k, v]) => `<option value="${k}"${k === c.kind ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+      <label class="fld wide"><span>会場</span><input type="text" id="ceV" value="${esc(c.venue)}" placeholder="例：市民会館 大ホール"></label>
+      <label class="fld wide"><span>メモ</span><textarea id="ceN" style="min-height:60px" placeholder="例：集合 11:00 楽屋口。出演順は3番目">${esc(c.note)}</textarea></label>
+    </div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="ceH"${c.hide ? ' checked' : ''}> ${esc(W().member)}に見せない（見るだけのリンク・${esc(W().member)}用の設定リンクに入れない）</label>
+    ${id ? '<div class="btnrow" style="margin-top:12px"><span style="flex:1"></span><button class="btn danger sm" id="ceDel">この本番を消す</button></div>' : ''}`,
+    actions: [{ label: 'やめる' }, { label: id ? '直す' : '足す', primary: true, onClick: body => {
+      const t = norm($('#ceT', body).value);
+      if (!t) { $('#ceT', body).classList.add('bad'); toast('本番の名前を入れてください'); return false; }
+      const before = GKY.org().concerts;
+      const n = GKY.saveConcert(Object.assign({}, c, { title: t, date: $('#ceD', body).value, start: $('#ceS', body).value, kind: $('#ceK', body).value, venue: $('#ceV', body).value, note: $('#ceN', body).value, hide: $('#ceH', body).checked }));
+      if (!n) { toast('保存できませんでした（容量がいっぱいかもしれません）'); return false; }
+      if (n.date) cy = fyOf(n.date);
+      renderAll(); toast(id ? '本番を直しました' : `「${n.title}」を足しました`, '元に戻す', () => { GKY.saveOrg('concerts', before); renderAll(); });
+    } }] });
+  const del = $('#ceDel', sh.body);
+  if (del) GKY.arm(del, () => { const before = GKY.org().concerts; GKY.saveOrg('concerts', before.filter(x => x.id !== id)); sh.close(); renderAll(); toast('本番を消しました（ツールの記録は残っています）', '元に戻す', () => { GKY.saveOrg('concerts', before); renderAll(); }); }, 'もう一度押すと消します');
+}
+/* 印刷・カレンダー・CSV・文 に使う本番（月ごと：選んだ年度、年度ごと：全部） */
+function concertsForOut() {
+  const o = GKY.org(), cs = GKY.isMember() ? o.concerts.filter(c => !c.hide) : o.concerts, year = GKY.pref('cView', 'month') === 'year' ? null : (cy == null ? fyOf(GKY.ymd()) : cy);
+  return { year, xs: year == null ? cs : cs.filter(c => c.date && fyOf(c.date) === year) };
+}
+$('#cPrint').onclick = () => {
+  const { year, xs } = concertsForOut(), o = GKY.org();
+  if (!xs.length) { toast('印刷する本番がありません'); return; }
+  const title = year == null ? '本番の一覧' : `${yLabel(year)}の本番`;
+  const d = GKY.doc({ title, sub: [o.org.name, year == null ? '' : ySpan(year)].filter(Boolean).join('　'), foot: o.org.name, file: title });
+  const groups = year == null ? [...new Set(xs.map(c => fyOf(c.date)))].map(y => [y, xs.filter(c => fyOf(c.date) === y)]) : [[year, xs]];
+  groups.forEach(([y, ys]) => {
+    if (year == null) d.block(`<h3>${esc(y == null ? '日付がまだ' : yLabel(y))}</h3>`, { keep: true });
+    d.table({ cols: [{ h: '日付', w: '18%' }, { h: '開演', w: '8%', cls: 'c' }, { h: '本番', w: '30%' }, { h: '種類', w: '14%' }, { h: '会場', w: '18%' }, { h: 'メモ', w: '12%' }],
+      rows: ys.map(c => [c.date ? esc(GKY.jpDate(c.date)) : 'まだ', esc(c.start), `<b>${esc(c.title)}</b>`, esc(GKY.CONCERT_KINDS[c.kind]), esc(c.venue), esc(c.note.split('\n')[0])]) });
+  });
+  d.show();
+};
+/* カレンダー（.ics）：iPhone・Googleカレンダーなどに入れられる */
+function icsOf(xs, name) {
+  const e2 = s => String(s || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([,;])/g, '\\$1');
+  const enc = new TextEncoder();
+  const fold = line => { const out = []; let cur = '', n = 0; for (const ch of line) { const b = enc.encode(ch).length; if (n + b > 73) { out.push(cur); cur = ' '; n = 1; } cur += ch; n += b; } out.push(cur); return out.join('\r\n'); };
+  const pad = GKY.pad, stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const lt = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//gakuya//concerts//JA', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:' + e2(name)];
+  xs.filter(c => c.date).forEach(c => {
+    L.push('BEGIN:VEVENT', 'UID:' + c.id + '@gakuya.bamiriunei-arch.github.io', 'DTSTAMP:' + stamp);
+    if (c.start) { const [h, m] = c.start.split(':').map(Number), d0 = GKY.parseYmd(c.date); const s0 = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), h, m), e0 = new Date(s0.getTime() + 3 * 3600000); L.push('DTSTART:' + lt(s0), 'DTEND:' + lt(e0)); }
+    else L.push('DTSTART;VALUE=DATE:' + c.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + GKY.addDays(c.date, 1).replace(/-/g, ''));
+    L.push('SUMMARY:' + e2(c.title));
+    if (c.venue) L.push('LOCATION:' + e2(c.venue));
+    if (c.note) L.push('DESCRIPTION:' + e2(c.note));
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n') + '\r\n';
+}
+$('#cIcs').onclick = () => { const { year, xs } = concertsForOut(), o = GKY.org(); if (!xs.some(c => c.date)) { toast('日付の入った本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'の本番'), 'text/calendar'); };
+$('#cCsv').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}_${GKY.stamp()}.csv`, GKY.csv([['日付', '曜日', '開演', '本番', '種類', '会場', 'メモ', '部員に見せない'], ...xs.map(c => [c.date, c.date ? GKY.WD[GKY.parseYmd(c.date).getDay()] : '', c.start, c.title, GKY.CONCERT_KINDS[c.kind], c.venue, c.note, c.hide ? '○' : ''])]), 'text/csv'); };
+const concertText = (xs, head) => [head, ...xs.map(c => `${c.date ? GKY.mdDate(c.date) : '日付まだ'}${c.start ? ' ' + c.start + '〜' : ''}　${c.title}${c.venue ? '（' + c.venue + '）' : ''}`)].join('\n');
+$('#cCopy').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.copyText(concertText(xs, `【${year == null ? '本番の一覧' : yLabel(year) + 'の本番'}】${GKY.org().org.name ? '　' + GKY.org().org.name : ''}`), '本番の一覧をコピーしました'); };
+$('#cShare').onclick = async () => {
+  const o = GKY.org(), today = GKY.ymd(), xs = o.concerts.filter(c => !c.hide && (!c.date || c.date >= GKY.addDays(today, -7)));
+  if (!xs.length) { toast('配るこれからの本番がありません'); return; }
+  const p = { k: 'concerts', o: o.org.name, c: xs.map(c => [c.date, c.start, c.title, c.kind, c.venue, c.note]) };
+  try { GKY.shareSheet({ title: '見るだけのリンク（本番の予定）', url: await GKY.shareUrl('gakuya', p), note: `これからの本番 ${xs.length}件です（${esc(W().member)}に見せない本番はのぞきます）。受け取った人は、自分のカレンダーにも入れられます。` }); }
+  catch (e) { toast('リンクを作れませんでした'); }
+};
+/* 見るだけのリンク（本番の予定）を開いたとき */
+async function startViewer() {
+  let v = null;
+  try { v = await GKY.readShare(); } catch (e) { toast('リンクを開けませんでした：' + e.message, null, null, 6000); return false; }
+  if (!v || v.k !== 'concerts') return false;
+  const xs = (v.c || []).map((a, i) => GKY.normConcert({ id: 'v' + i, date: a[0], start: a[1], title: a[2], kind: a[3], venue: a[4], note: a[5] })).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+  const body = GKY.viewer({ title: '本番の予定', sub: v.o || '', note: 'このページは、送られてきた本番の予定を見るだけです。この端末には保存しません。「カレンダーに入れる」で、自分のカレンダーに入れられます。' });
+  const months = [...new Set(xs.map(c => c.date ? c.date.slice(0, 7) : ''))];
+  body.innerHTML = months.map(m => `<div class="cmonth"><h3><span class="tape">${m ? +m.slice(5) + '月' : '日付はまだ'}</span>${m ? m.slice(0, 4) + '年' : ''}</h3>${xs.filter(c => (c.date ? c.date.slice(0, 7) : '') === m).map(c => concertRow(c, null)).join('')}</div>`).join('') + '<div class="btnrow"><button class="btn primary" id="vwIcs">カレンダーに入れる（.ics）</button><button class="btn" id="vwCopy">文でコピー</button></div>';
+  $$('.crow', body).forEach(r => { r.style.cursor = 'default'; r.removeAttribute('role'); r.removeAttribute('tabindex'); });
+  $('#vwIcs', body).onclick = () => GKY.saveFile('本番の予定.ics', icsOf(xs, (v.o || '') + 'の本番'), 'text/calendar');
+  $('#vwCopy', body).onclick = () => GKY.copyText(concertText(xs, `【本番の予定】${v.o ? '　' + v.o : ''}`), 'コピーしました');
+  return true;
+}
+
+/* --- 部員用の設定リンク --- */
+$('#joinLink').onclick = async () => {
+  const o = GKY.org(), cfg = o.org.member, w = W();
+  if (!o.org.name) { toast('先に「団体」で団体の名前を入れてください'); return; }
+  if (!cfg.tools.length) { toast(`${w.member}の端末に出すツールを、1つ以上えらんでください`); return; }
+  const p = { k: 'join', v: 1, o: { name: o.org.name, type: o.org.type, year: o.org.year }, cfg: Object.assign({}, cfg, { at: GKY.ymd() }), at: GKY.ymd() };
+  if (cfg.concerts) p.c = o.concerts.filter(c => !c.hide).map(c => [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note]);
+  if (cfg.roster) p.m = o.members.filter(m => ['active', 'semi', 'extra'].includes(m.status)).map(m => [m.name, m.part, m.grade]);
+  if (cfg.songs) p.s = o.songs.map(x => [x.title, x.composer, x.arranger, x.dur, x.parts]);
+  try {
+    const url = GKY.pageUrl('gakuya') + '#join=' + await GKY.packShare(p);
+    GKY.shareSheet({ title: `${w.member}用の設定リンク`, url, keep: true, note: `このリンク（QRコード）を${esc(w.member)}のスマホで開いて「入れる」を押すと、その端末の楽屋が「${esc(o.org.name)}」の${esc(w.member)}用になります。入るもの：${[cfg.concerts ? `本番の予定（${p.c.length}件）` : '', cfg.roster ? `名簿（${p.m.length}人・名前と楽器と学年だけ）` : '', cfg.songs ? `曲の一覧（${p.s.length}曲）` : '', `使うツール（${cfg.tools.map(sl => esc((T(sl) || {}).name || sl)).join('・')}）`].filter(Boolean).join('、')}。` });
+  } catch (e) { toast('リンクを作れませんでした'); }
+};
+/* 部員用の設定リンクを開いたとき */
+async function receiveJoin() {
+  const m = location.hash.match(/^#join=([A-Za-z0-9_-]+)$/); if (!m) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+  let p; try { p = await GKY.unpackShare(m[1]); } catch (e) { toast('リンクを読めませんでした：' + e.message, null, null, 6000); return true; }
+  if (!p || p.k !== 'join' || !p.o || !p.o.name) { toast('部員用の設定リンクではありません'); return true; }
+  const cur = GKY.org(), same = cur.org.name === p.o.name, used = GKY.hasOrg() || hasData(), w2 = GKY.words(p.o.type || '');
+  const staffHere = !GKY.isMember() && same && (cur.members.length > 0 || hasData());
+  const def = !used ? 'member' : staffHere ? 'concerts' : same ? 'member' : 'switch';
+  const what = [p.c ? `本番の予定（${p.c.length}件）` : '', p.m ? `名簿（${p.m.length}人）` : '', p.s ? `曲の一覧（${p.s.length}曲）` : '', `使うツール：${(p.cfg && p.cfg.tools || []).map(sl => (T(sl) || {}).name || sl).join('・') || 'なし'}`].filter(Boolean);
+  const opt = (v, t, d) => `<label class="chk" style="align-items:flex-start;margin:4px 0"><input type="radio" name="jm" value="${v}"${v === def ? ' checked' : ''}><span><b>${t}</b><br><span class="muted" style="font-size:12.5px">${d}</span></span></label>`;
+  sheet({ title: `「${p.o.name}」の${w2.member}用の設定`, content: `<p style="margin:0 0 6px">${esc(p.at || '')}に作られた設定です。この端末の楽屋に入れると、${esc(w2.staff)}・代表者が決めたツールだけが出る「${esc(w2.member)}用」の画面になります。</p>
+    <ul style="margin:0 0 10px;padding-left:1.2em;font-size:13px">${what.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    ${used ? `${opt('member', `この端末を「${esc(p.o.name)}」の${esc(w2.member)}用にする`, same ? '本番の予定・名簿を新しくします。この端末のほかのデータ（合奏ノートなど）はそのままです' : `いまの楽屋（${esc(cur.org.name || '名前のない団体')}）の団体の名前・本番・名簿が入れかわります`)}
+      ${opt('switch', '新しい団体として入れる', `いまの楽屋（${esc(cur.org.name || '名前のない団体')}）のデータは、この端末にしまっておきます。「団体・年度」の「この端末の団体」でいつでも戻れます`)}
+      ${p.c ? opt('concerts', '本番の予定だけ受け取る', 'この端末の使い方（代表者・顧問用）と名簿は変えません') : ''}` : ''}
+    <p class="note">見せる画面を分けるためのしくみで、パスワードのような守りではありません。あとで「代表者・顧問用にもどす」こともできます。</p>`,
+    actions: [{ label: 'やめる' }, { label: '入れる', primary: true, onClick: body => { const r = $('[name="jm"]:checked', body); applyJoin(p, r ? r.value : 'member'); } }] });
+  return true;
+}
+function applyJoin(p, mode) {
+  const cs = (p.c || []).map(a => ({ id: a[0], date: a[1], start: a[2], title: a[3], kind: a[4], venue: a[5], note: a[6] }));
+  if (mode === 'concerts') {
+    const lst = GKY.org().concerts; let n = 0;
+    cs.forEach(c => { const i = lst.findIndex(x => x.id === c.id); if (i >= 0) { lst[i] = Object.assign({}, lst[i], c); n++; } else if (!lst.some(x => x.date === c.date && GKY.key(x.title) === GKY.key(c.title))) { lst.push(c); n++; } });
+    GKY.saveOrg('concerts', lst); renderAll(); toast(`本番の予定を${n}件入れました`); return;
+  }
+  if (mode === 'switch') { const pp = profiles(), id = uid('p'); pp.list.push({ id, name: p.o.name, type: p.o.type || '' }); GKY.store.set(PKEY, pp); switchTo(id); }
+  const before = GKY.org(), wasMember = before.org.role === 'member' || !before.members.length;
+  GKY.saveOrg('org', { name: p.o.name, type: p.o.type || '', year: p.o.year || null, role: 'member', member: Object.assign({}, p.cfg || {}, { at: p.at || GKY.ymd() }) });
+  if (p.c) GKY.saveOrg('concerts', cs); else if (wasMember) GKY.saveOrg('concerts', []);
+  if (p.m) GKY.saveOrg('members', p.m.map(a => ({ name: a[0], part: a[1], grade: a[2], status: 'active' }))); else if (wasMember) GKY.saveOrg('members', []);
+  if (p.s) GKY.saveOrg('songs', p.s.map(a => ({ title: a[0], composer: a[1], arranger: a[2], dur: a[3], parts: a[4] || [] })));
+  renderAll(); showTab('tools');
+  toast(`この端末を「${p.o.name}」の${GKY.words(p.o.type || '').member}用にしました`, null, null, 5000);
+}
+
+/* --- アンケートのお願い（バミリと同じフォーム。回数はこの端末にだけ記録し、どこにも送らない） --- */
+function survey() {
+  const box = $('#survey'), url = FEEDBACK_URL || GKY.FEEDBACK_URL;
+  $('#svGo').href = url;
+  if (GKY.IN_VIEWER || (GKY.TEST && !/[?&]survey\b/.test(location.search))) return;
+  const sv = Object.assign({ visits: 0, state: '', next: 3 }, GKY.pref('survey', {}) || {});
+  sv.visits++; GKY.setPref('survey', sv);
+  const save = () => GKY.setPref('survey', sv);
+  $('#svGo').onclick = () => { sv.state = 'done'; save(); box.hidden = true; toast('ありがとうございます！'); };
+  $('#fbGo').addEventListener('click', () => { if (sv.state !== 'never') { sv.state = 'done'; save(); box.hidden = true; } });
+  $('#svLater').onclick = () => { sv.next = sv.visits + 3; save(); box.hidden = true; };
+  $('#svNever').onclick = () => { sv.state = 'never'; save(); box.hidden = true; };
+  if (sv.state === 'done' || sv.state === 'never' || sv.visits < sv.next) return;
+  setTimeout(() => { if (!$('.gky-veil') && !$('#gkyView')) box.hidden = false; }, 1500);
+}
+
 /* --- 部員 --- */
 function saveMembers(list) { if (!GKY.saveOrg('members', list)) toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); renderAll(); }
 let mq = '', mfs = 'cur', mfp = '', mfg = '', mfr = '', msort = 'part';
@@ -1884,15 +2266,73 @@ function filteredMembers(o) {
   if (mfp) ms = ms.filter(m => (GKY.familyOf(m.part) || '') === (mfp === '-' ? '' : mfp));
   if (mfg) ms = ms.filter(m => (m.grade || '') === (mfg === '-' ? '' : mfg));
   if (mfr) ms = ms.filter(m => m.roles.includes(mfr));
-  const so = { active: 0, extra: 1, support: 2, leave: 3, retired: 4, gone: 5 };
+  const so = { active: 0, semi: 1, extra: 2, support: 3, leave: 4, retired: 5, gone: 6 };
   const byPart = (a, b) => GKY.partOrder(a.part || 'zz') - GKY.partOrder(b.part || 'zz');
   const byGrade = (a, b) => GKY.gradeRank(b.grade) - GKY.gradeRank(a.grade);
   const byKana = (a, b) => (a.kana || a.name).localeCompare(b.kana || b.name, 'ja');
   const cmp = { part: (a, b) => byPart(a, b) || byGrade(a, b) || byKana(a, b), grade: (a, b) => byGrade(a, b) || byPart(a, b) || byKana(a, b), kana: byKana, joined: (a, b) => (a.joined || 9999) - (b.joined || 9999) || byPart(a, b), status: (a, b) => so[a.status] - so[b.status] || byPart(a, b) }[msort] || byKana;
-  return ms.sort((a, b) => (so[a.status] >= 5) - (so[b.status] >= 5) || cmp(a, b));
+  return ms.sort((a, b) => (so[a.status] >= 6) - (so[b.status] >= 6) || cmp(a, b));
+}
+/* 部員用の端末：受け取った名簿を見るだけ（名前・いつもの楽器・学年） */
+function renderRoster(o) {
+  const w = GKY.words(o.org.type), ms = filteredMembers(o);
+  $('#mTitle').textContent = '名簿';
+  $('#mSum').textContent = `${o.members.length}人`;
+  $('#mLead').textContent = `${o.org.name || '団体'}の名簿です（${w.staff}・代表者から受け取ったもの。名前・いつもの楽器・学年だけ）。`;
+  ['#mFSt', '#mFRole', '#mSort'].forEach(q => { $(q).hidden = true; });
+  const opt = (v, l, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`;
+  const fams = [...new Set(o.members.map(m => GKY.familyOf(m.part) || ''))].sort((a, b) => GKY.partOrder(a || 'zz') - GKY.partOrder(b || 'zz'));
+  $('#mFPart').innerHTML = opt('', '楽器：すべて', mfp) + fams.map(f => opt(f || '-', f ? GKY.partName(f) : '楽器が未定', mfp)).join('');
+  const grs = [...new Set(o.members.map(m => m.grade || ''))].sort((a, b) => GKY.gradeRank(a) - GKY.gradeRank(b));
+  $('#mFGrade').innerHTML = opt('', '学年：すべて', mfg) + grs.map(g => opt(g || '-', g ? GKY.gradeLabel(g) : '学年なし', mfg)).join('');
+  $('#mFGrade').hidden = grs.length <= 1;
+  $('#mCnts').innerHTML = '';
+  $('#mTable').innerHTML = !o.members.length ? '<tbody><tr><td class="wide"><div class="empty" style="border:0"><b>名簿はありません</b></div></td></tr></tbody>'
+    : `<thead><tr><th>名前</th><th>いつもの楽器</th><th>学年</th></tr></thead><tbody>${ms.map(m => `<tr><td data-l="名前"><b>${esc(m.name)}</b></td><td data-l="いつもの楽器">${esc(m.part ? GKY.partName(GKY.familyOf(m.part)) : '')}</td><td data-l="学年">${esc(m.grade)}</td></tr>`).join('')}</tbody>`;
+  $('#mNote').textContent = '';
+}
+/* --- えらんでまとめて変える --- */
+let mselOn = false; const msel = new Set();
+function renderBulk() {
+  const bar = $('#mBulk'); bar.hidden = !mselOn;
+  $('#mSelMode').setAttribute('aria-pressed', String(mselOn));
+  $('#mSelMode').textContent = mselOn ? 'えらぶのをやめる' : 'えらんでまとめて変える';
+  if (!mselOn) return;
+  const t = ty(), ippan = t === 'ippan', ids = new Set(GKY.org().members.map(m => m.id));
+  [...msel].forEach(id => { if (!ids.has(id)) msel.delete(id); });
+  const shown = new Set($$('#mTable tr[data-id]').map(tr => tr.dataset.id)), hid = [...msel].filter(id => !shown.has(id)).length;
+  bar.innerHTML = `<b>${msel.size}人</b><span class="muted">をえらんでいます${hid ? `（いま出ていない${hid}人をふくむ）` : ''}</span>
+    ${ippan ? '<input type="number" id="bJoined" placeholder="入団した年" min="1950" max="2100" style="width:7em" aria-label="入団した年をそろえる">' : `<select id="bGrade" aria-label="学年をそろえる"><option value="">学年はそのまま</option>${GKY.gradesOf(t).map(g => `<option value="${esc(g)}">${esc(GKY.gradeLabel(g))}にする</option>`).join('')}<option value="-">学年をなしにする</option></select>`}
+    <select id="bPart" aria-label="いつもの楽器をそろえる"><option value="">楽器はそのまま</option>${GKY.PARTS.map(p => `<option value="${esc(p[0])}">${esc(p[1])}にする</option>`).join('')}<option value="-">楽器を未定にする</option></select>
+    <select id="bStatus" aria-label="状態をそろえる"><option value="">状態はそのまま</option>${Object.keys(GKY.STATUS).map(st => `<option value="${st}">${esc(GKY.statusName(st, t))}にする</option>`).join('')}</select>
+    <input type="text" id="bRole" placeholder="役職を足す" list="roleList" style="width:8em" aria-label="役職を足す">
+    <button class="btn sm primary" id="bGo">変える</button><span style="flex:1"></span>
+    <button class="btn sm" id="bAll">出ている人を全部えらぶ</button><button class="btn sm ghost" id="bNone">えらびを消す</button><button class="btn sm danger" id="bDel">えらんだ人を消す</button>`;
+  $('#bAll').onclick = () => { $$('#mTable tr[data-id]').forEach(tr => msel.add(tr.dataset.id)); renderMembers(); };
+  $('#bNone').onclick = () => { msel.clear(); renderMembers(); };
+  $('#bGo').onclick = () => {
+    if (!msel.size) { toast('先に、変える人をえらんでください'); return; }
+    const g = $('#bGrade') ? $('#bGrade').value : '', j = $('#bJoined') ? Math.round(+$('#bJoined').value) : 0, p = $('#bPart').value, st = $('#bStatus').value, rl = norm($('#bRole').value);
+    if (!g && !j && !p && !st && !rl) { toast('学年・楽器・状態・役職のどれかを選んでください'); return; }
+    const before = GKY.org().members, lst = before.map(m => {
+      if (!msel.has(m.id)) return m;
+      const x = Object.assign({}, m, { roles: m.roles.slice() });
+      if (g) x.grade = g === '-' ? '' : g;
+      if (j >= 1950 && j <= 2100) x.joined = j;
+      if (p) { x.part = p === '-' ? '' : p; x.subs = x.subs.filter(s => s !== x.part); }
+      if (st) GKY.setStatus(x, st);
+      if (rl && !x.roles.includes(rl)) x.roles.push(rl);
+      return x;
+    });
+    saveMembers(lst);
+    toast(`${msel.size}人を変えました`, '元に戻す', () => saveMembers(before));
+  };
+  GKY.arm($('#bDel'), () => { if (!msel.size) return; const before = GKY.org().members, n = msel.size; saveMembers(before.filter(m => !msel.has(m.id))); msel.clear(); toast(`${n}人を消しました`, '元に戻す', () => saveMembers(before)); }, `もう一度押すと${msel.size}人を消します`);
 }
 function renderMembers() {
   const o = GKY.org(), t = o.org.type, w = GKY.words(t), ippan = t === 'ippan';
+  if (GKY.isMember()) { renderRoster(o); return; }
+  ['#mFSt', '#mSort'].forEach(q => { $(q).hidden = false; });
   $('#mTitle').textContent = w.member;
   $('#mLead').textContent = `ここに入れた${w.member}は、コウバン（パート割り）・楽譜ライブラリ（できる曲）・楽器決め（編成計画）・楽器台帳（使う人・貸し出し先）・搬入出リスト（担当）・出欠・会計で使えます。`;
   $('#mStaffL').textContent = `${w.staff}・指導者のメモを出す`;
@@ -1920,11 +2360,11 @@ function renderMembers() {
   const ms = filteredMembers(o);
   const partOpts = cur => `<option value="">（未定）</option>` + GKY.PARTS.map(p => `<option value="${esc(p[0])}"${cur === p[0] ? ' selected' : ''}>${esc(p[1])}</option>`).join('') + (cur && !GKY.PARTS.some(p => p[0] === cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : '');
   const stOpts = cur => Object.keys(GKY.STATUS).map(st => `<option value="${st}"${st === cur ? ' selected' : ''}>${esc(GKY.statusName(st, t))}</option>`).join('');
-  const head = `<thead><tr><th>名前</th><th>よみ</th><th>${ippan ? '入団した年' : '学年'}</th><th>いつもの楽器</th><th>持ち替えできる楽器</th><th>役職</th><th>状態</th><th>メモ</th>${staff ? `<th>${esc(w.staff)}・指導者のメモ</th>` : ''}<th></th></tr></thead>`;
+  const head = `<thead><tr>${mselOn ? `<th class="sel"><input type="checkbox" id="mAll" aria-label="出ている人を全部えらぶ"${ms.length && ms.every(m => msel.has(m.id)) ? ' checked' : ''}></th>` : ''}<th>名前</th><th>よみ</th><th>${ippan ? '入団した年' : '学年'}</th><th>いつもの楽器</th><th>持ち替えできる楽器</th><th>役職</th><th>状態</th><th>メモ</th>${staff ? `<th>${esc(w.staff)}・指導者のメモ</th>` : ''}<th></th></tr></thead>`;
   $('#mTable').innerHTML = !o.members.length ? `<tbody><tr><td class="wide"><div class="empty" style="border:0"><b>まだ${esc(w.member)}がいません</b>「＋ 1人足す」「まとめて足す」、またはExcelの名簿をCSVで読み込んでください。</div></td></tr></tbody>`
     : !ms.length ? `<tbody><tr><td class="wide"><div class="empty" style="border:0"><b>見つかりませんでした</b>さがす言葉やしぼり方を変えてみてください。</div></td></tr></tbody>`
-    : head + `<tbody>${ms.map(m => `<tr data-id="${esc(m.id)}" class="${m.active ? '' : 'off'}">
-    <td data-l="名前"><input type="text" data-k="name" value="${esc(m.name)}" aria-label="名前"></td><td data-l="よみ"><input type="text" data-k="kana" value="${esc(m.kana)}" aria-label="よみ"></td>
+    : head + `<tbody>${ms.map(m => `<tr data-id="${esc(m.id)}" class="${m.active ? '' : 'off'}${mselOn && msel.has(m.id) ? ' picked' : ''}">
+    ${mselOn ? `<td class="sel" data-l="えらぶ"><input type="checkbox" data-sel aria-label="${esc(m.name)}をえらぶ"${msel.has(m.id) ? ' checked' : ''}></td>` : ''}<td data-l="名前"><input type="text" data-k="name" value="${esc(m.name)}" aria-label="名前"></td><td data-l="よみ"><input type="text" data-k="kana" value="${esc(m.kana)}" aria-label="よみ"></td>
     <td data-l="${ippan ? '入団した年' : '学年'}">${ippan ? `<input type="number" data-k="joined" value="${m.joined || ''}" min="1950" max="2100" style="width:6.5em" aria-label="入団した年">` : `<input type="text" data-k="grade" value="${esc(m.grade)}" list="grades" style="min-width:4.5em;width:5.5em" aria-label="学年" class="${gradeOk(m.grade, t) ? '' : 'warn'}" title="${gradeOk(m.grade, t) ? '' : 'この書き方では進級で学年が上がりません（例：中2・高1・大3）'}">`}</td>
     <td data-l="いつもの楽器"><select data-k="part" aria-label="いつもの楽器">${partOpts(m.part)}</select></td>
     <td data-l="持ち替え"><input type="text" data-k="subs" value="${esc(m.subs.join('、'))}" placeholder="例：Pic、Timp" aria-label="持ち替えできる楽器"></td>
@@ -1935,8 +2375,10 @@ function renderMembers() {
     <td class="end"><button class="ibtn del" data-del aria-label="消す">×</button></td></tr>`).join('')}</tbody>`;
   $('#mTable').insertAdjacentHTML('beforeend', `<datalist id="grades">${GKY.gradesOf(t).map(g => `<option value="${g}">${esc(GKY.gradeLabel(g))}</option>`).join('')}</datalist><datalist id="roleList">${GKY.roleHints(t).map(r => `<option value="${esc(r)}">`).join('')}</datalist>`);
   $('#mNote').textContent = o.members.some(m => !gradeOk(m.grade, t)) ? '黄色の学年は、進級で上がらない書き方です（「中2」「高1」「大3」のように直してください）。' : (ms.length < o.members.length ? `${o.members.length}人のうち${ms.length}人を出しています。` : '');
+  const ma = $('#mAll'); if (ma) ma.onchange = () => { ms.forEach(m => { if (ma.checked) msel.add(m.id); else msel.delete(m.id); }); renderMembers(); };
   $$('#mTable tr[data-id]').forEach(tr => {
     const id = tr.dataset.id;
+    const sc = $('[data-sel]', tr); if (sc) sc.onchange = () => { if (sc.checked) msel.add(id); else msel.delete(id); tr.classList.toggle('picked', sc.checked); renderBulk(); };
     $$('[data-k]', tr).forEach(i => i.onchange = () => {
       const lst = GKY.org().members, m = lst.find(x => x.id === id), k = i.dataset.k;
       if (!m) return;
@@ -1957,7 +2399,9 @@ function renderMembers() {
     });
     GKY.arm($('[data-del]', tr), () => { const before = GKY.org().members; saveMembers(before.filter(x => x.id !== id)); toast('消しました', '元に戻す', () => saveMembers(before)); }, '消す？');
   });
+  renderBulk();
 }
+$('#mSelMode').onclick = () => { mselOn = !mselOn; if (!mselOn) msel.clear(); renderMembers(); };
 $('#mQ').oninput = GKY.debounce(() => { mq = $('#mQ').value; renderMembers(); }, 150);
 $('#mFSt').onchange = e => { mfs = e.target.value; renderMembers(); };
 $('#mFPart').onchange = e => { mfp = e.target.value; renderMembers(); };
@@ -1973,12 +2417,29 @@ $('#mAdd').onclick = () => {
 };
 const addMembers = (add, src) => { const lst = GKY.org().members; saveMembers(lst.concat(add)); toast(`${add.length}人を足しました${src ? '（' + src + '）' : ''}`, '元に戻す', () => saveMembers(lst)); };
 $('#mMany').onclick = () => {
-  const t = ty(), ex = t === 'ippan' ? '山田 花子 2015 クラリネット&#10;鈴木 太郎 トラ ラッパ' : t === 'daigaku' ? '山田 花子 2回生 クラリネット&#10;鈴木 太郎 大1 ラッパ 学指揮' : '山田 花子 中2 クラリネット&#10;鈴木 太郎 1年 ラッパ';
-  sheet({ title: 'まとめて足す', content: `<p class="lead">1行に1人、「名前　学年　楽器」の順に、空白で区切って書きます（学年と楽器はなくてもかまいません）。「パーカス」「ペット」「1年生」「2回生」「OG」「トラ」「パートリーダー」なども読みます。<b>足す前に、読んだ結果を表で確かめます。</b></p><textarea id="mmIn" style="min-height:200px" placeholder="${ex}"></textarea>`,
+  const t = ty(), ippan = t === 'ippan', ex = ippan ? '山田 花子 2015 クラリネット&#10;鈴木 太郎 トラ ラッパ' : t === 'daigaku' ? '山田 花子 2回生 クラリネット&#10;鈴木 太郎 大1 ラッパ 学指揮' : '山田 花子 中2 クラリネット&#10;鈴木 太郎 1年 ラッパ';
+  const last = GKY.pref('mmDefaults', {}) || {};
+  const sel = (id, label, opts) => `<label class="fld"><span>${label}</span><select id="${id}">${opts}</select></label>`;
+  sheet({ title: 'まとめて足す', content: `<p class="lead">1行に1人、「名前　学年　楽器」の順に、空白で区切って書きます（学年と楽器はなくてもかまいません）。「パーカス」「ペット」「1年生」「2回生」「OG」「トラ」「パートリーダー」なども読みます。<b>足す前に、読んだ結果を表で確かめます。</b></p>
+    <div class="grid" style="margin-bottom:6px">
+      ${sel('mmPart', '楽器を書いていない人の楽器', `<option value="">（決めない）</option>${GKY.PARTS.map(p => `<option value="${esc(p[0])}"${last.part === p[0] ? ' selected' : ''}>${esc(p[1])}</option>`).join('')}`)}
+      ${ippan ? `<label class="fld"><span>入団した年を書いていない人の年</span><input type="number" id="mmJoined" min="1950" max="2100" placeholder="例：${new Date().getFullYear()}"></label>` : sel('mmGrade', '学年を書いていない人の学年', `<option value="">（決めない）</option>${GKY.gradesOf(t).map(g => `<option value="${esc(g)}"${last.grade === g ? ' selected' : ''}>${esc(GKY.gradeLabel(g))}</option>`).join('')}`)}
+      ${sel('mmSt', '状態を書いていない人の状態', Object.keys(GKY.STATUS).map(st => `<option value="${st}"${(last.status || 'active') === st ? ' selected' : ''}>${esc(GKY.statusName(st, t))}</option>`).join(''))}
+    </div>
+    <p class="note" style="margin:0 0 8px">例：楽器を先に「クラリネット」にして、クラリネットの人の名前だけを1行ずつ書くと、全員クラリネットで入ります。</p>
+    <textarea id="mmIn" style="min-height:180px" placeholder="${ex}"></textarea>`,
     actions: [{ label: 'やめる' }, { label: '読んで確かめる', primary: true, onClick: body => {
       const lines = $('#mmIn', body).value.split('\n').map(norm).filter(Boolean);
       if (!lines.length) { toast('名前を書いてください'); return false; }
+      const dp = $('#mmPart', body).value, dg = $('#mmGrade', body) ? $('#mmGrade', body).value : '', dj = $('#mmJoined', body) ? Math.round(+$('#mmJoined', body).value) : 0, ds = $('#mmSt', body).value;
+      GKY.setPref('mmDefaults', { part: dp, grade: dg, status: ds });
       const recs = lines.map(l => GKY.parseMemberLine(l, ty()));
+      recs.forEach(r => {
+        if (dp && !r.part) r.part = dp;
+        if (dg && !r.grade && !r.askGrade) r.grade = dg;
+        if (dj >= 1950 && dj <= 2100 && !r.joined) r.joined = dj;
+        if (ds && !r.stSet) r.status = ds;
+      });
       setTimeout(() => GKY.previewMembers(recs, { existing: GKY.org().members, type: ty(), source: '書いた' + lines.length + '行', onAdd: add => addMembers(add) }), 0);
     } }] });
 };
@@ -2017,8 +2478,33 @@ function promoInfo(o, cont) {
 }
 const contDefault = t => t === 'chuko';
 const lastGrades = (t, cont) => t === 'chu' ? '中3' : t === 'koko' ? '高3' : t === 'daigaku' ? '4回生・院2' : cont ? '高3' : '中3・高3';
+/* 部員の端末に出すツールの説明 */
+const MEMBER_DESC = { gassou: '自分のノートを書いて提出する。配られた録音とコメントを聞く', tempomap: '練習用のクリック・通しの録音', drillboard: '隊形と動きを見て確かめる', bamiri: '配置図を見る', shukketsu: '出欠の返事は、配る「見るだけのリンク」でもできます', kouban: '香盤表と自分の出番は「見るだけのリンク」でも配れます', gakufu: '楽譜の一覧（この端末に入れた分）', gyakusan: '本番までのスケジュールは「見るだけのリンク」でも配れます', hannyu: '積み込みのチェックは「見るだけのリンク」でもできます' };
+const MEMBER_FEATS = [['concerts', '本番の予定を見る', '楽屋の「本番」（部員に見せない本番はのぞく）'], ['roster', '名簿を見る', '名前・いつもの楽器・学年だけ（メモ・指導者メモは入れません）'], ['notes', '合奏ノートを提出する', '書いたノートを、リンクで代表者・顧問に送れる'], ['songs', '曲の一覧を使う', '楽譜ライブラリの曲（テンポマップで曲を選ぶとき）']];
+function renderRole(o) {
+  const cfg = o.org.member, w = GKY.words(o.org.type);
+  $('#roleLead').textContent = `${w.member}の端末で使うツールと、できることを決めます。決めたら「${w.member}用の設定リンク」を${w.member}に送ってください。この端末は「代表者・顧問用」のままです。`;
+  $('#roleTools').innerHTML = TOOLS.filter(t => !t.viewer).map(t => `<label><input type="checkbox" data-rt="${esc(t.slug)}"${cfg.tools.includes(t.slug) ? ' checked' : ''}><span><b>${esc(t.name)}</b><small>${esc(MEMBER_DESC[t.slug] || t.desc)}</small></span></label>`).join('');
+  $('#roleFeats').innerHTML = MEMBER_FEATS.map(([k, l, d]) => `<label><input type="checkbox" data-rf="${k}"${cfg[k] ? ' checked' : ''}><span><b>${esc(l)}</b><small>${esc(d)}</small></span></label>`).join('');
+  if (document.activeElement !== $('#roleMsg')) $('#roleMsg').value = cfg.msg;
+  const save = () => { const c = GKY.memberCfg(); c.tools = $$('#roleTools [data-rt]').filter(x => x.checked).map(x => x.dataset.rt); MEMBER_FEATS.forEach(([k]) => { c[k] = !!($(`#roleFeats [data-rf="${k}"]`) || {}).checked; }); c.msg = $('#roleMsg').value; GKY.saveOrg('org', { member: c }); };
+  $$('#roleTools [data-rt], #roleFeats [data-rf]').forEach(x => x.onchange = save);
+  $('#roleMsg').oninput = GKY.debounce(save, 400);
+}
+function renderMe(o) {
+  const cfg = o.org.member, w = GKY.words(o.org.type);
+  $('#meOrg').textContent = `${w.member}用`;
+  $('#meBox').innerHTML = `<p style="margin:0 0 6px">この端末は「${esc(o.org.name || '団体')}」の${esc(w.member)}用です${cfg.at ? `（${esc(cfg.at)}に受け取った設定）` : ''}。${esc(w.staff)}・代表者が決めたツールだけを出しています。</p>
+    <p class="note" style="margin:0 0 10px">本番の予定や設定が変わったときは、${esc(w.staff)}・代表者から新しい「${esc(w.member)}用の設定リンク」を受け取って開いてください。</p>
+    <div class="btnrow"><button class="btn" id="meStaff">代表者・顧問用にもどす</button></div>
+    <p class="note">代表者・顧問用にもどすと、全部のツールと設定が出ます（この端末のデータはそのままです）。</p>`;
+  GKY.arm($('#meStaff'), () => { GKY.saveOrg('org', { role: 'staff' }); renderAll(); toast('代表者・顧問用にもどしました'); }, 'もう一度押すと代表者・顧問用にします');
+}
 function renderOrg() {
   const o = GKY.org(), t = o.org.type, w = GKY.words(t);
+  $('#oBig').checked = !!GKY.pref('big', false);
+  if (GKY.isMember()) { renderMe(o); renderProfiles(o); return; }
+  renderRole(o);
   $('#oTypes').innerHTML = typeButtons(t); wireTypes($('#oTypes'));
   $('#oTypeNote').textContent = t ? `「${GKY.ORG_TYPES[t]}」：学年は ${GKY.gradesOf(t).length ? GKY.gradesOf(t).map(GKY.gradeLabel).join('・') : 'なし（入団した年を使います）'}。呼び方は「${w.member}」「${w.staff}」。` : 'まだ選んでいません。選ぶと、学年の選び方・進級・呼び方が団体に合わせて変わります。';
   if (document.activeElement !== $('#oName')) $('#oName').value = o.org.name;
@@ -2051,9 +2537,9 @@ function renderOrg() {
   const actG = [...new Set(o.members.filter(m => m.status === 'active' && m.grade).map(m => m.grade))].sort((a, b) => GKY.gradeRank(a) - GKY.gradeRank(b));
   const def = t === 'daigaku' ? (o.org.retire || '大3') : t === 'chu' ? '中3' : '高3';
   $('#rtGrade').innerHTML = actG.length ? actG.map(g => `<option value="${esc(g)}"${g === def ? ' selected' : ''}>${esc(GKY.gradeLabel(g))}</option>`).join('') : '<option value="">（在籍の人がいません）</option>';
-  $('#rtLead').textContent = `引退した人は在籍したまま（消さずに）、パート割りの候補や「今の${w.member}でできる曲」の人数から外れます。${GKY.isSchool(t) ? '3年生が夏に引退しても、卒業までは名簿に残せます。' : ''}卒業・退部は、進級のときに自動でつきます。`;
-  $('#doRetire').disabled = !actG.length;
-  $('#undoRetire').disabled = !o.members.some(m => m.status === 'retired');
+  $('#rtLead').textContent = `引退した人は在籍したまま（消さずに）、パート割りの候補や「今の${w.member}でできる曲」の人数から外れます。仮引退は、ふだんの練習には出ないが、本番によっては出る人です（コウバンでは、仮引退の人も候補に入れるかを選べます）。${GKY.isSchool(t) ? '3年生が夏に引退しても、卒業までは名簿に残せます。' : ''}卒業・退部は、進級のときに自動でつきます。`;
+  $('#doRetire').disabled = !actG.length; $('#doSemi').disabled = !actG.length;
+  $('#undoRetire').disabled = !o.members.some(m => m.status === 'retired' || m.status === 'semi');
 }
 function askPromote(cont) {
   const o = GKY.org(), pi = promoInfo(o, cont);
@@ -2085,14 +2571,16 @@ $('#oName').onchange = e => { GKY.saveOrg('org', { name: norm(e.target.value) })
 $('#oYear').onchange = e => { const v = Math.round(+e.target.value); GKY.saveOrg('org', { year: v >= 2000 && v <= 2100 ? v : null }); renderAll(); };
 $('#oRetire').onchange = e => { GKY.saveOrg('org', { retire: e.target.value }); renderAll(); };
 $('#oBig').onchange = e => GKY.setPref('big', e.target.checked);
-$('#doRetire').onclick = () => {
-  const g = $('#rtGrade').value, before = GKY.org().members;
-  const lst = before.map(m => m.status === 'active' && m.grade === g ? GKY.setStatus(Object.assign({}, m), 'retired') : m);
+function retireGrade(st) {
+  const g = $('#rtGrade').value, before = GKY.org().members, name = GKY.statusName(st, ty());
+  const lst = before.map(m => (m.status === 'active' || (st === 'retired' && m.status === 'semi')) && m.grade === g ? GKY.setStatus(Object.assign({}, m), st) : m);
   const n = lst.filter((m, i) => m !== before[i]).length;
-  if (!n) { toast('引退にする人がいません'); return; }
-  saveMembers(lst); toast(`${g}の${n}人を引退にしました`, '元に戻す', () => saveMembers(before));
-};
-GKY.arm($('#undoRetire'), () => { const before = GKY.org().members; const lst = before.map(m => m.status === 'retired' ? GKY.setStatus(Object.assign({}, m), 'active') : m); saveMembers(lst); toast('引退の人を在籍にもどしました', '元に戻す', () => saveMembers(before)); }, 'もう一度押すともどします');
+  if (!n) { toast(`${name}にする人がいません`); return; }
+  saveMembers(lst); toast(`${g}の${n}人を${name}にしました`, '元に戻す', () => saveMembers(before));
+}
+$('#doRetire').onclick = () => retireGrade('retired');
+$('#doSemi').onclick = () => retireGrade('semi');
+GKY.arm($('#undoRetire'), () => { const before = GKY.org().members; const lst = before.map(m => m.status === 'retired' || m.status === 'semi' ? GKY.setStatus(Object.assign({}, m), 'active') : m); saveMembers(lst); toast('引退・仮引退の人を在籍にもどしました', '元に戻す', () => saveMembers(before)); }, 'もう一度押すともどします');
 
 /* --- この端末の団体（切りかえ） --- */
 /* いまの団体のデータはそのまま使い、ほかの団体のデータは gakuya.profile.〈id〉 にしまっておく。切りかえるときに入れかえる */
@@ -2145,12 +2633,18 @@ function renderLinks() {
   const card = (title, color, rows) => `<div class="flowc"><h3><span class="tape" style="--tc:${color};--ti:${['#E3B23C', '#DD7A2B'].includes(color) ? '#1B1A14' : '#fff'}">${esc(title)}</span></h3>${rows.map(r => `<div class="row"><span>${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')}</div>`;
   $('#flow').innerHTML = [
     card(`${w.member}（${o.members.filter(m => m.status === 'active').length}人）`, '#2B2F36', [['入れる所', '<span class="tn">楽屋（この画面）</span>' + tn('gakkigime')], ['使う所', ['kouban', 'gakufu', 'gakkigime', 'gakki', 'hannyu', 'shukketsu', 'kaikei', 'gassou'].map(tn).join('')], ['使い方', 'パート割りの候補、できる曲の判定、来年の人数の予測、楽器を使う人・貸し出し先、運搬の担当、出欠の名簿、団費の名簿、合奏ノートのパート']]),
+    card(`本番（${o.concerts.length}）`, '#44539E', [['入れる所', '<span class="tn">楽屋（本番）</span>' + LINKS.map(L => tn(L.slug)).join('')], ['使う所', LINKS.map(L => tn(L.slug)).join('')], ['使い方', '楽屋の「本番」から、その本番のスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。各ツールの「楽屋の本番」の欄でつなぎます（日付が同じ記録は、自動でその本番のものになります）']]),
     card(`曲（${o.songs.length}曲）`, '#2F6CC8', [['入れる所', tn('gakufu')], ['使う所', ['kouban', 'tempomap'].map(tn).join('')], ['使い方', '楽譜に入れた編成が、コウバンの受け持ちになります。テンポマップで新しい曲を作るときに選べます']]),
     card(`楽器（${o.instruments.length}台）`, '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', ['hannyu', 'gakkigime'].map(tn).join('')], ['使い方', '運ぶ楽器を台帳から選べます。楽器決めでは、学校・団体の楽器の台数を募集人数の目安にします']]),
     card('ステマネのファイル', '#A3192B', [['作る所', tn('stagemane')], ['使う所', ['kouban', 'shikomi', 'gakufu'].map(tn).join('')], ['使い方', '曲の順番（コウバン）、きっかけ表（仕込み図）、演奏の記録と曲目一覧（楽譜ライブラリ）']]),
     card('バミリの配置図', '#E3B23C', [['作る所', tn('bamiri')], ['使う所', ['kouban', 'shikomi', 'hannyu'].map(tn).join('')], ['使い方', '席に名前を入れて返す（コウバン）、仕込み図の下絵（仕込み図）、運ぶ打楽器と譜面台の数（搬入出リスト）。同じ場所なら、バミリで開いている配置図をそのまま使えます']]),
     card('テンポマップの共有コード', '#2B9457', [['作る所', tn('tempomap')], ['使う所', tn('gassou')], ['使い方', '録音に小節の目印をつける（テンポや拍子が変わる曲、くり返しやカットのある曲も）']]),
-    card('見るだけのリンク・QRコード', '#5B7A1B', [['作る所', ['kouban', 'hannyu', 'gyakusan', 'shukketsu'].map(tn).join('')], ['使う所', '<span class="tn">部員・保護者のスマホ</span>'], ['使い方', '香盤表と自分の出番・積み込みの担当・本番までのスケジュール・練習の予定を、LINEやQRコードで配れます。受け取った人が見ても、こちらのデータは変わりません（積み込みのチェックはその人の端末の中だけ、出欠は「返事」の文を送ってもらって取り込みます）']]),
+    card('録音・楽譜のファイル', '#2B9457', [['入れる所', ['tempomap', 'gassou', 'gakufu'].map(tn).join('')], ['使う所', ['gassou', 'drillboard', 'gakufu'].map(tn).join('')], ['使い方', 'テンポマップで録った通しの録音を、合奏ノートで小節の目印つきで聞けます（ドリルボードの音源にも）。楽譜ライブラリのPDFは、パートごとにまとめて送れます。ファイルはこの端末の中（ファイル置き場）にあります']]),
+    card('出欠', '#5B7A1B', [['入れる所', tn('shukketsu')], ['使う所', ['kouban', 'gassou'].map(tn).join('')], ['使い方', '本番の日に欠席の人を、コウバンの「休み」に入れられます。合奏ノートには、その日の欠席・遅刻の人を出します']]),
+    card('楽器の修理代', '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', tn('kaikei')], ['使い方', '楽器台帳の修理の記録に入れた金額を、会計の帳簿にまとめて入れられます（二重には入りません）']]),
+    card(`${w.member}用の設定リンク`, '#C43F7D', [['作る所', '<span class="tn">楽屋（団体・年度）</span>'], ['使う所', `<span class="tn">${esc(w.member)}のスマホの楽屋</span>`], ['使い方', `${w.member}の端末に、団体の名前・本番の予定・名簿（決めたとき）と、使うツールを入れます`]]),
+    card('合奏ノートの提出', '#A8612A', [['作る所', `${tn('gassou')}（${esc(w.member)}の端末）`], ['使う所', `${tn('gassou')}（代表者・顧問の端末）`], ['使い方', `${w.member}が書いたノートを、リンクで代表者・顧問に送ります。開くと「提出されたノート」に入ります。録音とコメントは、リンクとファイルでみんなに配れます`]]),
+    card('見るだけのリンク・QRコード', '#5B7A1B', [['作る所', '<span class="tn">楽屋（本番）</span>' + ['kouban', 'hannyu', 'gyakusan', 'shukketsu', 'gassou'].map(tn).join('')], ['使う所', '<span class="tn">部員・保護者のスマホ</span>'], ['使い方', '本番の予定・香盤表と自分の出番・積み込みの担当・本番までのスケジュール・練習の予定・合奏のコメントを、LINEやQRコードで配れます。受け取った人が見ても、こちらのデータは変わりません（積み込みのチェックはその人の端末の中だけ、出欠は「返事」の文を送ってもらって取り込みます）']]),
     card('引き継ぎファイル', '#506070', [['作る所', '<span class="tn">楽屋（バックアップ）</span>'], ['使う所', '<span class="tn">次の人の端末の楽屋</span>'], ['使い方', '全部のツールのデータと引き継ぎのメモを1つのファイルで渡します。次の人は「バックアップから戻す」で開きます']]),
   ].join('');
 }
@@ -2174,7 +2668,16 @@ function renderBackup() {
   $('#usage').innerHTML = `<p style="margin:0">この場所（bamiriunei-arch.github.io）で保存できる量のうち、<b>${pct < 1 ? '1%未満' : Math.round(pct) + '%'}</b>ほどを使っています（${(u.used / 10000).toFixed(1)}万字 ／ およそ${u.limit / 10000}万字）。</p>
     <div class="gky-meter ${pct >= 85 ? 'bad' : pct >= 60 ? 'warn' : ''}"><i style="width:${Math.max(1, pct).toFixed(1)}%"></i></div>
     ${by.length ? `<p class="note" style="margin:0">多い順：${by.slice(0, 6).map(([k, n]) => `${esc(T(k) ? T(k).name : k === 'gakuya' ? '楽屋' : k)} ${(n / u.limit * 100).toFixed(1)}%`).join('・')}</p>` : ''}
-    <p class="note">${pct >= 85 ? '<b style="color:var(--bad)">残りが少なくなっています。</b>バックアップを保存してから、使わなくなった演奏会・曲などを消してください。' : '楽屋シリーズ・バミリ・ドリルボードで、この量を分け合っています。いっぱいになると保存できなくなります。'}楽器台帳の写真は別の場所（IndexedDB）なので、ここには入りません。</p>`;
+    <p class="note">${pct >= 85 ? '<b style="color:var(--bad)">残りが少なくなっています。</b>バックアップを保存してから、使わなくなった演奏会・曲などを消してください。' : '楽屋シリーズ・バミリ・ドリルボードで、この量を分け合っています。いっぱいになると保存できなくなります。'}楽器台帳の写真と、録音・楽譜のファイルは別の場所（IndexedDB）なので、ここには入りません。</p>`;
+  renderMediaUsage();
+}
+/* ファイル置き場（録音・楽譜のPDF）の量 */
+async function renderMediaUsage() {
+  const el = $('#mediaUsage'); if (!el) return;
+  if (GKY.IN_VIEWER || !GKY.media.ok()) { el.innerHTML = ''; return; }
+  let xs = []; try { xs = await GKY.media.list(); } catch (e) { el.innerHTML = ''; return; }
+  const est = await GKY.media.estimate(), by = c => xs.filter(m => m.cat === c), sz = a => a.reduce((t, m) => t + (m.size || 0), 0);
+  el.innerHTML = `<h3 class="h3s">ファイル置き場（録音・楽譜のファイル）</h3><p style="margin:0;font-size:13px">録音 <b>${by('audio').length}</b>（${GKY.bytes(sz(by('audio')))}）・楽譜のファイル <b>${by('score').length}</b>（${GKY.bytes(sz(by('score')))}）</p>${est && est.quota ? `<p class="note" style="margin:4px 0 0">このブラウザで使える量のめやす：${GKY.bytes(est.usage)} ／ ${GKY.bytes(est.quota)}。ブラウザのデータを消すと、ファイル置き場も消えます。</p>` : ''}`;
 }
 function idbAll(name, store) {
   return new Promise(res => { try { const r = indexedDB.open(name); r.onsuccess = () => { const db = r.result; if (!db.objectStoreNames.contains(store)) { db.close(); return res({}); } const out = {}; const tx = db.transaction(store, 'readonly'); const st = tx.objectStore(store); const c = st.openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; tx.oncomplete = () => { db.close(); res(out); }; tx.onerror = () => res({}); }; r.onerror = () => res({}); r.onupgradeneeded = () => { r.transaction.abort(); res({}); }; } catch (e) { res({}); } });
@@ -2235,34 +2738,23 @@ $('#orgLoad').onclick = async () => {
     actions: [{ label: 'やめる' }, { label: '入れかえる', primary: true, danger: true, onClick: () => { GKY.saveOrg('all', n); renderAll(); toast('楽屋のデータを読み込みました', '元に戻す', () => { GKY.saveOrg('all', cur); renderAll(); }); } }] });
 };
 
-/* --- 置き方（開発する人向け。?dev のときだけ） --- */
-/* GitHub の画面から1回に上げられるのは100ファイルまで。フォルダのファイルの数：README・index.html・sw.js・manifest・アイコン4つ・テストの設定・tests の4つまで（多めに数える）
-   いちばん上：index.html・README.md・.nojekyll・.gitignore・package.json・test-all.js・sync-common.js */
-const FILES_PER_TOOL = 13, TOP_FILES = 7;
-function renderSetup() {
-  const lst = [{ slug: 'gakuya', name: '楽屋', color: 'var(--ink)' }].concat(TOOLS.filter(t => !t.old));
-  let n = TOP_FILES, batch = 1;
-  const rows = lst.map(t => { if (n + FILES_PER_TOOL > 100) { batch++; n = 0; } n += FILES_PER_TOOL; return { t, batch }; });
-  const row = (name, folder, b, path) => `<tr><td>${name}</td><td class="mono">${folder}</td><td class="c">${b}</td><td class="mono">${path}</td></tr>`;
-  $('#repoTable').innerHTML = `<thead><tr><th>ツール</th><th>フォルダ</th><th class="c">上げる回</th><th>公開ページ</th></tr></thead><tbody>`
-    + row('いちばん上のファイル', 'index.html ほか', '1回目', '/')
-    + rows.map(({ t, batch: b }) => row(`<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>`, esc(t.slug) + '/', b + '回目', '/' + esc(t.slug) + '/')).join('')
-    + row('自動テストの設定', '.github/workflows/test.yml', '別に作る', '—')
-    + '</tbody>';
-}
-
 /* ---------- はじまり ---------- */
 $('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: '楽屋', what: '吹奏楽の団体のためのツール集「楽屋シリーズ」の入口です。部員・曲・楽器のデータを楽屋に入れておくと、同じ場所に置いた全部のツールで使えます。各ツールは1つずつ独立していて、別々に直したり更新したりできます。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
 $('#fbTop').href = FEEDBACK_URL || GKY.FEEDBACK_URL;
-$('[data-tab="setup"]').hidden = !DEV;
 GKY.onOrgChange(renderAll);
 window.addEventListener('storage', e => { if (e.key && e.key !== GKY.ORG_KEY && tab !== 'members') renderAll(); });
-window.addEventListener('focus', () => { if (tab === 'tools' || tab === 'backup') renderTab(); });
+window.addEventListener('focus', () => { if (tab === 'tools' || tab === 'backup' || tab === 'concerts') renderTab(); });
 GKY.fitTop(); GKY.offline();
-// ツールの画面の「バックアップのお知らせ」から来たときは、バックアップのタブを開く
-showTab(location.hash === '#backup' ? 'backup' : 'tools');
+// ツールの画面の「バックアップのお知らせ」・本番の札から来たときは、そのタブを開く
+const hashTab = () => ({ '#backup': 'backup', '#concerts': 'concerts' })[location.hash] || '';
+window.addEventListener('hashchange', () => { const t = hashTab(); if (t) showTab(t); });
+showTab(hashTab() || 'tools');
 renderAll();
-if (GKY.TEST) window.__app = { ready: true, TOOLS, renderAll, promoInfo, profiles, switchTo, showTab, buildBackup };
+(async () => {
+  const viewing = await startViewer();
+  if (!viewing) { await receiveJoin(); survey(); }
+  if (GKY.TEST) window.__app = { ready: true, TOOLS, LINKS, renderAll, promoInfo, profiles, switchTo, showTab, buildBackup, foundConcerts, loadStates, icsOf, applyJoin, msel };
+})();
 })();
 </script>
 </body>

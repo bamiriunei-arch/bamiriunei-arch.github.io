@@ -8,7 +8,7 @@ const reopen = async (page, q = '?test') => { await page.goto('/index.html' + q)
 // WindowsのExcelで保存したCSV（Shift_JIS）：名前,学年,パート／山田 花子,中2,クラリネット／鈴木 太郎,1年,パーカス／佐藤 次郎,中3,フルート・ピッコロ
 const SJIS_CSV = 'lryRTyyKd5ROLINwgVuDZw0KjlKTYyCJ1I5xLJKGMiyDToOJg4qDbINig2cNCpfpltggkb6YWSwxlE4sg3CBW4NKg1gNCo2yk6Egjp+YWSyShjMsg3SDi4Fbg2eBRYNzg2KDUoONDQo=';
 
-test('ツールの一覧：14のツールが出て、同じツールは同じタブで開く。ステマネはClaudeの画面', async ({ page }) => {
+test('ツールの一覧：14のツールが出て、同じツールは同じタブで開く。ステマネはClaudeの画面。置き方はなく、ご意見はバミリと同じフォーム', async ({ page }) => {
   const errors = await openApp(page);
   await expect(page.locator('.tool')).toHaveCount(14);
   const kb = page.locator('.tool[data-slug="kouban"]');
@@ -21,13 +21,11 @@ test('ツールの一覧：14のツールが出て、同じツールは同じタ
   await expect(sm).toHaveAttribute('href', /claude\.ai\/artifact/);
   await expect(sm).toContainText('Claudeの画面で開きます');
   await expect(sm).not.toContainText('まだ使っていません');
-  // 置き方のタブは ?dev のときだけ
-  await expect(page.locator('[data-tab="setup"]')).toBeHidden();
+  // 置き方のタブはなくした（?dev をつけても出ない）。ご意見はバミリと同じフォーム
   await reopen(page, '?test&dev');
-  await expect(page.locator('[data-tab="setup"]')).toBeVisible();
-  await page.click('[data-tab="setup"]');
-  await expect(page.locator('#repoTable')).toContainText('shukketsu/');
+  await expect(page.locator('[data-tab="setup"]')).toHaveCount(0);
   await expect(page.locator('#fbTop')).toHaveAttribute('href', 'https://forms.gle/HpXuHj7YCkBAsbGt9');
+  await expect(page.locator('#fbGo')).toHaveAttribute('href', 'https://forms.gle/HpXuHj7YCkBAsbGt9');
   await noErrors(errors);
 });
 

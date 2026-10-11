@@ -7,7 +7,7 @@ test('スマホの幅で全部の画面が横にはみ出さない', async ({ pa
   const ms = []; for (let i = 0; i < 30; i++) ms.push({ id: 'm' + i, name: '部員' + i, grade: '中' + (1 + i % 3), part: ['Fl', 'Cl', 'Tp'][i % 3], roles: i ? [] : ['部長'] });
   await page.evaluate(ms => localStorage.setItem('gakuya.org', JSON.stringify({ app: 'gakuya', org: { name: 'スマホ中学校吹奏楽部', type: 'chu' }, members: ms })), ms);
   await page.reload(); await page.waitForFunction(() => window.__app && window.__app.ready);
-  for (const t of ['tools', 'members', 'org', 'links', 'backup']) {
+  for (const t of ['tools', 'concerts', 'members', 'org', 'links', 'backup']) {
     await page.click(`[data-tab="${t}"]`);
     await expect(page.locator(`[data-panel="${t}"]`)).toBeVisible();
     await noSideScroll(page);
