@@ -1295,7 +1295,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1660,8 +1661,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: ['部員用の端末では、決まった楽器で楽屋の部員を足さないようにしました（代表者・顧問の端末で足してください）', '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました'] },
   { v: '2', d: '2026-10-06', items: [
     '編成計画：4月に新入部員を楽屋に中1として足したとき、来年の1年に二重に数えていたのを直しました。楽屋にいる人は名前で見分け、「今年度の1年として数える／来年度の1年として数える」を選べるようにしました',
     '団体の種類に合わせて、学年の数を変えるようにしました（中高一貫は中1〜高3、大学は引退の時期まで）',

@@ -1392,7 +1392,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1763,6 +1764,7 @@ const CHANGELOG = [
     '「録音」を入れました：合奏の通しをこの端末のマイクで録音し、前後の無音を除いた演奏の長さを出します。カット案の「実際に計った時間」にそのまま入れられます',
     'クリックを鳴らしながら録音すると、合奏ノートで開いたときに小節の目印が自動でつきます（「合奏ノートで開く」）',
     '録音はこの端末の中（ファイル置き場）に入り、合奏ノート・ドリルボードからも選べます。「送る」でほかの人に渡せます',
+    '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました',
   ] },
   { v: '2', d: '2026-10-06', items: [
     'くり返し（リピート記号）を区間ごとに入れられるようにしました。時間・時間の帯・クリック・印刷がくり返しどおりになります',

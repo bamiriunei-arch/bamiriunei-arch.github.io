@@ -358,8 +358,16 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .dl-pick label{display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line); font-size:13px}
 .dl-pick label:last-child{border-bottom:0}
 .dl-pick label.off{opacity:.5}
-.inrow{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1.1fr) minmax(0,1fr) 4.2em auto; gap:6px; align-items:center; margin-bottom:6px}
-@media (max-width:640px){ .inrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4.2em auto} .inrow .w2{grid-column:span 2} }
+.inrow,.inhead{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1.1fr) minmax(0,1fr) 4.2em 30px; gap:6px; align-items:center; margin-bottom:6px}
+.inhead{font-size:11.5px; color:var(--muted); margin-bottom:2px}
+.ubt td{vertical-align:middle}
+@media (max-width:560px){ .ubt .ow{display:none} }
+@media (max-width:640px){
+  .inhead{display:none}
+  .inrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-auto-flow:row dense; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2)}
+  .inrow [data-r="name"], .inrow .w2{grid-column:1/-1}
+  .inrow [data-rdel]{justify-self:end}
+}
 </style>
 </head>
 <body>
@@ -1354,7 +1362,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1726,6 +1735,7 @@ const CHANGELOG = [
     '借りた楽器は、借用書の楽器を書くとそのまま台帳に入ります。返したときは台帳から外し、貸し借りの記録には残ります',
     '「使う人をまとめて決める」で、楽器ごとの使う人を一度に入れられるようにしました（同じパートの部員が先に出ます）。使う人が決まっていない部員もわかります',
     '楽器ごとに「使った人の記録」（だれが・いつからいつまで）を残すようにしました',
+    '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました',
   ] },
   { v: '2', d: '2026-10-06', items: [
     '「使う人（今年度）」を足しました。1年間決まった人が使う楽器と、家に持ち帰る「貸し出し」を分けて記録できます。年度末の返却チェック表も印刷できます',
@@ -2055,7 +2065,7 @@ function dealSheet(dir, id = null) {
   const isIn = dir === 'in', t = GKY.ymd();
   const free = i => i.owner !== 'borrowed' && i.owner !== 'personal' && (!i.lentTo || d.items.includes(i.id));
   const pick = S.items.slice().sort((a, b) => GKY.partOrder(a.part) - GKY.partOrder(b.part) || a.no.localeCompare(b.no, 'ja', { numeric: true }));
-  const row = (o = {}) => `<div class="inrow"><input type="text" data-r="name" placeholder="楽器（例：テューバ）" value="${esc(o.name || '')}" aria-label="楽器"><input type="text" data-r="no" placeholder="番号" value="${esc(o.no || '')}" aria-label="番号"><input type="text" data-r="maker" class="w2" placeholder="メーカー・型番" aria-label="メーカー・型番"><input type="text" data-r="serial" placeholder="製造番号" aria-label="製造番号"><input type="number" data-r="qty" min="1" max="30" value="1" aria-label="台数"><button class="ibtn del" data-rdel aria-label="この行を消す">×</button></div>`;
+  const row = (o = {}) => `<div class="inrow"><input type="text" data-r="name" placeholder="楽器（例：テューバ）" value="${esc(o.name || '')}" aria-label="楽器"><input type="text" data-r="no" placeholder="番号" value="${esc(o.no || '')}" aria-label="番号"><input type="text" data-r="maker" class="w2" placeholder="メーカー・型番" aria-label="メーカー・型番"><input type="text" data-r="serial" placeholder="製造番号" aria-label="製造番号"><input type="number" data-r="qty" min="1" max="30" value="1" aria-label="台数" title="台数（同じ楽器を何台借りるか）"><button class="ibtn del" data-rdel aria-label="この行を消す">×</button></div>`;
   const sh = sheet({ title: isIn ? (id ? '借りている楽器の記録を直す' : 'ほかの団体から借りる') : (id ? '貸している楽器の記録を直す' : 'ほかの団体に貸す'), wide: true, content: `<div class="grid">
       <label class="fld wide"><span>${isIn ? '借りる相手（団体）' : '貸す相手（団体）'}</span><input type="text" id="dOrg" value="${esc(d.org)}" placeholder="例：市立〇〇中学校 吹奏楽部"></label>
       <label class="fld wide"><span>相手の担当・連絡先</span><input type="text" id="dCon" value="${esc(d.contact)}" placeholder="例：顧問 〇〇先生（電話 000-0000）"></label>
@@ -2066,7 +2076,7 @@ function dealSheet(dir, id = null) {
     </div>
     ${isIn ? `<h3 style="font-size:14px;margin:14px 0 6px">${id ? '借りる楽器を足す' : '借りる楽器'}<small class="muted" style="font-weight:400">　台帳に「借用」の楽器として入ります</small></h3>
       ${id ? `<p class="note" style="margin:0 0 6px">いま入っている楽器：${d.items.map(x => esc([dealItem(d, x).no, dealItem(d, x).name].filter(Boolean).join(' '))).join('、') || 'なし'}</p>` : ''}
-      <div id="dRows">${id ? '' : row()}</div><button class="btn sm" id="dRowAdd">＋ 行を足す</button>`
+      <div class="inhead"><span>楽器</span><span>番号</span><span>メーカー・型番</span><span>製造番号</span><span>台数</span><span></span></div><div id="dRows">${id ? '' : row()}</div><button class="btn sm" id="dRowAdd">＋ 行を足す</button>`
     : `<h3 style="font-size:14px;margin:14px 0 6px">貸す楽器<small class="muted" style="font-weight:400" id="dCnt"></small></h3><input type="search" id="dQ" placeholder="番号・楽器でさがす" aria-label="楽器をさがす" style="margin-bottom:6px"><div class="dl-pick" id="dPick">${pick.map(i => `<label class="${free(i) ? '' : 'off'}"><input type="checkbox" value="${esc(i.id)}" ${d.items.includes(i.id) ? 'checked' : ''} ${free(i) ? '' : 'disabled'}><span class="mono" style="min-width:4.5em">${esc(i.no)}</span><span style="flex:1">${esc(i.name)}</span><span class="muted" style="font-size:12px">${esc(!free(i) ? (i.lentTo ? lendTo(i) + 'に貸し出し中' : OWNERS[i.owner]) : STATES[i.state][0])}</span></label>`).join('') || '<p class="muted">楽器がありません</p>'}</div>`}`,
     actions: [{ label: 'やめる' }, { label: id ? '直す' : isIn ? '借りる' : '貸す', primary: true, onClick: body => {
       const org = norm($('#dOrg', body).value); if (!org) { toast('相手の団体を入れてください'); $('#dOrg', body).focus(); return false; }
@@ -2185,7 +2195,7 @@ $('#userBulk').onclick = () => {
   const opts = f => { const mine = ms.filter(m => f && (GKY.familyOf(m.part) === f || (m.subs || []).map(GKY.familyOf).includes(f))), rest = ms.filter(m => !mine.includes(m)); return mine.concat(rest).map(m => `<option value="${esc(m.name)}">${esc([GKY.familyOf(m.part), m.grade].filter(Boolean).join('・'))}</option>`).join(''); };
   const sh = sheet({ title: '使う人をまとめて決める', wide: true, content: `<p class="lead">楽器ごとに、今年度の使う人を入れます（名前を入れるか、出てくる候補から選ぶ）。同じパートの${esc(GKY.words().member)}が先に出ます。空にすると、使う人なしになります。</p>
     ${fams.map(f => `<datalist id="${dl(f)}">${opts(f)}</datalist>`).join('')}
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>番号</th><th>楽器</th><th>持ち主</th><th>使う人</th></tr></thead><tbody>${xs.map(i => `<tr data-id="${esc(i.id)}"><td class="mono">${esc(i.no)}</td><td>${esc(i.name)}</td><td>${esc(OWNERS[i.owner])}</td><td><input type="text" value="${esc(i.user)}" list="${dl(GKY.familyOf(i.part) || '')}" aria-label="${esc(i.no + ' ' + i.name)}の使う人" style="min-width:9em"></td></tr>`).join('')}</tbody></table></div>
+    <div class="tbl-wrap"><table class="tbl ubt"><thead><tr><th>楽器</th><th class="ow">持ち主</th><th>使う人</th></tr></thead><tbody>${xs.map(i => `<tr data-id="${esc(i.id)}"><td><span class="mono" style="font-size:12px">${esc(i.no)}</span><br>${esc(i.name)}</td><td class="ow">${esc(OWNERS[i.owner])}</td><td><input type="text" value="${esc(i.user)}" list="${dl(GKY.familyOf(i.part) || '')}" aria-label="${esc(i.no + ' ' + i.name)}の使う人" style="min-width:8em"></td></tr>`).join('')}</tbody></table></div>
     <div id="ubFree"></div>`,
     actions: [{ label: 'やめる' }, { label: '決める', primary: true, onClick: body => {
       const ch = $$('tr[data-id]', body).map(tr => ({ id: tr.dataset.id, v: norm($('input', tr).value) })).filter(r => byId(r.id).user !== r.v);

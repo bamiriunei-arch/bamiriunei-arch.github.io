@@ -27,6 +27,7 @@
 ## ほかのツールとのつながり
 
 - **楽屋**：編成計画の「今の人数」を楽屋の部員（学年とパート）から数えられます。決まった新入部員を楽屋の部員に足せます
+- **部員用の端末**：楽屋で部員用にした端末では、楽屋の部員を足しません
 
 ## データの保存について
 
@@ -71,5 +72,5 @@ npx playwright install chromium
 node test-all.js gakkigime
 ```
 
-`tests/app.spec.js` がパソコンの幅、`tests/phone.spec.js` がスマホの幅（390px）のテストです。
+`tests/app.spec.js` がパソコンの幅、`tests/phone.spec.js` がスマホの幅（390px）、`tests/v2.spec.js` がv2 の版で足した機能のテストです。
 テストでは `index.html?test` のようにアドレスに `?test` を付けて開き、アプリの中身を `window.__app` から触っています。ふだんの使い方（`?test` なし）では何も変わりません。

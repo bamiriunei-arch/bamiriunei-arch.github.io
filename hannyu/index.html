@@ -1294,7 +1294,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1661,7 +1662,7 @@ const GKY = (() => {
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
 const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
-  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の積み込みリストを開くか作ります'] },
+  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の積み込みリストを開くか作ります', '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました'] },
   { v: '2', d: '2026-10-06', items: [
     '見るだけのリンク・QRコードを作れるようにしました。運ぶ人は、自分の担当や車でしぼって、自分のスマホでチェックできます',
     '同じ搬入出リストを2つのタブで開いて直したとき、黙って上書きしないようにしました',

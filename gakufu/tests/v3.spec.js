@@ -111,7 +111,7 @@ test('曲目一覧：パートごとのPDFを表で見て、全部のパート�
   await expect(tr('スコア')).toContainText('2. ふるさと');
   await expect(tr('Tp1').locator('td').nth(1)).toHaveText('2／2曲');
   await expect(tr('Tp2').locator('td').nth(1)).toHaveText('2／2曲');
-  await expect(tr('Tp3').locator('td').nth(1)).toHaveText('0／2曲');
+  await expect(tr('Tp3').locator('td').nth(1)).toHaveText('0／1曲');   // Tp3 があるのは宝島だけ
   await expect(tr('Tp3')).toContainText('1. 宝島');
   await expect(tr('Tp3').locator('[data-bsend]')).toHaveCount(0);
   // パートの送るファイルの名前（演奏する順・曲名・パート）

@@ -1316,7 +1316,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1683,7 +1684,7 @@ const GKY = (() => {
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
 const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
-  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の資料を開くか作ります'] },
+  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定の「楽屋の本番」）。楽屋の本番から開くと、その本番の資料を開くか作ります', '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました'] },
   { v: '2', d: '2026-10-06', items: [
     '同じ仕込み図を2つのタブで開いて直したとき、黙って上書きしないようにしました',
     '楽屋シリーズ共通：印刷の用紙（A4・B4・A3）を選べるようにし、2ページ以上の表で各ページの最後の行が切れることがあったのを直しました。ホーム画面に追加すると、どのツールからでも「楽屋」という1つのアプリになります。文字を大きくする設定と「ご意見」のリンク（画面左上の名前を押す）も使えます。一般の団体・地域クラブでは、画面の「部員」「休部」「顧問」を「団員」「休団」「団長（代表）」にそろえます。最後のバックアップから日がたつと（学校は7日、ほかは30日）、ツールの画面でも1日1回お知らせします',

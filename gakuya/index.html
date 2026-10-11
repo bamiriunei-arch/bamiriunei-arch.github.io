@@ -1480,7 +1480,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1857,6 +1858,7 @@ const CHANGELOG = [
     '置き方のタブをなくしました（手順はリポジトリの README にあります）',
     'ご意見・アンケートのフォーム（バミリと同じ）を、ツールの一覧の下と、ときどき出るお願いに入れました',
     '保存している量に、録音・楽譜のPDFの「ファイル置き場」の量も出すようにしました',
+    'ほかのツールも新しくなりました：楽譜ライブラリのPDF楽譜（パートごとにまとめて送る）、テンポマップの通しの録音、合奏ノートの提出とコメントの配布、楽器台帳のほかの団体との貸し借り（貸出書・借用書）、ドリルボードとのつながり（楽屋の部員・録音）。つながりは「つながり」のタブで見られます',
   ] },
   { v: '4', d: '2026-10-06', items: [
     '団体の種類（中学校・高校・中高一貫・大学・一般・地域クラブ）を選べるようにしました。学年の選び方・進級・呼び方（部員／団員）が種類に合わせて変わります',
@@ -2634,14 +2636,14 @@ function renderLinks() {
   const o = GKY.org(), w = GKY.words(o.org.type);
   const card = (title, color, rows) => `<div class="flowc"><h3><span class="tape" style="--tc:${color};--ti:${['#E3B23C', '#DD7A2B'].includes(color) ? '#1B1A14' : '#fff'}">${esc(title)}</span></h3>${rows.map(r => `<div class="row"><span>${esc(r[0])}</span><span>${r[1]}</span></div>`).join('')}</div>`;
   $('#flow').innerHTML = [
-    card(`${w.member}（${o.members.filter(m => m.status === 'active').length}人）`, '#2B2F36', [['入れる所', '<span class="tn">楽屋（この画面）</span>' + tn('gakkigime')], ['使う所', ['kouban', 'gakufu', 'gakkigime', 'gakki', 'hannyu', 'shukketsu', 'kaikei', 'gassou'].map(tn).join('')], ['使い方', 'パート割りの候補、できる曲の判定、来年の人数の予測、楽器を使う人・貸し出し先、運搬の担当、出欠の名簿、団費の名簿、合奏ノートのパート']]),
+    card(`${w.member}（${o.members.filter(m => m.status === 'active').length}人）`, '#2B2F36', [['入れる所', '<span class="tn">楽屋（この画面）</span>' + tn('gakkigime')], ['使う所', ['kouban', 'gakufu', 'gakkigime', 'gakki', 'hannyu', 'shukketsu', 'kaikei', 'gassou', 'drillboard'].map(tn).join('')], ['使い方', 'パート割りの候補、できる曲の判定、来年の人数の予測、楽器を使う人・貸し出し先、運搬の担当、出欠の名簿、団費の名簿、合奏ノートのパート、ドリルボードの隊員']]),
     card(`本番（${o.concerts.length}）`, '#44539E', [['入れる所', '<span class="tn">楽屋（本番）</span>' + LINKS.map(L => tn(L.slug)).join('')], ['使う所', LINKS.map(L => tn(L.slug)).join('')], ['使い方', '楽屋の「本番」から、その本番のスケジュール・香盤表・曲目一覧・音響照明の資料・積み込み・出欠・予算をまとめて開けます。各ツールの「楽屋の本番」の欄でつなぎます（日付が同じ記録は、自動でその本番のものになります）']]),
     card(`曲（${o.songs.length}曲）`, '#2F6CC8', [['入れる所', tn('gakufu')], ['使う所', ['kouban', 'tempomap'].map(tn).join('')], ['使い方', '楽譜に入れた編成が、コウバンの受け持ちになります。テンポマップで新しい曲を作るときに選べます']]),
     card(`楽器（${o.instruments.length}台）`, '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', ['hannyu', 'gakkigime'].map(tn).join('')], ['使い方', '運ぶ楽器を台帳から選べます。楽器決めでは、学校・団体の楽器の台数を募集人数の目安にします']]),
     card('ステマネのファイル', '#A3192B', [['作る所', tn('stagemane')], ['使う所', ['kouban', 'shikomi', 'gakufu'].map(tn).join('')], ['使い方', '曲の順番（コウバン）、きっかけ表（仕込み図）、演奏の記録と曲目一覧（楽譜ライブラリ）']]),
     card('バミリの配置図', '#E3B23C', [['作る所', tn('bamiri')], ['使う所', ['kouban', 'shikomi', 'hannyu'].map(tn).join('')], ['使い方', '席に名前を入れて返す（コウバン）、仕込み図の下絵（仕込み図）、運ぶ打楽器と譜面台の数（搬入出リスト）。同じ場所なら、バミリで開いている配置図をそのまま使えます']]),
     card('テンポマップの共有コード', '#2B9457', [['作る所', tn('tempomap')], ['使う所', tn('gassou')], ['使い方', '録音に小節の目印をつける（テンポや拍子が変わる曲、くり返しやカットのある曲も）']]),
-    card('録音・楽譜のファイル', '#2B9457', [['入れる所', ['tempomap', 'gassou', 'gakufu'].map(tn).join('')], ['使う所', ['gassou', 'drillboard', 'gakufu'].map(tn).join('')], ['使い方', 'テンポマップで録った通しの録音を、合奏ノートで小節の目印つきで聞けます（ドリルボードの音源にも）。楽譜ライブラリのPDFは、パートごとにまとめて送れます。ファイルはこの端末の中（ファイル置き場）にあります']]),
+    card('録音・楽譜のファイル', '#2B9457', [['入れる所', ['tempomap', 'gassou', 'gakufu', 'drillboard'].map(tn).join('')], ['使う所', ['gassou', 'drillboard', 'gakufu'].map(tn).join('')], ['使い方', 'テンポマップで録った通しの録音を、合奏ノートで小節の目印つきで聞けます（ドリルボードの音源にも）。楽譜ライブラリのPDFは、パートごとにまとめて送れます。ファイルはこの端末の中（ファイル置き場）にあります']]),
     card('出欠', '#5B7A1B', [['入れる所', tn('shukketsu')], ['使う所', ['kouban', 'gassou'].map(tn).join('')], ['使い方', '本番の日に欠席の人を、コウバンの「休み」に入れられます。合奏ノートには、その日の欠席・遅刻の人を出します']]),
     card('楽器の修理代', '#DD7A2B', [['入れる所', tn('gakki')], ['使う所', tn('kaikei')], ['使い方', '楽器台帳の修理の記録に入れた金額を、会計の帳簿にまとめて入れられます（二重には入りません）']]),
     card(`${w.member}用の設定リンク`, '#C43F7D', [['作る所', '<span class="tn">楽屋（団体・年度）</span>'], ['使う所', `<span class="tn">${esc(w.member)}のスマホの楽屋</span>`], ['使い方', `${w.member}の端末に、団体の名前・本番の予定・名簿（決めたとき）と、使うツールを入れます`]]),

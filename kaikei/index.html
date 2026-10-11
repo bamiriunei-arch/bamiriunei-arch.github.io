@@ -1283,7 +1283,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1650,7 +1651,7 @@ const GKY = (() => {
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
 const APP_VERSION = '2', APP_DATE = '2026-10-11';
 const CHANGELOG = [
-  { v: '2', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（予算の「楽屋の本番」）。楽屋の本番から開くと、その本番の予算を開くか作ります', '楽器台帳の修理・点検などの記録に入れた金額を、帳簿にまとめて入れられるようにしました（二重には入りません）'] },
+  { v: '2', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（予算の「楽屋の本番」）。楽屋の本番から開くと、その本番の予算を開くか作ります', '楽器台帳の修理・点検などの記録に入れた金額を、帳簿にまとめて入れられるようにしました（二重には入りません）', '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました'] },
   { v: '1', d: '2026-10-06', items: ['はじめての版：収入と支出の帳簿（残高つき・立替の管理）、団費・部費の集金（受け取り・免除・まだの人）、演奏会などの予算と実績、年度の会計報告（繰越・科目ごと・署名欄）、CSV'] },
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（バミリと同じ）を使います

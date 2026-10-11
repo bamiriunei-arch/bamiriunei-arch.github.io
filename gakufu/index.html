@@ -1372,7 +1372,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1745,6 +1746,7 @@ const CHANGELOG = [
     'PDFをzipにまとめて保存し、ほかの端末で読み込めるようにしました（「取り込み・書き出し」）',
     '曲目一覧を楽屋の「本番」とつなげるようにしました。楽屋の本番から開くと、その本番の曲目一覧を開くか作ります',
     '部員用の端末では、楽屋への反映をしないようにしました',
+    '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました',
   ] },
   { v: '2', d: '2026-10-06', items: [
     '「今の部員でできる曲」の数え方を直しました：打楽器は楽器ごとではなく人数で数え（曲ごとに「打楽器の人数」を入れられます）、「なくても可」にしたパートは足りなくても数えません。ピッコロ←フルート、バストロンボーン←トロンボーンのような近い楽器の持ち替えも数え、「できる（持ち替え）」と出します',
@@ -2186,7 +2188,7 @@ async function addPdfs(songId, fs) {
   const r = await putScores(items.map(it => ({ ...it, s, part: guessPart(it.name, s) })));
   if (r.added) GKY.media.persist();
   renderTab();
-  toast([r.added ? `「${s.title}」にPDFを${r.added}個入れました（パートがちがうときは左の欄で直せます）` : 'PDFは入りませんでした', r.same ? `同じファイル ${r.same}個は入れていません` : '', skip.length ? `PDF・画像でないファイル ${skip.length}個は入れていません` : '', r.err ? r.err : ''].filter(Boolean).join('。'), '', null, 6000);
+  toast([r.added ? `「${s.title}」にPDFを${r.added}個入れました（パートがちがうときは、パートの欄で直せます）` : 'PDFは入りませんでした', r.same ? `同じファイル ${r.same}個は入れていません` : '', skip.length ? `PDF・画像でないファイル ${skip.length}個は入れていません` : '', r.err ? r.err : ''].filter(Boolean).join('。'), '', null, 6000);
   return r.added;
 }
 /* まとめて入れる：[{ name, blob, s(曲), part }]。同じ曲・同じ名前・同じ大きさは入れない */
@@ -2356,7 +2358,7 @@ $('#slPdf').onclick = async () => {
   await loadPdfs();
   const L = SL(S), rows = bundleRows(xs), any = rows.some(r => r.have.length);
   const sh = sheet({ title: `パートごとのPDF（${L.title || '曲目一覧'}）`, content: any ? `<p class="lead" style="margin-bottom:8px">パートごとに、この曲目一覧の曲のPDFをまとめて送れます（スマホでは送る画面、パソコンではファイルに保存）。ファイルの名前は「01_曲名_パート」で、演奏する順に並びます。</p>
-    <div class="tbl-wrap"><table class="tbl bund"><thead><tr><th>パート</th><th class="num">PDF</th><th>ない曲</th><th></th></tr></thead><tbody>${rows.map((r, ri) => `<tr data-ri="${ri}"><td><span class="tape">${esc(r.k)}</span></td><td class="num">${r.have.length}／${xs.length}曲</td><td>${r.miss.length ? r.miss.map(p => `<span class="miss">${p.i + 1}. ${esc(p.s.title)}</span>`).join('') : '<span class="muted">—</span>'}</td><td>${r.have.length ? '<button class="btn sm" data-bsend>送る</button>' : ''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tbl-wrap"><table class="tbl bund"><thead><tr><th>パート</th><th class="num">PDF</th><th>ない曲</th><th></th></tr></thead><tbody>${rows.map((r, ri) => `<tr data-ri="${ri}"><td><span class="tape">${esc(r.k)}</span></td><td class="num">${r.have.length}／${r.per.filter(p => p.need || p.ms.length).length}曲</td><td>${r.miss.length ? r.miss.map(p => `<span class="miss">${p.i + 1}. ${esc(p.s.title)}</span>`).join('') : '<span class="muted">—</span>'}</td><td>${r.have.length ? '<button class="btn sm" data-bsend>送る</button>' : ''}</td></tr>`).join('')}</tbody></table></div>
     <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="bZip">全部のパートをzipで保存</button></div>
     <p class="note">zipの中は、パートごとのフォルダに分かれます（「曲目一覧.txt」に曲の順番と、PDFのない曲も書きます）。PDFは「楽譜」で曲を選んで入れます。</p>`
     : `<div class="empty"><b>この曲目一覧の曲には、まだPDFが入っていません</b>「楽譜」で曲を選んで、「＋ PDFを入れる」から入れてください。</div>`, actions: [{ label: '閉じる' }] });

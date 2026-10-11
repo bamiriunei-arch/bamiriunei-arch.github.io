@@ -1415,7 +1415,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1788,6 +1789,7 @@ const CHANGELOG = [
     '「楽譜ライブラリの曲目一覧から」：同じ本番の曲目一覧の曲を、編成（受け持ち）ごと順番どおりに入れられます',
     '「出欠から休みを入れる」：出欠で、この演奏会の日に欠席の人を「休み」にします',
     '仮引退の人を、演奏会ごとに候補に入れられるようにしました（演奏会の設定）',
+    '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました',
   ] },
   { v: '2', d: '2026-10-06', items: [
     '曲ごとに指揮者と部（第1部など）を入れられるようにしました。印刷・コピーにも出ます。ステマネから読み込むときも入ります',

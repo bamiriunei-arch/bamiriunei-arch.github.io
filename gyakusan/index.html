@@ -1260,7 +1260,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1625,8 +1626,9 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: ['楽屋の「本番」とつなげるようにしました（本番の設定・新しい本番の「楽屋の本番」）。楽屋の本番から開くと、その本番の準備のスケジュールを開くか作ります（コンクールの本番なら、ひな形もコンクールに）', '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました'] },
   { v: '2', d: '2026-10-06', items: [
     '見るだけのリンク・QRコードで、本番までのスケジュールを配れるようにしました（受け取った人は担当でしぼって見られます）',
     'ひな形を足しました：学校行事（文化祭・式典）、新入生歓迎・部活動紹介、大学の定期演奏会（会場の抽選・広告集め・OB/OG への案内）、合宿',

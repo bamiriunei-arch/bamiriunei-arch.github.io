@@ -1447,7 +1447,8 @@ const GKY = (() => {
     $('[data-close]', veil).onclick = close;
     document.body.appendChild(veil);
     const first = $('input:not([type=checkbox]),select,textarea,button:not([data-close])', body) || $('[data-close]', veil);
-    setTimeout(() => first && first.focus && first.focus({ preventScroll: true }), 30);
+    // はじめの欄に入る。ただし、もう中の欄を使いはじめていたら（すばやく押した・打った）そのまま（打った文字がほかの欄に入らないように）
+    setTimeout(() => { if (!closed && first && first.focus && !veil.contains(document.activeElement)) first.focus({ preventScroll: true }); }, 30);
     return { el: veil, body, close };
   }
   /* 消すなど取り消しにくい操作は「もう一度押すと〜」の2段階にする */
@@ -1820,6 +1821,7 @@ const CHANGELOG = [
     '開いた録音をこの端末に入れておき、次からは選ばなくても開くようにしました。「入っている録音」から、テンポマップで録った録音なども選べます',
     'テンポマップでクリックを鳴らしながら録った録音は、開くと小節の目印が自動でつきます',
     'ノートに、その日の出欠（出欠のツールで入れた欠席・遅刻・早退）を出し、ノートに書き込めるようにしました',
+    '楽屋シリーズ共通：楽屋で「部員用の端末」にしたスマホでは、決めたツールだけを開き、楽屋のデータ（部員・曲・楽器・本番）を書きかえないようにしました。録音・楽譜のファイルをツールどうしで使う「ファイル置き場」と、「仮引退」を入れました',
   ] },
   { v: '3', d: '2026-10-06', items: [
     '長い録音でもメモリを使いすぎないようにしました。録音はファイルのまま再生し、波形はファイルを少しずつ読んで作ります（60分の録音で、前は 1GB 以上使うことがありました）',
@@ -2410,12 +2412,12 @@ function subFlow() {
   const part0 = GKY.pref('myPart', '') || (mem ? mem.part : '');
   sheet({ title: `${w.staff}・代表者にノートを提出`, content: `<p class="lead">「${esc(n.title)}」${n.date ? '（' + esc(GKY.jpDate(n.date)) + '）' : ''}のノートを、リンクにして送ります。受け取った人がリンクを開くと、提出されたノートの一覧に入ります。</p>
     <div class="grid"><label class="fld"><span>名前</span><input type="text" id="sbName" value="${esc(me)}" autocomplete="name"></label><label class="fld"><span>パート</span><input type="text" id="sbPart" value="${esc(part0)}" placeholder="例：Tp"></label></div>
-    <label class="chk" style="margin-top:8px"><input type="checkbox" id="sbCm" ${n.comments.length ? 'checked' : 'disabled'}> 録音へのコメント（${n.comments.length}件）も入れる</label>`,
+    ${n.comments.length ? `<label class="chk" style="margin-top:8px"><input type="checkbox" id="sbCm" checked> 録音へのコメント（${n.comments.length}件）も入れる</label>` : ''}`,
     actions: [{ label: 'やめる' }, { label: 'リンクを作る', primary: true, onClick: body => {
       const name = norm($('#sbName', body).value), part = norm($('#sbPart', body).value);
       if (!name) { toast('名前を入れてください'); $('#sbName', body).focus(); return false; }
       GKY.setPref('myName', name); GKY.setPref('myPart', part);
-      const p = { k: 'gassou-n', v: 1, nm: name, pt: part, t: n.title, d: n.date, m: n.memo, c: $('#sbCm', body).checked ? n.comments.map(c => [Math.round(c.t * 10) / 10, c.text, c.kind, c.parts, barAt(n, c.t)]) : [], at: Date.now(), o: GKY.org().org.name };
+      const p = { k: 'gassou-n', v: 1, nm: name, pt: part, t: n.title, d: n.date, m: n.memo, c: $('#sbCm', body) && $('#sbCm', body).checked ? n.comments.map(c => [Math.round(c.t * 10) / 10, c.text, c.kind, c.parts, barAt(n, c.t)]) : [], at: Date.now(), o: GKY.org().org.name };
       GKY.packShare(p).then(code => GKY.shareSheet({ title: 'ノートを提出するリンク', url: GKY.pageUrl('gassou') + '#n=' + code, keep: true, note: `このリンクを、${esc(w.staff)}・代表者に LINE などで送ってください。受け取った人の端末の合奏ノートに入ります（このリンクを開いた人は、だれでもノートを読めます）。` }));
     } }] });
 }
@@ -2594,14 +2596,15 @@ function renderInbox() {
   $('#inDates').innerHTML = xs.length ? `<button class="chip" data-d="" aria-pressed="${!inDate}">すべて</button>` + dates.map(d => `<button class="chip" data-d="${esc(d)}" aria-pressed="${inDate === d}">${esc(d ? GKY.mdDate(d) : '日付なし')}（${xs.filter(x => x.date === d).length}）</button>`).join('') : '';
   $$('#inDates [data-d]').forEach(b => b.onclick = () => { inDate = b.dataset.d; renderInbox(); });
   const ys = inShown();
-  $('#inList').innerHTML = ys.length ? ys.map(x => `<div class="sub fold${x.read ? '' : ' unread'}" data-sid="${esc(x.id)}"><div class="hd"><b>${esc(x.name)}</b>${x.part ? `<span class="tape">${esc(x.part)}</span>` : ''}<small>${esc(x.title)}${x.date ? '・' + esc(GKY.mdDate(x.date)) : ''}</small><span class="sp"></span><small>${x.read ? '' : '<b style="color:var(--tape)">まだ読んでいない</b>　'}${esc(new Date(x.got).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}に受け取り</small></div>
+  const long = x => x.memo.split('\n').length > 6 || x.memo.length > 240;
+  $('#inList').innerHTML = ys.length ? ys.map(x => `<div class="sub${long(x) ? ' fold' : ''}${x.read ? '' : ' unread'}" data-sid="${esc(x.id)}"><div class="hd"><b>${esc(x.name)}</b>${x.part ? `<span class="tape">${esc(x.part)}</span>` : ''}<small>${esc(x.title)}${x.date ? '・' + esc(GKY.mdDate(x.date)) : ''}</small><span class="sp"></span><small>${x.read ? '' : '<b style="color:var(--tape)">まだ読んでいない</b>　'}${esc(new Date(x.got).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}に受け取り</small></div>
     ${x.memo.trim() ? `<div class="body">${esc(x.memo)}</div>` : ''}
     ${x.cm.length ? `<div class="scm">${x.cm.map(c => `<div><b>${c[4] != null ? esc(c[4]) + '小節' : GKY.clock(c[0])}</b><span>${subMark(c[2])}${esc(c[1])}${c[3].join('') !== '全体' ? `［${esc(c[3].join('・'))}］` : ''}</span></div>`).join('')}</div>` : ''}
-    <div class="btnrow"><button class="btn sm" data-sopen>${x.memo.split('\n').length > 6 ? '全部見る' : '読んだ'}</button><button class="btn sm" data-sread>${x.read ? 'まだにする' : '読んだにする'}</button><button class="btn sm" data-scopy>コピー</button><span style="flex:1"></span><button class="ibtn del" data-sdel aria-label="消す">×</button></div></div>`).join('')
+    <div class="btnrow">${long(x) ? '<button class="btn sm" data-sopen>全部見る</button>' : ''}<button class="btn sm" data-sread>${x.read ? 'まだにする' : '読んだにする'}</button><button class="btn sm" data-scopy>コピー</button><span style="flex:1"></span><button class="ibtn del" data-sdel aria-label="消す">×</button></div></div>`).join('')
     : `<div class="empty"><b>${xs.length ? 'この日の提出はありません' : 'まだ提出はありません'}</b>${esc(GKY.words().member)}が合奏ノートの「提出する」で作ったリンクを開くか、右の欄に貼ると入ります。</div>`;
   $$('#inList .sub').forEach(card => {
     const id = card.dataset.sid, X = () => S.inbox.find(y => y.id === id);
-    $('[data-sopen]', card).onclick = e => { card.classList.remove('fold'); e.target.remove(); if (!X().read) { X().read = true; persist(); card.classList.remove('unread'); updInCount(); } };
+    const so = $('[data-sopen]', card); if (so) so.onclick = e => { card.classList.remove('fold'); e.target.remove(); if (!X().read) { X().read = true; persist(); card.classList.remove('unread'); updInCount(); } };
     $('[data-sread]', card).onclick = () => { X().read = !X().read; persist(); renderInbox(); };
     $('[data-scopy]', card).onclick = () => GKY.copyText(subText(X()), 'コピーしました');
     GKY.arm($('[data-sdel]', card), () => { const gone = X(), i = S.inbox.indexOf(gone); S.inbox.splice(i, 1); persist(); renderInbox(); toast(`${gone.name}さんのノートを消しました`, '元に戻す', () => { S.inbox.splice(i, 0, gone); persist(); renderInbox(); }); }, '消す？');
