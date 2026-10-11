@@ -357,6 +357,31 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
 #pNew{margin-left:auto}
 /* スマホ：1段目に日付と「新しい合奏」、2段目に名前（長い名前も見えるように） */
 @media (max-width:560px){ .notepage{padding:12px 12px 8px; border-radius:10px} .pagehead input[type="text"]{order:3; flex-basis:100%} }
+/* その日の出欠・提出 */
+.attline{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; margin-top:10px; padding:7px 10px; border-radius:8px; background:var(--surface-2); font-size:12.5px}
+.attline .lbl{color:var(--muted)}
+.attline b{font-weight:700}
+.attline .sp{flex:1}
+.subbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line)}
+.subbar .hint{font-size:12px; color:var(--muted)}
+.subs{display:flex; flex-direction:column; gap:8px}
+.sub{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+.sub.unread{box-shadow:inset 3px 0 0 var(--tape)}
+.sub .hd{display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px}
+.sub .hd .sp{flex:1}
+.sub .hd small{color:var(--muted); font-size:12px}
+.sub .body{white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.7; margin-top:6px}
+.sub.fold .body{display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden}
+.sub .scm{font-size:12.5px; margin-top:6px; color:var(--muted)}
+.sub .scm div{display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px}
+.sub .scm b{font-family:var(--f-mono); color:var(--ink); font-weight:600}
+.sub .btnrow{margin-top:8px}
+.storelist{display:flex; flex-direction:column; gap:6px}
+.storelist .item .t2 b{font-family:var(--f-mono)}
+/* 見るだけのリンク */
+.vw-audio{width:100%; margin:6px 0 10px}
+.vw-bar{display:flex; flex-wrap:wrap; gap:4px; margin:8px 0}
+.vw-list .cm{cursor:pointer}
 /* 印刷のノート：段落ごと（長い段落は区切って）ページに入れる */
 .gky-page .memo-p{font-size:10.5pt; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere}
 .gky-page .memo-p b{font-weight:700}
@@ -376,7 +401,8 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
     <button data-tab="note">ノート</button>
     <button data-tab="rec">録音とコメント</button>
     <button data-tab="bars">小節の目印</button>
-    <button data-tab="out">書き出し</button>
+    <button data-tab="out">書き出し・配る</button>
+    <button data-tab="inbox" data-staff>提出<span class="count" id="cntIn"></span></button>
   </nav>
   <main class="gky-main">
     <div id="sampleBar"></div>
@@ -401,8 +427,10 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
           <button class="chip" data-h="直すこと">【直すこと】</button>
           <button class="chip" data-h="次までに">【次までに】</button>
         </div>
+        <div class="attline" id="attLine" hidden></div>
         <textarea class="memo" id="memo" aria-label="ノート（自由に書けます）" placeholder="自由に書けます。&#10;やったこと、気づいたこと、次の合奏までにすることなど"></textarea>
         <div class="memo-foot"><span class="cnt" id="memoCount"></span><span id="memoSaved"></span></div>
+        <div class="subbar" id="subBar" data-member hidden></div>
       </div>
     </section>
 
@@ -417,6 +445,7 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
         <button class="btn sm" id="setA" title="くり返しの始め">A</button><button class="btn sm" id="setB" title="くり返しの終わり">B</button><button class="btn sm ghost" id="clrAB">くり返しなし</button>
         <span class="zoom"><button class="chip" data-z="0" aria-pressed="true">全体</button><button class="chip" data-z="30">30秒</button><button class="chip" data-z="10">10秒</button></span>
         <button class="btn" id="pickFile">録音を選ぶ</button>
+        <button class="btn" id="pickStore" title="この端末に入っている録音（テンポマップで録った録音など）から選びます">入っている録音</button>
       </div>
     </div>
 
@@ -478,6 +507,35 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
       </div>
     </section>
 
+    <section data-panel="inbox" data-staff hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>提出されたノート<small id="inSum"></small></h2>
+            <div class="btnrow" id="inDates" style="margin-bottom:8px"></div>
+            <div class="subs" id="inList"></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>まとめて見る</h2>
+            <div class="btnrow"><button class="btn" id="inPrint">印刷・PDF</button><button class="btn" id="inCopy">文字でコピー</button><button class="btn" id="inReadAll">全部を読んだにする</button></div>
+            <p class="note">上で選んだ日の分（「すべて」のときは全部）を出します。</p>
+          </div>
+          <div class="sec">
+            <h2>届いたリンクを入れる</h2>
+            <p class="lead">部員から届いた提出のリンクを、ここにまとめて貼れます（いくつでも。LINEのトークをそのまま貼っても読みます）。リンクを開いても入ります。</p>
+            <textarea id="inPaste" placeholder="https://…/gassou/#n=…" aria-label="提出のリンク" style="min-height:80px"></textarea>
+            <div class="btnrow" style="margin-top:8px"><button class="btn primary" id="inAdd">入れる</button></div>
+          </div>
+          <div class="sec">
+            <h2>部員が提出するには</h2>
+            <p class="lead" id="inHow"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section data-panel="out" hidden>
       <div class="gky-cols">
         <div>
@@ -500,7 +558,19 @@ kbd{font-family:var(--f-mono); font-size:11px; padding:1px 5px; border:1px solid
           <div class="sec">
             <h2>ファイル</h2>
             <div class="btnrow"><button class="btn" id="jsonOut">この合奏をファイルに保存</button><button class="btn" id="jsonIn">ファイルから読み込む</button><button class="btn" id="csvOut">コメントをCSVで保存</button></div>
-            <p class="note">「この合奏をファイルに保存」には、ノート・コメント・小節の目印が入ります。録音は入らないので、開くときに録音のファイルをもう一度選んでください。録音は、どこにもアップロードしません。</p>
+            <p class="note">「この合奏をファイルに保存」には、ノート・コメント・小節の目印が入ります（録音は入りません）。録音もいっしょに渡すときは「録音とコメントをまとめて送る」を使ってください。「ファイルから読み込む」は、どちらのファイルも読めます。録音は、どこにもアップロードしません。</p>
+          </div>
+          <div class="sec">
+            <h2>録音へのコメントを配る</h2>
+            <div class="list">
+              <button class="item" id="shView"><div class="main"><div class="t1">見るだけのリンク</div><div class="t2">コメント（小節・時刻・パート）をスマホで見られます。自分のパートだけにもできます。録音を持っている人は、コメントの所から聞けます</div></div></button>
+              <button class="item" id="shZip"><div class="main"><div class="t1">録音とコメントをまとめて送る</div><div class="t2">zip のファイル。受け取った人が合奏ノートの「ファイルから読み込む」で開くと、録音とコメント・小節の目印が入ります</div></div></button>
+            </div>
+          </div>
+          <div class="sec" id="subSec">
+            <h2>ノートを提出する</h2>
+            <p class="lead">このノートを、リンクにして顧問・代表者に送ります。受け取った人が開くと、「提出」のタブに入ります。</p>
+            <div class="btnrow"><button class="btn" id="subGo2">提出のリンクを作る</button></div>
           </div>
         </div>
       </div>
@@ -1740,8 +1810,15 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '3', APP_DATE = '2026-10-06';
+const APP_VERSION = '4', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '4', d: '2026-10-11', items: [
+    '部員が自分で書いたノートを、代表者・顧問に「提出」できるようにしました（リンクで送ります）。代表者・顧問の端末では「提出」のタブに、日ごとにまとまります（印刷・コピーもできます）',
+    '録音へのコメントを、みんなに配れるようにしました：見るだけのリンク（録音を持っている人は、コメントの所から聞けます）と、録音とコメントをまとめたzip（受け取った人が読み込むと、そのまま聞けます）',
+    '開いた録音をこの端末に入れておき、次からは選ばなくても開くようにしました。「入っている録音」から、テンポマップで録った録音なども選べます',
+    'テンポマップでクリックを鳴らしながら録った録音は、開くと小節の目印が自動でつきます',
+    'ノートに、その日の出欠（出欠のツールで入れた欠席・遅刻・早退）を出し、ノートに書き込めるようにしました',
+  ] },
   { v: '3', d: '2026-10-06', items: [
     '長い録音でもメモリを使いすぎないようにしました。録音はファイルのまま再生し、波形はファイルを少しずつ読んで作ります（60分の録音で、前は 1GB 以上使うことがありました）',
     '波形：WAV・MP3 はどのブラウザでも、M4A・MP4・MOV は Chrome・Edge などで、長い録音でも出ます。出せないときは15分までの録音だけ出し、それより長いときは波形なしで再生・コメント・小節の目印を使えます',
@@ -1759,7 +1836,9 @@ const KINDS = { fix: '直す', check: '確かめる', good: 'よかった' };
 const PARTS = ['全体', ...GKY.PARTS.filter(p => !['E.H.', 'E♭Cl', 'A.Cl', 'Cor', 'Pf', 'Hp'].includes(p[0])).map(p => p[0])];
 
 /* ---------- データの形 ----------
-  S = { v:1, current, order:[id], notes:{ id: 合奏 } }
+  S = { v:1, current, order:[id], notes:{ id: 合奏 }, inbox:[提出されたノート] }
+  提出されたノート = { id, name, part, title, date, memo, cm:[[秒, 文, 種類, パート, 小節]], at(書いた人が送った時刻), got(受け取った時刻), read }
+  録音（file）= { name, size, dur, media(ファイル置き場の id。この端末に入れたとき) }
   合奏 = { id, title, date, sample, memo:'ノート（自由に書いた文）', file:{ name, size, dur }|null, bars:{ marks:[秒], start }, comments:[{ id, t, text, parts:[], kind, done }] } */
 const newNote = (o = {}) => Object.assign({ id: uid('n'), title: '新しい合奏', date: GKY.ymd(), sample: false, memo: '', file: null, bars: { marks: [], start: 1 }, comments: [] }, o);
 const SAMPLE_MEMO = `【やったこと】
@@ -1792,17 +1871,24 @@ function normalizeNote(n) {
   n.bars = { marks: (n.bars && Array.isArray(n.bars.marks) ? n.bars.marks : []).map(Number).filter(x => isFinite(x) && x >= 0).sort((a, b) => a - b), start: n.bars && isFinite(+n.bars.start) ? Math.round(+n.bars.start) : 1,
     nums: n.bars && Array.isArray(n.bars.nums) ? n.bars.nums.map(x => Math.round(+x) || 0) : null };
   if (n.bars.nums && n.bars.nums.length !== n.bars.marks.length) n.bars.nums = null;   // 目印と数が合わなければ、ふつうの続き番号
+  n.file = n.file && typeof n.file === 'object' && (n.file.name || n.file.media) ? { name: String(n.file.name || ''), size: +n.file.size || 0, dur: +n.file.dur || 0, media: typeof n.file.media === 'string' ? n.file.media : '' } : null;
   n.comments = (Array.isArray(n.comments) ? n.comments : []).filter(Boolean).map(c => ({ id: c.id || uid('c'), t: Math.max(0, +c.t || 0), text: String(c.text || ''), parts: (Array.isArray(c.parts) && c.parts.length ? c.parts : ['全体']).map(String), kind: KINDS[c.kind] ? c.kind : 'fix', done: !!c.done })).sort((a, b) => a.t - b.t);
   return n;
 }
+/* 提出されたノート */
+const normSub = x => ({ id: typeof x.id === 'string' && x.id ? x.id : uid('s'), name: norm(x.name) || '（名前なし）', part: norm(x.part), title: String(x.title || ''), date: /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : '', memo: String(x.memo || '').replace(/\r\n?/g, '\n').slice(0, 30000),
+  cm: (Array.isArray(x.cm) ? x.cm : []).filter(Array.isArray).slice(0, 500).map(c => [Math.max(0, +c[0] || 0), String(c[1] || ''), KINDS[c[2]] ? c[2] : 'fix', Array.isArray(c[3]) && c[3].length ? c[3].map(String) : ['全体'], c[4] == null || c[4] === '' ? null : +c[4]]),
+  at: +x.at || Date.now(), got: +x.got || Date.now(), read: !!x.read });
+const normInbox = xs => (Array.isArray(xs) ? xs : []).filter(x => x && typeof x === 'object').map(normSub).sort((a, b) => b.got - a.got);
 function load() {
   const s = GKY.store.get(KEY);
+  const inbox = normInbox(s && s.inbox);
   if (s && s.notes && Object.keys(s.notes).length) {
-    const out = { v: 1, current: s.current, order: [], notes: {} };
+    const out = { v: 1, current: s.current, order: [], notes: {}, inbox };
     (Array.isArray(s.order) ? s.order : Object.keys(s.notes)).forEach(id => { if (s.notes[id] && !out.notes[id]) { const n = normalizeNote(s.notes[id]); out.notes[n.id] = n; out.order.push(n.id); } });
     if (out.order.length) { if (!out.notes[out.current]) out.current = out.order[0]; return out; }
   }
-  const n = sampleNote(); return { v: 1, current: n.id, order: [n.id], notes: { [n.id]: n } };
+  const n = sampleNote(); return { v: 1, current: n.id, order: [n.id], notes: { [n.id]: n }, inbox };
 }
 let S = load();
 const N = () => S.notes[S.current];
@@ -2068,13 +2154,87 @@ async function mp4Peaks(blob, out, duration, progress, live) {
   return !err && got > 0;
 }
 
+/* --- 録音をこの端末（ファイル置き場）に入れる。次からは選ばなくても開く --- */
+const KEEP_MAX = 400 << 20;   // これより大きい録音（長い動画など）は入れない
+let waveNote = '';            // 波形の所に出す知らせ（読み込み中など）
+async function keepMedia(blob, info) {
+  if (!GKY.media.ok() || GKY.IN_VIEWER || blob.size > KEEP_MAX) return null;
+  const n = N(); let m = null;
+  try {
+    m = (await GKY.media.list(x => x.cat === 'audio' && x.name === info.name && x.size === blob.size))[0] || null;
+    if (!m) m = await GKY.media.put(blob, { cat: 'audio', name: info.name, type: blob.type || '', dur: n.file ? n.file.dur : 0, from: 'gassou', note: n.id, title: n.title });
+  } catch (e) { return null; }
+  if (S.notes[n.id] && S.notes[n.id].file) { S.notes[n.id].file.media = m.id; persist(); }
+  GKY.media.persist();
+  return m;
+}
+/* その合奏の録音がファイル置き場にあれば開く */
+async function loadStored(n = N()) {
+  const id = n.file && n.file.media; if (!id || !GKY.media.ok() || buf) return false;
+  waveNote = `「${n.file.name}」を読み込んでいます…`; draw();
+  const g = await GKY.media.get(id).catch(() => null);
+  waveNote = '';
+  if (S.current !== n.id) return false;
+  if (!g || !g.blob) { draw(); return false; }
+  try { await useMedia(g.blob, null, { name: g.meta.name }); return true; } catch (e) { draw(); toast('入っている録音を開けませんでした。「録音を選ぶ」から選んでください'); return false; }
+}
+/* 入っている録音（ファイル置き場の録音）から選ぶ */
+async function pickStore() {
+  const xs = GKY.media.ok() ? await GKY.media.list(m => m.cat === 'audio').catch(() => []) : [];
+  const src = m => GKY.APP_NAMES[m.from] || '';
+  const sh = sheet({ title: '入っている録音', content: xs.length ? `<p class="lead" style="margin-bottom:8px">この端末のファイル置き場にある録音です。選ぶと、この合奏（${esc(N().title)}）の録音にします。</p><div class="storelist">${xs.map(m => { const d = new Date(m.at); return `<button class="item" data-mid="${esc(m.id)}"><div class="main"><div class="t1">${esc(m.mapTitle || m.title || m.name)}</div><div class="t2">${esc(GKY.mdDate(GKY.ymd(d)))} ${d.getHours()}:${GKY.pad(d.getMinutes())}　${m.dur ? '<b>' + GKY.clock(m.dur) + '</b>　' : ''}${esc(src(m))}${m.click ? '・クリックつき（小節の目印が自動でつきます）' : ''}　${GKY.bytes(m.size)}</div></div></button>`; }).join('')}</div>`
+    : '<div class="empty"><b>入っている録音はありません</b>「録音を選ぶ」で開いた録音や、テンポマップの「録音」で録った録音が、ここに出ます。</div>', actions: [{ label: '閉じる' }] });
+  $$('[data-mid]', sh.body).forEach(b => b.onclick = async () => { sh.close(); await useStored(b.dataset.mid); });
+}
+/* ファイル置き場の録音を、いまの合奏の録音にする（テンポマップの録音なら、小節の目印もつける） */
+async function useStored(id, { quiet = false } = {}) {
+  const g = await GKY.media.get(id).catch(() => null);
+  if (!g || !g.blob) { toast('録音が見つかりませんでした'); return false; }
+  const n = N(), m = g.meta;
+  if (n.file && (n.file.media !== id) && (n.comments.length || n.bars.marks.length) && !quiet) toast('前とちがう録音にしました。コメントの時刻がずれていないか確かめてください', '', null, 6000);
+  unload(); waveNote = `「${m.name}」を読み込んでいます…`; draw();
+  try { await useMedia(g.blob, { name: m.name, size: m.size, media: id }, { name: m.name }); }
+  catch (e) { waveNote = ''; draw(); toast('この録音は開けませんでした'); return false; }
+  finally { waveNote = ''; }
+  const r = m.map ? tempoMarks(m) : null;
+  if (!quiet) toast(`「${m.name}」を開きました${r && r.auto ? `。テンポマップから${r.n}小節の目印をつけました` : r ? '。「小節の目印」で、テンポマップから目印をつけられます' : ''}`, '', null, 6000);
+  return r || true;
+}
+/* テンポマップで録った録音：クリックつきなら小節の目印をつける。クリックなしなら「テンポマップからつける」に曲・カット案・始まりを入れておく */
+let tmPref = null;
+function tempoMarks(m) {
+  const tm = GKY.IN_VIEWER ? null : GKY.store.get('tempomap.v1'), map = tm && tm.maps ? tm.maps[m.map] : null;
+  if (!map) return null;
+  if (m.click && isFinite(+m.click.at)) {
+    const r = barsFromMap(map, m.click.plan || m.plan, 0, +m.click.speed || 100), nums = r.nums || r.marks.map((_, i) => r.start + i);
+    const k = nums.indexOf(+m.click.from); if (k < 0) return null;
+    const off = +m.click.at - r.marks[k], marks = r.marks.slice(k).map(t => +(t + off).toFixed(3)), ns = nums.slice(k), seq = ns.every((x, i) => !i || x === ns[i - 1] + 1);
+    edit(n => { n.bars.marks = marks; n.bars.start = ns[0]; n.bars.nums = seq ? null : ns; });
+    return { auto: true, n: marks.length };
+  }
+  tmPref = { id: map.id, plan: m.plan, at: m.trim ? m.trim.a : 0 };
+  return { auto: false };
+}
+/* テンポマップの「合奏ノートで開く」（#media=〈id〉）：その録音を使っている合奏を開く。なければ新しい合奏を作る */
+async function openMediaLink(id) {
+  const meta = await GKY.media.meta(id).catch(() => null);
+  if (!meta) { toast('録音が見つかりませんでした（この端末のファイル置き場にありません）', '', null, 6000); return; }
+  const hit = S.order.map(i => S.notes[i]).find(n => n.file && n.file.media === id);
+  if (hit) { if (S.current !== hit.id) { unload(); S.current = hit.id; persist(); renderAll(); await loadStored(); } showTab('rec'); toast(`「${hit.title}」を開きました`); return; }
+  const date = GKY.ymd(new Date(meta.at)), n = newNote({ title: `${meta.mapTitle || meta.title || '録音'}（${+date.slice(5, 7)}/${+date.slice(8)}の録音）`, date });
+  if (S.order.length === 1 && N().sample) { S.notes = {}; S.order = []; }
+  S.notes[n.id] = n; S.order.unshift(n.id); S.current = n.id; unload(); persist(); renderAll();
+  const r = await useStored(id, { quiet: true });
+  showTab(r && r.auto ? 'rec' : r && r.auto === false ? 'bars' : 'rec');
+  toast(`「${n.title}」を作りました${r && r.auto ? `。テンポマップから${r.n}小節の目印をつけました` : r && r.auto === false ? '。テンポマップの曲と、演奏の始まり（音が出た所）を入れておいたので、「目印をつける」を押してください' : ''}`, '', null, 7000);
+}
 async function pickFile() {
   const f = await GKY.openFile({ accept: 'audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.mp4,.mov', as: 'file' }); if (!f) return;
   const n = N();
   if (n.file && n.file.name && n.file.size && (n.file.name !== f.name || n.file.size !== f.size) && (n.comments.length || n.bars.marks.length)) toast(`前に使った録音（${n.file.name}）とちがうファイルのようです。コメントの時刻がずれていないか確かめてください`, null, null, 6000);
   unload(); draw();
   $('#waveMsg').textContent = '録音を読み込んでいます…'; $('#waveMsg').hidden = false;
-  try { const d = await useMedia(f.file, { name: f.name, size: f.size }, { name: f.name }); toast(`「${f.name}」を開きました（${GKY.clock(d)}）`); return; }
+  try { const d = await useMedia(f.file, { name: f.name, size: f.size }, { name: f.name }); const k = await keepMedia(f.file, { name: f.name }); toast(`「${f.name}」を開きました（${GKY.clock(d)}）${k ? '。この端末に入れたので、次からは選ばなくても開きます' : ''}`, '', null, k ? 5000 : 3200); return; }
   catch (e) { /* ブラウザが再生できない形式。小さいファイルなら、広げて WAV にして再生する */ }
   try {
     if (f.size > 40 << 20) throw new Error('big');
@@ -2144,7 +2304,7 @@ function draw() {
   const col = k => cs.getPropertyValue(k).trim() || '#888';
   const n = N(), D = dur();
   $('#waveMsg').hidden = !!buf;
-  if (!buf) { $('#waveMsg').textContent = n.file && n.file.name ? `「${n.file.name}」をもう一度選んでください（録音はこの端末に保存していません）` : '「録音を選ぶ」から、合奏の録音（mp3・m4a・wav・動画など）を開きます。録音はどこにもアップロードしません。'; }
+  if (!buf) { $('#waveMsg').textContent = waveNote || (n.file && n.file.name ? (n.file.media ? `「${n.file.name}」は、この端末のファイル置き場にありません。「録音を選ぶ」からもう一度選んでください` : `「${n.file.name}」をもう一度選んでください（この録音は、この端末に入れていません）`) : '「録音を選ぶ」から、合奏の録音（mp3・m4a・wav・動画など）を開きます。「入っている録音」から、テンポマップで録った録音なども選べます。録音はどこにもアップロードしません。'); }
   if (!D) return;
   const [a, b] = view(), X = t => (t - a) / (b - a) * W, p = pos();
   // A-B
@@ -2189,7 +2349,7 @@ function renderAll() {
   const sb = $('#sbNew'); if (sb) sb.onclick = newNoteFlow;
   updUI(); draw(); renderTab();
 }
-function renderTab() { ({ note: renderNote, rec: renderRec, bars: renderBars, out: () => {} })[tab](); }
+function renderTab() { ({ note: renderNote, rec: renderRec, bars: renderBars, out: () => { $('#subSec').hidden = !canSubmit(); }, inbox: renderInbox })[tab](); }
 
 /* --- ノート --- */
 let memoOf = null;   // いまノートの欄に出している合奏の id（合奏を変えたら「保存しました」を消す）
@@ -2201,7 +2361,61 @@ function renderNote() {
   $('#pDate').value = n.date || '';
   $('#nRec').hidden = !buf;
   if (memoOf !== n.id) { memoOf = n.id; $('#memoSaved').textContent = IDLE; }
+  renderAtt(n); renderSubBar();
   memoInfo(); growMemo(); updUI();
+}
+/* その日の出欠（同じ場所の出欠のツールのデータ）：欠席・遅刻・早退の人 */
+function attOf(date) {
+  if (GKY.IN_VIEWER || !date) return null;
+  const s = GKY.store.get('shukketsu.v1'); if (!s || s.sample || !Array.isArray(s.events)) return null;
+  const evs = s.events.filter(e => e && e.date === date); if (!evs.length) return null;
+  const nk = x => norm(x).replace(/\s+/g, ''), who = {};
+  (Array.isArray(s.extra) ? s.extra : []).forEach(m => { if (m && m.name) who[nk(m.name)] = m; });
+  GKY.org().members.forEach(m => { who[nk(m.name)] = m; });
+  const out = { evs, a: [], l: [], e: [], any: false };
+  evs.forEach(e => Object.entries((s.att || {})[e.id] || {}).forEach(([k, v]) => {
+    if (!v) return; out.any = true; if (!out[v.s] || !Array.isArray(out[v.s])) return;
+    const m = who[k], x = { name: m ? m.name : k, part: m ? GKY.familyOf(m.part) || '' : '', r: String(v.r || '') };
+    if (!out[v.s].some(y => y.name === x.name)) out[v.s].push(x);
+  }));
+  ['a', 'l', 'e'].forEach(k => out[k].sort((x, y) => GKY.partOrder(x.part) - GKY.partOrder(y.part)));
+  return out;
+}
+const ATT_W = { a: '欠席', l: '遅刻', e: '早退' };
+const attNames = xs => xs.map(x => x.name + (x.part ? `（${x.part}）` : '')).join('、');
+function renderAtt(n) {
+  const el = $('#attLine'), x = attOf(n.date);
+  if (!x) { el.hidden = true; el.innerHTML = ''; return; }
+  const parts = ['a', 'l', 'e'].filter(k => x[k].length);
+  el.hidden = false;
+  el.innerHTML = `<span class="lbl">この日の出欠（${esc(x.evs.map(e => e.title).join('・'))}）</span>${!x.any ? '<span>まだ入っていません</span>' : parts.length ? parts.map(k => `<span>${ATT_W[k]} <b>${x[k].length}人</b>：${esc(attNames(x[k]))}</span>`).join('') : '<span>欠席・遅刻・早退はありません</span>'}<span class="sp"></span>${parts.length ? '<button class="btn sm" id="attIns">ノートに書き込む</button>' : ''}<a class="btn sm ghost" href="${esc(GKY.linkTo('shukketsu'))}" target="${GKY.targetOf('shukketsu')}">出欠を開く</a>`;
+  const b = $('#attIns'); if (b) b.onclick = () => insertMemo('【欠席・遅刻・早退】\n' + ['a', 'l', 'e'].filter(k => x[k].length).map(k => `${ATT_W[k]}：${attNames(x[k])}`).join('\n') + '\n', { lineStart: true });
+}
+/* 部員用の端末：「提出する」のボタン（楽屋の設定で、提出を使うときだけ） */
+const canSubmit = () => !GKY.IN_VIEWER && (!GKY.isMember() || GKY.memberCfg().notes);
+function renderSubBar() {
+  const el = $('#subBar'), w = GKY.words();
+  el.hidden = !(GKY.isMember() && canSubmit());
+  el.innerHTML = el.hidden ? '' : `<button class="btn primary" id="subGo">${esc(w.staff)}・代表者に提出する</button><span class="hint">書いたノートを、リンクにして送ります</span>`;
+  const b = $('#subGo'); if (b) b.onclick = subFlow;
+  $('#subSec').hidden = !canSubmit();
+}
+/* 提出のリンクを作る */
+function subFlow() {
+  const n = N(), w = GKY.words();
+  if (!n.memo.trim() && !n.comments.length) { toast('ノートに何も書いてありません'); return; }
+  const me = GKY.myName(), mem = me ? GKY.org().members.find(m => GKY.key(m.name) === GKY.key(me)) : null;
+  const part0 = GKY.pref('myPart', '') || (mem ? mem.part : '');
+  sheet({ title: `${w.staff}・代表者にノートを提出`, content: `<p class="lead">「${esc(n.title)}」${n.date ? '（' + esc(GKY.jpDate(n.date)) + '）' : ''}のノートを、リンクにして送ります。受け取った人がリンクを開くと、提出されたノートの一覧に入ります。</p>
+    <div class="grid"><label class="fld"><span>名前</span><input type="text" id="sbName" value="${esc(me)}" autocomplete="name"></label><label class="fld"><span>パート</span><input type="text" id="sbPart" value="${esc(part0)}" placeholder="例：Tp"></label></div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="sbCm" ${n.comments.length ? 'checked' : 'disabled'}> 録音へのコメント（${n.comments.length}件）も入れる</label>`,
+    actions: [{ label: 'やめる' }, { label: 'リンクを作る', primary: true, onClick: body => {
+      const name = norm($('#sbName', body).value), part = norm($('#sbPart', body).value);
+      if (!name) { toast('名前を入れてください'); $('#sbName', body).focus(); return false; }
+      GKY.setPref('myName', name); GKY.setPref('myPart', part);
+      const p = { k: 'gassou-n', v: 1, nm: name, pt: part, t: n.title, d: n.date, m: n.memo, c: $('#sbCm', body).checked ? n.comments.map(c => [Math.round(c.t * 10) / 10, c.text, c.kind, c.parts, barAt(n, c.t)]) : [], at: Date.now(), o: GKY.org().org.name };
+      GKY.packShare(p).then(code => GKY.shareSheet({ title: 'ノートを提出するリンク', url: GKY.pageUrl('gassou') + '#n=' + code, keep: true, note: `このリンクを、${esc(w.staff)}・代表者に LINE などで送ってください。受け取った人の端末の合奏ノートに入ります（このリンクを開いた人は、だれでもノートを読めます）。` }));
+    } }] });
 }
 /* 欄の高さを中身に合わせる（ページの位置は動かさない） */
 function growMemo() { const ta = $('#memo'); if (ta.offsetParent === null) return; const y = window.scrollY; ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; window.scrollTo(0, y); }
@@ -2287,9 +2501,12 @@ function renderBars() {
   // 同じ場所のテンポマップ
   const tm = GKY.IN_VIEWER ? null : GKY.store.get('tempomap.v1');
   const maps = tm && tm.maps ? (tm.order || Object.keys(tm.maps)).map(id => tm.maps[id]).filter(Boolean) : [];
-  $('#tmPick').innerHTML = `<option value="">${maps.length ? 'テンポマップの曲を選ぶ（または下にコードを貼る）' : 'コードを貼る'}</option>` + maps.map((m, i) => `<option value="${i}">${esc(m.title)}</option>`).join('');
+  $('#tmPick').innerHTML = `<option value="">${maps.length ? 'テンポマップの曲を選ぶ（または下にコードを貼る）' : 'コードを貼る'}</option>` + maps.map(m => `<option value="${esc(m.id)}">${esc(m.title)}</option>`).join('');
   $('#tmPick').hidden = !maps.length;
-  $('#tmPick').onchange = () => { tmMap = maps[+$('#tmPick').value] || null; fillPlans(); };
+  $('#tmPick').onchange = () => { tmMap = maps.find(m => m.id === $('#tmPick').value) || null; fillPlans(); };
+  if (tmMap && maps.some(m => m.id === tmMap.id)) $('#tmPick').value = tmMap.id;
+  // テンポマップで録った録音（クリックなし）：曲・カット案・演奏の始まりを入れておく
+  if (tmPref && maps.some(m => m.id === tmPref.id)) { $('#tmPick').value = tmPref.id; tmMap = maps.find(m => m.id === tmPref.id); fillPlans(); if (tmMap.plans.some(p => p.id === tmPref.plan)) $('#tmPlan').value = tmPref.plan; $('#tmAt').value = (+tmPref.at || 0).toFixed(2); tmPref = null; return; }
   fillPlans();
 }
 let tmMap = null;
@@ -2323,7 +2540,8 @@ function mapOrder(m) {
   }
   return out;
 }
-function barsFromMap(m, planId, at) {
+function barsFromMap(m, planId, at, speed = 100) {
+  const sp = 100 / (+speed || 100);   // テンポマップの「速さ」（80% なら 1.25倍の長さ）
   const plan = (m.plans || []).find(p => p.id === planId) || (m.plans || [])[0] || { cut: [] }, cut = new Set(plan.cut || []);
   const secs = m.sections || [], starts = []; { let b = +m.start || 1; secs.forEach(s => { starts.push(b); b += +s.bars || 0; }); }
   const marks = [], nums = []; let t = at, rep = false;
@@ -2334,7 +2552,7 @@ function barsFromMap(m, planId, at) {
     for (let r = 0; r < it.reps; r++) for (let k = 0; k < (+s.bars || 0); k++) {
       marks.push(+t.toFixed(3)); nums.push(starts[it.i] + k);
       const x0 = k * bpb, x1 = (k + 1) * bpb; const bt = Math.abs(e - st) < 1e-9 ? 60 * bpb / st : 60 * B / (e - st) * Math.log((st + (e - st) * x1 / B) / (st + (e - st) * x0 / B));
-      t += bt + (r === it.reps - 1 && k === s.bars - 1 ? (+s.extra || 0) : 0);
+      t += (bt + (r === it.reps - 1 && k === s.bars - 1 ? (+s.extra || 0) : 0)) * sp;
     }
   });
   // 続き番号でないとき（カット・くり返し・D.S.）は、小節番号を1つずつ持つ
@@ -2363,6 +2581,164 @@ $('#tmGo').onclick = async () => {
 };
 $('#mkShift').onclick = () => sheet({ title: '目印を全部ずらす', content: '<label class="fld"><span>ずらす秒数（前へはマイナス）</span><input type="number" id="shS" step="0.05" value="0.1"></label>', actions: [{ label: 'やめる' }, { label: 'ずらす', primary: true, onClick: body => { const d = +$('#shS', body).value || 0; edit(n => { n.bars.marks = n.bars.marks.map(x => Math.max(0, +(x + d).toFixed(3))); }); } }] });
 GKY.arm($('#mkClear'), () => { const old = clone(N().bars); edit(n => { n.bars.marks = []; n.bars.nums = null; }); toast('目印を全部消しました', '元に戻す', () => edit(n => { n.bars = old; })); }, 'もう一度押すと消します');
+
+/* --- 提出されたノート（顧問・代表者の端末） --- */
+let inDate = '';
+const subMark = k => k === 'good' ? '◎' : k === 'check' ? '△' : '●';
+function renderInbox() {
+  const xs = S.inbox, dates = [...new Set(xs.map(x => x.date))].sort((a, b) => b.localeCompare(a));
+  if (inDate && !dates.includes(inDate)) inDate = '';
+  $('#inSum').textContent = xs.length ? `${xs.length}件（まだ読んでいない ${xs.filter(x => !x.read).length}）` : '';
+  $('#inDates').innerHTML = xs.length ? `<button class="chip" data-d="" aria-pressed="${!inDate}">すべて</button>` + dates.map(d => `<button class="chip" data-d="${esc(d)}" aria-pressed="${inDate === d}">${esc(d ? GKY.mdDate(d) : '日付なし')}（${xs.filter(x => x.date === d).length}）</button>`).join('') : '';
+  $$('#inDates [data-d]').forEach(b => b.onclick = () => { inDate = b.dataset.d; renderInbox(); });
+  const ys = inShown();
+  $('#inList').innerHTML = ys.length ? ys.map(x => `<div class="sub fold${x.read ? '' : ' unread'}" data-sid="${esc(x.id)}"><div class="hd"><b>${esc(x.name)}</b>${x.part ? `<span class="tape">${esc(x.part)}</span>` : ''}<small>${esc(x.title)}${x.date ? '・' + esc(GKY.mdDate(x.date)) : ''}</small><span class="sp"></span><small>${x.read ? '' : '<b style="color:var(--tape)">まだ読んでいない</b>　'}${esc(new Date(x.got).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}に受け取り</small></div>
+    ${x.memo.trim() ? `<div class="body">${esc(x.memo)}</div>` : ''}
+    ${x.cm.length ? `<div class="scm">${x.cm.map(c => `<div><b>${c[4] != null ? esc(c[4]) + '小節' : GKY.clock(c[0])}</b><span>${subMark(c[2])}${esc(c[1])}${c[3].join('') !== '全体' ? `［${esc(c[3].join('・'))}］` : ''}</span></div>`).join('')}</div>` : ''}
+    <div class="btnrow"><button class="btn sm" data-sopen>${x.memo.split('\n').length > 6 ? '全部見る' : '読んだ'}</button><button class="btn sm" data-sread>${x.read ? 'まだにする' : '読んだにする'}</button><button class="btn sm" data-scopy>コピー</button><span style="flex:1"></span><button class="ibtn del" data-sdel aria-label="消す">×</button></div></div>`).join('')
+    : `<div class="empty"><b>${xs.length ? 'この日の提出はありません' : 'まだ提出はありません'}</b>${esc(GKY.words().member)}が合奏ノートの「提出する」で作ったリンクを開くか、右の欄に貼ると入ります。</div>`;
+  $$('#inList .sub').forEach(card => {
+    const id = card.dataset.sid, X = () => S.inbox.find(y => y.id === id);
+    $('[data-sopen]', card).onclick = e => { card.classList.remove('fold'); e.target.remove(); if (!X().read) { X().read = true; persist(); card.classList.remove('unread'); updInCount(); } };
+    $('[data-sread]', card).onclick = () => { X().read = !X().read; persist(); renderInbox(); };
+    $('[data-scopy]', card).onclick = () => GKY.copyText(subText(X()), 'コピーしました');
+    GKY.arm($('[data-sdel]', card), () => { const gone = X(), i = S.inbox.indexOf(gone); S.inbox.splice(i, 1); persist(); renderInbox(); toast(`${gone.name}さんのノートを消しました`, '元に戻す', () => { S.inbox.splice(i, 0, gone); persist(); renderInbox(); }); }, '消す？');
+  });
+  const w = GKY.words();
+  $('#inHow').innerHTML = `${esc(w.member)}の端末の合奏ノートで、ノートを書いて「${esc(w.staff)}・代表者に提出する」（「書き出し・配る」の「ノートを提出する」）を押すとリンクができます。そのリンクを LINE などで送ってもらってください。${esc(w.member)}用の端末の設定（提出を使うか）は、楽屋の「団体」でできます。`;
+  updInCount();
+}
+const inShown = () => S.inbox.filter(x => !inDate || x.date === inDate);
+const subText = x => [`■${x.name}${x.part ? '（' + x.part + '）' : ''}　${x.title}${x.date ? '　' + GKY.jpDate(x.date) : ''}`, x.memo.replace(/\s+$/, ''), ...x.cm.map(c => `${c[4] != null ? c[4] + '小節 ' : ''}(${GKY.clock(c[0])}) ${subMark(c[2])}${c[1]}`)].filter(Boolean).join('\n');
+function updInCount() { const c = $('#cntIn'); if (c) c.textContent = S.inbox.filter(x => !x.read).length || ''; }
+/* 提出を入れる（同じ人・同じ時刻に送ったものは1つだけ） */
+function addSub(p) {
+  if (!p || p.k !== 'gassou-n') return null;
+  const x = normSub({ name: p.nm, part: p.pt, title: p.t, date: p.d, memo: p.m, cm: p.c, at: p.at, got: Date.now() });
+  const dup = S.inbox.find(y => y.at === x.at && y.name === x.name);
+  if (dup) return { x: dup, dup: true };
+  S.inbox.unshift(x); persist();
+  return { x, dup: false };
+}
+/* 開いたアドレスが提出のリンク（#n=…）なら入れる */
+async function receiveSub() {
+  const m = location.hash.match(/^#n=([A-Za-z0-9_-]+)$/); if (!m) return false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+  let p = null; try { p = await GKY.unpackShare(m[1]); } catch (e) { toast('提出のリンクを読めませんでした（途中で切れているのかもしれません）', '', null, 6000); return true; }
+  if (!p || p.k !== 'gassou-n') { toast('合奏ノートの提出のリンクではありません'); return true; }
+  if (GKY.isMember()) {
+    const x = normSub({ name: p.nm, part: p.pt, title: p.t, date: p.d, memo: p.m, cm: p.c, at: p.at });
+    sheet({ title: `${x.name}さんのノート`, content: `<p class="note" style="margin-top:0">これは提出のリンクです。${esc(GKY.words().staff)}・代表者の端末で開くと、提出されたノートの一覧に入ります（この端末は${esc(GKY.words().member)}用なので、入れません）。</p><div class="sub"><div class="body">${esc(subText(x))}</div></div>`, actions: [{ label: '閉じる' }] });
+    return true;
+  }
+  const r = addSub(p);
+  showTab('inbox'); renderInbox();
+  toast(r.dup ? `${r.x.name}さんのこのノートは、もう入っています` : `${r.x.name}さんのノート（${r.x.title}）を受け取りました`, '', null, 5000);
+  return true;
+}
+$('#inAdd').onclick = async () => {
+  const codes = [...String($('#inPaste').value).matchAll(/#n=([A-Za-z0-9_-]+)/g)].map(m => m[1]);
+  if (!codes.length) { toast('提出のリンク（…/gassou/#n=…）が見つかりませんでした'); return; }
+  let add = 0, dup = 0, bad = 0;
+  for (const c of codes) { try { const r = addSub(await GKY.unpackShare(c)); if (!r) bad++; else if (r.dup) dup++; else add++; } catch (e) { bad++; } }
+  $('#inPaste').value = ''; renderInbox();
+  toast([`${add}件入れました`, dup ? `もう入っていたもの ${dup}件` : '', bad ? `読めなかったもの ${bad}件` : ''].filter(Boolean).join('・'), '', null, 5000);
+};
+$('#inCopy').onclick = () => { const ys = inShown(); if (!ys.length) { toast('提出がありません'); return; } GKY.copyText(ys.slice().sort(bySubPart).map(subText).join('\n\n'), `${ys.length}件をコピーしました`); };
+$('#inReadAll').onclick = () => { inShown().forEach(x => { x.read = true; }); persist(); renderInbox(); };
+const bySubPart = (a, b) => GKY.partOrder(GKY.familyOf(a.part)) - GKY.partOrder(GKY.familyOf(b.part)) || a.name.localeCompare(b.name, 'ja');
+$('#inPrint').onclick = () => {
+  const ys = inShown().slice().sort(bySubPart); if (!ys.length) { toast('提出がありません'); return; }
+  const d = GKY.doc({ title: '提出された合奏ノート', sub: inDate ? GKY.jpDate(inDate) : 'すべて', foot: GKY.org().org.name, file: '提出された合奏ノート' + (inDate ? '_' + inDate : '') });
+  ys.forEach(x => {
+    d.block(`<h3>${esc(x.name)}${x.part ? `（${esc(x.part)}）` : ''}　<span class="muted" style="font-weight:400;font-size:9pt">${esc(x.title)}${x.date ? '　' + esc(GKY.jpDate(x.date)) : ''}</span></h3>`, { keep: true });
+    memoBlocks(x.memo).forEach(html => d.block(html));
+    if (x.cm.length) d.table({ cols: [{ h: '小節', w: '12%', cls: 'c' }, { h: '時刻', w: '12%', cls: 'c' }, { h: 'コメント', w: '76%' }], rows: x.cm.map(c => [c[4] != null ? esc(c[4]) : '', GKY.clock(c[0]), subMark(c[2]) + esc(c[1])]) });
+  });
+  d.show();
+};
+
+/* --- 録音へのコメントを配る --- */
+/* 見るだけのリンク：コメント（小節・時刻・パート）と、録音の名前・大きさ（同じ録音を持っている人は、その録音で聞ける） */
+$('#shView').onclick = async () => {
+  const n = N(); if (!n.comments.length) { toast('コメントがありません'); return; }
+  const v = { k: 'gassou', t: n.title, d: n.date, o: GKY.org().org.name, f: n.file ? [n.file.name, n.file.size, n.file.dur] : null, c: n.comments.map(c => [Math.round(c.t * 10) / 10, c.text, c.kind, c.parts, barAt(n, c.t), c.done ? 1 : 0]) };
+  GKY.shareSheet({ title: 'コメントを見るだけのリンク', url: await GKY.shareUrl('gassou', v), note: `コメント（${n.comments.length}件）を見るだけのページです。開いた人は自分のパートだけにできます。録音を持っている人（「録音とコメントをまとめて送る」で受け取った人など）は、コメントの所から聞けます。` });
+};
+/* 録音とコメントをまとめた zip：gassou-note.json と、録音のファイル */
+$('#shZip').onclick = async () => {
+  const n = N(); if (!n.comments.length && !n.bars.marks.length && !n.memo.trim()) { toast('配るものがありません'); return; }
+  const g = n.file && n.file.media && GKY.media.ok() ? await GKY.media.get(n.file.media).catch(() => null) : null;
+  const sh = sheet({ title: '録音とコメントをまとめて送る', content: `<p class="lead">zip のファイルにまとめます。スマホでは送る画面、パソコンではファイルに保存します。受け取った人は、合奏ノートの「書き出し・配る」→「ファイルから読み込む」で開きます。</p>
+    ${g && g.blob ? `<label class="chk"><input type="checkbox" id="zA" checked> 録音（${esc(g.meta.name)}・${GKY.bytes(g.blob.size)}）を入れる</label>` : `<p class="note">${n.file ? 'この録音はこの端末に入っていないので、入れられません（「録音を選ぶ」で開き直すと入ります）。' : '録音はまだありません。'}コメントと小節の目印だけを入れます。</p>`}
+    <label class="chk"><input type="checkbox" id="zC" checked disabled> コメント（${n.comments.length}件）と小節の目印</label>
+    <label class="chk"><input type="checkbox" id="zM"${n.memo.trim() ? '' : ' disabled'}> ノート（自由に書いた文）も入れる</label>
+    ${g && g.blob && g.blob.size > 80 << 20 ? '<p class="note">録音が大きいので、LINE などでは送れないことがあります。</p>' : ''}`,
+    actions: [{ label: 'やめる' }, { label: 'まとめる', primary: true, onClick: body => {
+      const withA = !!(g && g.blob && $('#zA', body) && $('#zA', body).checked), withM = $('#zM', body).checked;
+      (async () => {
+        const note = clone(n); if (!withM) note.memo = ''; note.sample = false;
+        const files = [{ name: 'gassou-note.json', data: JSON.stringify({ app: 'gassou', format: 1, kind: 'share', exportedAt: new Date().toISOString(), org: GKY.org().org.name, note, audio: withA ? 'audio/' + fileSafe(g.meta.name) : '' }, null, 1) }];
+        if (withA) files.push({ name: 'audio/' + fileSafe(g.meta.name), data: g.blob });
+        const z = await GKY.zipMake(files);
+        await GKY.shareFiles([new File([z], `合奏ノート_${fileSafe(n.title)}.zip`, { type: 'application/zip' })], { title: n.title });
+      })().catch(() => toast('まとめられませんでした'));
+    } }] });
+  return sh;
+};
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 80) || '無題';
+/* zip（録音とコメント）を読み込む：新しい合奏にして、録音はファイル置き場に入れる */
+async function importZip(blob) {
+  let zs; try { zs = await GKY.zipRead(blob); } catch (e) { toast('zip のファイルとして読めませんでした'); return null; }
+  const jz = zs.find(z => /(^|\/)gassou-note\.json$/.test(z.name)); if (!jz) { toast('合奏ノートでまとめた zip ではありません'); return null; }
+  let o; try { o = JSON.parse(await (await jz.blob()).text()); } catch (e) { toast('zip の中のノートが読めませんでした'); return null; }
+  if (!o || o.app !== 'gassou' || !o.note) { toast('合奏ノートでまとめた zip ではありません'); return null; }
+  const n = normalizeNote(o.note); n.sample = false; if (S.notes[n.id]) n.id = uid('n');
+  const az = o.audio ? zs.find(z => z.name === o.audio) : null;
+  let mid = '';
+  if (az && GKY.media.ok()) {
+    const name = (n.file && n.file.name) || az.name.split('/').pop();
+    try {
+      const ab = await az.blob(/\.(m4a|mp4|aac)$/i.test(name) ? 'audio/mp4' : /\.mp3$/i.test(name) ? 'audio/mpeg' : /\.wav$/i.test(name) ? 'audio/wav' : /\.ogg$/i.test(name) ? 'audio/ogg' : /\.webm$/i.test(name) ? 'audio/webm' : '');
+      const same = (await GKY.media.list(m => m.cat === 'audio' && m.name === name && m.size === ab.size))[0];
+      const m = same || await GKY.media.put(ab, { cat: 'audio', name, type: ab.type, dur: n.file ? n.file.dur : 0, from: 'gassou', note: n.id, title: n.title });
+      mid = m.id; GKY.media.persist();
+    } catch (e) { mid = ''; }
+  }
+  if (n.file) n.file.media = mid; else if (mid) n.file = { name: az.name.split('/').pop(), size: az.size, dur: 0, media: mid };
+  if (S.order.length === 1 && N().sample) { S.notes = {}; S.order = []; }
+  S.notes[n.id] = n; S.order.unshift(n.id); S.current = n.id; unload(); persist(); renderAll();
+  if (mid) await loadStored();
+  showTab(n.comments.length ? 'rec' : 'note');
+  toast(`「${n.title}」を読み込みました${mid ? '（録音も入りました）' : az ? '（録音はこの端末に入れられませんでした）' : ''}`, '', null, 5000);
+  return n;
+}
+
+/* 見るだけのリンク（#v=…）：コメントの一覧。録音を選ぶと、コメントの所から聞ける */
+async function startViewer() {
+  let v = null;
+  try { v = await GKY.readShare(); } catch (e) { toast('リンクを開けませんでした：' + e.message, null, null, 6000); return false; }
+  if (!v || v.k !== 'gassou') return false;
+  const cs = (v.c || []).filter(Array.isArray).map(a => ({ t: +a[0] || 0, text: String(a[1] || ''), kind: KINDS[a[2]] ? a[2] : 'fix', parts: Array.isArray(a[3]) && a[3].length ? a[3].map(String) : ['全体'], bar: a[4] == null ? null : a[4], done: !!a[5] }));
+  const body = GKY.viewer({ title: v.t || '合奏', sub: [v.d && GKY.jpDate(v.d), v.o].filter(Boolean).join('　'), note: 'このページは、送られてきたコメントを見るためのものです。' });
+  const used = [...new Set(cs.flatMap(c => c.parts))].sort((a, b) => a === '全体' ? -1 : b === '全体' ? 1 : GKY.partOrder(a) - GKY.partOrder(b));
+  let part = GKY.pref('myPart', ''); part = used.includes(GKY.familyOf(part)) ? GKY.familyOf(part) : '';
+  let au = null;
+  body.innerHTML = `<div class="sec"><h2>録音</h2><p class="lead" id="vwA">${v.f ? `録音「${esc(v.f[0])}」${v.f[2] ? '（' + GKY.clock(v.f[2]) + '）' : ''}を持っていれば、選ぶとコメントの所から聞けます。` : '録音のファイルを持っていれば、選ぶとコメントの所から聞けます。'}</p><div class="btnrow"><button class="btn" id="vwPick">録音を選ぶ</button><button class="btn" id="vwStore" hidden>この端末に入っている録音で聞く</button></div><div id="vwBox"></div></div>
+    <div class="sec"><h2>コメント<small>${cs.length}件　●直す △確かめる ◎よかった</small></h2><div class="vw-bar" id="vwParts"></div><div class="cms vw-list" id="vwList"></div></div>`;
+  const setAudio = (blob, name) => { if (au) { URL.revokeObjectURL(au.src); au.remove(); } au = document.createElement('audio'); au.controls = true; au.className = 'vw-audio'; au.src = URL.createObjectURL(blob); $('#vwBox', body).appendChild(au); $('#vwA', body).textContent = `「${name}」で聞いています。コメントを押すと、その少し前から鳴ります。`; };
+  $('#vwPick', body).onclick = async () => { const f = await GKY.openFile({ accept: 'audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.mp4,.mov', as: 'file' }); if (f) setAudio(f.file, f.name); };
+  if (v.f && GKY.media.ok()) { const hit = (await GKY.media.list(m => m.cat === 'audio' && m.name === v.f[0] && (!v.f[1] || m.size === v.f[1])).catch(() => []))[0]; if (hit) { const b = $('#vwStore', body); b.hidden = false; b.onclick = async () => { const g = await GKY.media.get(hit.id).catch(() => null); if (g && g.blob) setAudio(g.blob, hit.name); }; } }
+  const draw = () => {
+    $('#vwParts', body).innerHTML = `<button class="chip" data-vp="" aria-pressed="${!part}">すべて</button>` + used.filter(p => p !== '全体').map(p => `<button class="chip" data-vp="${esc(p)}" aria-pressed="${part === p}">${esc(p)}</button>`).join('');
+    $$('[data-vp]', body).forEach(b => b.onclick = () => { part = b.dataset.vp; if (part) GKY.setPref('myPart', part); draw(); });
+    const xs = cs.filter(c => !part || c.parts.includes(part) || c.parts.includes('全体'));
+    $('#vwList', body).innerHTML = xs.map(c => `<div class="cm${c.done ? ' done' : ''}" data-t="${c.t}"><div class="at"><b>${c.bar ?? '—'}</b>${GKY.clock(c.t)}</div><div style="min-width:0"><div class="txt">${subMark(c.kind)}${esc(c.text)}</div><div class="meta">${c.parts.map(p => `<span class="chip">${esc(p)}</span>`).join('')}${c.done ? '<span class="chip ok">すんだ</span>' : ''}</div></div><span></span></div>`).join('') || '<div class="empty">このパートのコメントはありません。</div>';
+    $$('#vwList .cm', body).forEach(r => r.onclick = () => { if (!au) { toast('「録音を選ぶ」で録音を選ぶと、ここから聞けます'); return; } au.currentTime = Math.max(0, +r.dataset.t - 2); au.play().catch(() => {}); });
+  };
+  draw();
+  return true;
+}
 
 /* --- 書き出し --- */
 /* ノート：1行目に名前と日付、1行あけて本文 */
@@ -2395,7 +2771,11 @@ $('#prPart').onclick = () => {
 };
 $('#csvOut').onclick = () => { const n = N(); GKY.saveFile(`合奏ノート_${n.title}.csv`, GKY.csv([['小節', '時刻', '種類', 'パート', 'コメント', 'すんだ'], ...n.comments.map(c => [barAt(n, c.t) ?? '', GKY.clock(c.t), KINDS[c.kind], c.parts.join('・'), c.text, c.done ? '✓' : ''])]), 'text/csv'); };
 $('#jsonOut').onclick = () => { const n = N(); GKY.saveJSON(`合奏ノート_${n.title}_${GKY.stamp()}.json`, { app: 'gassou', format: 1, exportedAt: new Date().toISOString(), note: n }); };
-$('#jsonIn').onclick = async () => { const f = await GKY.openJSON(); if (!f) return; if (f.kind !== 'gassou' || !f.data.note) { toast('合奏ノートで保存したファイルを選んでください'); return; } const n = normalizeNote(f.data.note); if (S.notes[n.id]) n.id = uid('n'); S.notes[n.id] = n; S.order.unshift(n.id); S.current = n.id; unload(); persist(); renderAll(); toast(`「${n.title}」を読み込みました${n.comments.length || n.bars.marks.length ? '。録音を聞くときは「録音とコメント」で録音のファイルを選んでください' : ''}`); };
+$('#jsonIn').onclick = async () => {
+  const pf = await GKY.openFile({ accept: '.json,.zip,application/json,application/zip,text/plain', as: 'file' }); if (!pf) return;
+  if (/\.zip$/i.test(pf.name) || /zip/.test(pf.type || '')) { importZip(pf.file); return; }
+  let f = null; try { const o = JSON.parse(GKY.decodeText(await pf.file.arrayBuffer()).text); f = { data: o, kind: GKY.identify(o) }; } catch (e) { toast('「' + pf.name + '」はこのツールで読めるファイルではありません'); return; }
+  if (f.kind !== 'gassou' || !f.data.note) { toast('合奏ノートで保存したファイルを選んでください'); return; } const n = normalizeNote(f.data.note); if (S.notes[n.id]) n.id = uid('n'); S.notes[n.id] = n; S.order.unshift(n.id); S.current = n.id; unload(); persist(); renderAll(); toast(`「${n.title}」を読み込みました${n.comments.length || n.bars.marks.length ? '。録音を聞くときは「録音とコメント」で録音のファイルを選んでください' : ''}`); };
 
 /* --- 合奏の設定 --- */
 function newNoteFlow() {
@@ -2414,7 +2794,9 @@ $('#btnNote').onclick = () => {
   $('#sNew', sh.body).onclick = () => { sh.close(); newNoteFlow(); };
   GKY.arm($('#sDel', sh.body), () => { const gone = clone(n), p0 = S.order.indexOf(n.id); delete S.notes[n.id]; S.order = S.order.filter(x => x !== n.id); if (!S.order.length) { const x = newNote(); S.notes[x.id] = x; S.order.push(x.id); } S.current = S.order[Math.min(p0, S.order.length - 1)]; unload(); persist(); sh.close(); renderAll(); toast(`「${gone.title}」を消しました`, '元に戻す', () => { S.notes[gone.id] = gone; S.order.splice(p0, 0, gone.id); S.current = gone.id; persist(); renderAll(); }); }, 'もう一度押すと消します');
 };
-$('#nSel').onchange = async e => { unload(); S.current = e.target.value; persist(); if (N().sample) await useSample(); renderAll(); };
+$('#nSel').onchange = async e => { unload(); S.current = e.target.value; persist(); renderAll(); if (N().sample) { await useSample(); renderAll(); } else loadStored(); };
+$('#subGo2').onclick = subFlow;
+$('#pickStore').onclick = pickStore;
 
 /* ---------- 操作 ---------- */
 $('#play').onclick = () => playing ? stop() : play();
@@ -2443,7 +2825,18 @@ showTab('note');
 renderAll();
 window.addEventListener('resize', GKY.debounce(growMemo, 150));
 GKY.onOrgChange(() => { if (tab === 'rec') renderRec(); });
-(async () => { if (N().sample) { try { await useSample(); } catch (e) { draw(); } } if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, N, barAt, barsFromMap, decodeTm, pos, seek, get buf() { return buf; }, get peaks() { return peaks; }, get media() { return media; }, play, stop, renderAll, noteText, memoBlocks, showTab }; })();
+(async () => {
+  const viewing = await startViewer();
+  if (!viewing) {
+    if (N().sample) { try { await useSample(); } catch (e) { draw(); } } else await loadStored();
+    await receiveSub();
+    // テンポマップの「合奏ノートで開く」（#media=…）
+    const goMedia = () => { const m = location.hash.match(/^#media=([A-Za-z0-9_-]+)$/); if (!m) return; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ } openMediaLink(m[1]); };
+    if (!GKY.IN_VIEWER) { window.addEventListener('hashchange', () => { goMedia(); if (/^#n=/.test(location.hash)) receiveSub(); }); goMedia(); }
+    updInCount();
+  }
+  if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, N, barAt, barsFromMap, decodeTm, pos, seek, get buf() { return buf; }, get peaks() { return peaks; }, get media() { return media; }, play, stop, renderAll, noteText, memoBlocks, showTab, attOf, addSub, receiveSub, importZip, useStored, openMediaLink, tempoMarks, loadStored, renderInbox };
+})();
 })();
 </script>
 </body>

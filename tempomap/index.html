@@ -364,6 +364,28 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .ctrls{display:flex; flex-direction:column; gap:12px}
 .ctrls .fld input[type=range]{width:100%; accent-color:var(--tape)}
 .share{font-family:var(--f-mono); font-size:12px; word-break:break-all; min-height:90px}
+/* 録音 */
+.recbox{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center}
+.recbox .rtime{font-family:var(--f-mono); font-size:clamp(40px,10vw,72px); font-weight:600; line-height:1; font-variant-numeric:tabular-nums}
+.recbox.on{border-color:var(--bad); box-shadow:0 0 0 1px var(--bad)}
+.recbox.on .rtime{color:var(--bad)}
+.recbox .rst{font-size:13px; color:var(--muted); min-height:1.4em}
+.recbox .rdot{display:inline-block; width:11px; height:11px; border-radius:50%; background:var(--bad); margin-right:6px; vertical-align:middle; animation:gkyBlink 1s steps(2) infinite}
+@keyframes gkyBlink{50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){ .recbox .rdot{animation:none} }
+.lvl{width:100%; max-width:360px; height:10px; border-radius:999px; background:var(--surface-3); overflow:hidden}
+.lvl i{display:block; height:100%; width:0; background:var(--ok); transition:width .08s linear}
+.lvl i.hot{background:var(--bad)}
+.rrow{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; align-items:center; padding:10px 0; border-bottom:1px dashed var(--line)}
+.rrow:last-child{border-bottom:0}
+.rrow .t1{font-weight:700; display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center}
+.rrow .t2{font-size:12px; color:var(--muted)}
+.rrow .t2 b{color:var(--ink); font-family:var(--f-mono)}
+.rrow .act{display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end}
+.rrow audio{grid-column:1/-1; width:100%; height:36px}
+.rrow svg.wv{grid-column:1/-1; width:100%; height:30px; display:block}
+.rrow svg.wv .w{fill:var(--line-strong)} .rrow svg.wv .in{fill:var(--tape)} .rrow svg.wv .cut{fill:var(--bad)}
+@media (max-width:560px){ .rrow{grid-template-columns:minmax(0,1fr)} .rrow .act{justify-content:flex-start} }
 </style>
 </head>
 <body>
@@ -382,6 +404,7 @@ a.gky-cchip:hover{border-color:var(--tape)}
     <button data-tab="map">区間</button>
     <button data-tab="plans">カット案</button>
     <button data-tab="click">クリック</button>
+    <button data-tab="rec">録音</button>
     <button data-tab="share">共有・書き出し</button>
   </nav>
   <main class="gky-main">
@@ -428,6 +451,35 @@ a.gky-cchip:hover{border-color:var(--tape)}
               <label class="fld wide"><span>音の大きさ</span><input type="range" id="pVol" min="0" max="100" step="5" value="80"></label>
             </div>
             <p class="note">小節の頭は高い音、拍子のまとまり（2+2+3 など）の頭は中くらいの音で鳴ります。止めるときはスペースキーでも止まります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="rec" hidden>
+      <div class="gky-cols">
+        <div>
+          <div class="sec">
+            <h2>通しを録音する</h2>
+            <p class="lead">合奏の通しを、この端末のマイクで録音します。止めると、前後の無音を除いた<b>演奏の長さ</b>を出し、カット案の「実際に計った時間」に入れられます。録音は合奏ノートで、コメントをつけながら聞けます。</p>
+            <div class="recbox" id="recBox">
+              <div class="rtime" id="rTime">0:00</div>
+              <div class="lvl" aria-hidden="true"><i id="rLevel"></i></div>
+              <div class="rst" id="rState" aria-live="polite"></div>
+              <div class="btnrow" style="justify-content:center"><button class="btn primary lg" id="rStart">● 録音する</button><button class="btn lg" id="rStop" disabled>■ 止める</button></div>
+            </div>
+            <div class="grid" style="margin-top:12px">
+              <label class="fld"><span>カット案</span><select id="rPlan"></select></label>
+              <label class="chk"><input type="checkbox" id="rClick"> クリックも鳴らす（「クリック」の、はじめる小節・速さで）</label>
+            </div>
+            <p class="note">クリックを鳴らすと、その音も録音に入ります。そのかわり、合奏ノートで開いたときに小節の目印が自動でつきます。録音のあいだは画面が消えないようにします（できる端末だけ）。画面を切りかえたり閉じたりすると、録音が止まる端末があります。</p>
+          </div>
+        </div>
+        <div>
+          <div class="sec">
+            <h2>この曲の録音<small id="rSum"></small></h2>
+            <div id="rList"></div>
+            <p class="note">録音はこの端末の中（ファイル置き場）にあります。合奏ノート・ドリルボードからも選べます。ほかの人へは「送る」で渡してください。演奏の長さは、音の大きさから見た目安です。</p>
           </div>
         </div>
       </div>
@@ -1703,8 +1755,13 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '2', APP_DATE = '2026-10-06';
+const APP_VERSION = '3', APP_DATE = '2026-10-11';
 const CHANGELOG = [
+  { v: '3', d: '2026-10-11', items: [
+    '「録音」を入れました：合奏の通しをこの端末のマイクで録音し、前後の無音を除いた演奏の長さを出します。カット案の「実際に計った時間」にそのまま入れられます',
+    'クリックを鳴らしながら録音すると、合奏ノートで開いたときに小節の目印が自動でつきます（「合奏ノートで開く」）',
+    '録音はこの端末の中（ファイル置き場）に入り、合奏ノート・ドリルボードからも選べます。「送る」でほかの人に渡せます',
+  ] },
   { v: '2', d: '2026-10-06', items: [
     'くり返し（リピート記号）を区間ごとに入れられるようにしました。時間・時間の帯・クリック・印刷がくり返しどおりになります',
     'D.S.・D.C.（to Coda・Fine）を入れられるようにしました。「演奏の順番」で確かめられます',
@@ -1880,7 +1937,7 @@ function renderTop() {
   const scaleMax = Math.max(full, limX || 0);
   $('#barWrap').innerHTML = m.sections.length ? `<div class="timebar" aria-label="時間の帯">${items.map(it => `<div class="seg${it.cut ? ' cut' : ''}${it.pass === 2 ? ' p2' : ''}" style="flex:${itemTime(it).toFixed(2)} 0 0" title="${esc(itemName(m, it))} ${GKY.clock(itemTime(it))}">${esc(it.s.name)}${it.reps > 1 ? '×' + it.reps : ''}</div>`).join('')}<div class="seg" style="flex:${Math.max(0, scaleMax - full).toFixed(2)} 0 0;background:transparent;border:0"></div>${limX != null ? `<div class="limit${limX / scaleMax > 0.6 ? ' r' : ''}" style="left:calc(${(limX / scaleMax * 100).toFixed(2)}% - 1px)" data-l="ここで制限${m.others.length ? '（ほかの曲の分を引いた残り ' + GKY.clock(lim) + '）' : ''}"></div>` : ''}</div><div class="scale"><span>はじめ</span><span>${esc(p.name)}の帯（斜線は切る区間）</span><span>おわり</span></div>` : '';
 }
-function renderTab() { if (tab === 'map') renderMap(); else if (tab === 'plans') renderPlans(); else if (tab === 'click') renderClick(); else if (tab === 'share') renderShare(); }
+function renderTab() { if (tab === 'map') renderMap(); else if (tab === 'plans') renderPlans(); else if (tab === 'click') renderClick(); else if (tab === 'rec') renderRec(); else if (tab === 'share') renderShare(); }
 
 /* --- 区間 --- */
 function renderMap() {
@@ -2081,10 +2138,10 @@ function newMapFlow() {
   $$('[data-s]', sh.body).forEach(b => b.onclick = () => { const s = songs[+b.dataset.s]; sh.close(); make(s.title, [s.composer, s.arranger && s.arranger + ' 編曲'].filter(Boolean).join('／')); });
 }
 $('#btnMap').onclick = mapSheet;
-$('#mapSel').onchange = e => { stop(); S.current = e.target.value; past = []; future = []; persist(); renderAll(); };
+$('#mapSel').onchange = e => { if (rec) { toast('録音を止めてから、曲を切りかえてください'); e.target.value = S.current; return; } stop(); S.current = e.target.value; past = []; future = []; RECS = []; persist(); renderAll(); };
 
 /* --- クリック --- */
-let ac = null, timer = 0, queue = [], playing = false, wake = null, raf = 0, startAt = 0, totalLen = 0;
+let ac = null, timer = 0, queue = [], playing = false, wake = null, raf = 0, startAt = 0, totalLen = 0, lastPlay = null;
 function renderClick() {
   const m = M();
   $('#pPlan').innerHTML = m.plans.map(p => `<option value="${esc(p.id)}"${p.id === m.plan ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
@@ -2165,6 +2222,7 @@ async function play() {
   queue = list; totalLen = built.len; startAt = ac.currentTime + 0.12; playing = true;
   let idx = 0;
   const firstReal = queue.findIndex(x => !x.count), offReal = queue[firstReal].t;
+  lastPlay = { startAt, offReal, from: queue[firstReal].bar, plan: planId, speed };   // 録音とあわせるとき：はじめる小節の頭が鳴る時刻
   const vol = () => (+$('#pVol').value) / 100;
   const tick = () => {
     while (idx < queue.length && startAt + queue[idx].t < ac.currentTime + 0.15) { clickSound(startAt + queue[idx].t, queue[idx].level, vol()); idx++; }
@@ -2200,6 +2258,149 @@ $('#pPlay').onclick = play; $('#pStop').onclick = stop;
 $('#pSpeed').oninput = e => { $('#pSpeedV').textContent = e.target.value + '%'; if (!playing) renderClick(); };
 ['pFrom', 'pPlan'].forEach(id => $('#' + id).addEventListener('change', () => { if (!playing) renderClick(); }));
 document.addEventListener('keydown', e => { if (e.code === 'Space' && tab === 'click' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); if (playing) stop(); else play(); } });
+
+/* --- 録音（通しを録って、演奏の長さを計る） ---
+  録音は共通の「ファイル置き場」（GKY.media、cat:'audio'）に入れる：
+  { id, cat:'audio', name, type, size, dur(秒), at, from:'tempomap', map(曲id), mapTitle, plan(カット案id), planName,
+    lv:[音の大きさ 0〜100（-60dB〜0dB）、0.1秒ごと], trim:{ a, b }（前後の無音を除いた所・秒）| null,
+    click:{ from(はじめる小節), plan, speed(%), at(はじめる小節の頭が鳴った、録音の中の時刻・秒) } | null } */
+let rec = null, RECS = [];
+const REC_TYPES = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'];
+const recOk = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && GKY.media.ok();
+const extOfType = t => /mp4|aac|m4a/.test(t) ? '.m4a' : /ogg/.test(t) ? '.ogg' : /wav/.test(t) ? '.wav' : '.webm';
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 60) || '録音';
+const recLen = r => r.trim ? r.trim.b - r.trim.a : r.dur;
+async function loadRecs() { const id = S.current; try { const xs = GKY.media.ok() ? await GKY.media.list(x => x.cat === 'audio' && x.map === id) : []; if (id === S.current) RECS = xs; } catch (e) { RECS = []; } return RECS; }
+/* 前後の無音を除いた所。lv は 0.1秒ごとの音の大きさ（0〜100）。静かな所（小さい方から2割）と大きい所の間の2割より大きい所を「演奏」とみる */
+function trimOf(lv, step = 0.1) {
+  if (!Array.isArray(lv) || lv.length < 5) return null;
+  const s = lv.slice().sort((a, b) => a - b), floor = s[Math.floor(s.length * 0.2)], peak = s[s.length - 1];
+  if (peak - floor < 10) return null;   // 大きい音がない（無音・ずっと同じ大きさ）
+  const thr = floor + (peak - floor) * 0.2;
+  const a = lv.findIndex(v => v >= thr); let b = lv.length - 1; while (b > a && lv[b] < thr) b--;
+  if (a < 0) return null;
+  return { a: Math.round(Math.max(0, (a - 1) * step) * 100) / 100, b: Math.round(Math.min(lv.length * step, (b + 2) * step) * 100) / 100 };
+}
+/* 音の大きさの小さな図（演奏とみた所は色つき） */
+function waveSVG(r) {
+  const lv = r.lv || []; if (lv.length < 2) return '';
+  const W = 300, H = 30, n = Math.min(W, lv.length), per = lv.length / n, D = lv.length * 0.1;
+  let d = ''; for (let i = 0; i < n; i++) { let v = 0; for (let k = Math.floor(i * per); k < Math.floor((i + 1) * per); k++) v = Math.max(v, lv[k] || 0); const hh = Math.max(1, v / 100 * H); d += `M${(i * W / n).toFixed(1)} ${((H - hh) / 2).toFixed(1)}h${Math.max(0.6, W / n - 0.4).toFixed(1)}v${hh.toFixed(1)}h-${Math.max(0.6, W / n - 0.4).toFixed(1)}z`; }
+  const tr = r.trim, x = t => (t / D * W).toFixed(1);
+  return `<svg class="wv" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${tr ? `<defs><clipPath id="cp-${esc(r.id)}"><rect x="${x(tr.a)}" y="0" width="${(+x(tr.b) - +x(tr.a)).toFixed(1)}" height="${H}"/></clipPath></defs>` : ''}<path class="w" d="${d}"/>${tr ? `<path class="in" d="${d}" clip-path="url(#cp-${esc(r.id)})"/>` : ''}${r.click ? `<rect class="cut" x="${x(r.click.at)}" y="0" width="1.2" height="${H}"/>` : ''}</svg>`;
+}
+function renderRec() {
+  const m = M();
+  $('#rPlan').innerHTML = m.plans.map(p => `<option value="${esc(p.id)}"${p.id === m.plan ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  $('#rPlan').disabled = !!rec;
+  recUI();
+  loadRecs().then(renderRecList);
+}
+function recUI() {
+  const on = !!rec, ok = recOk();
+  $('#recBox').classList.toggle('on', on);
+  $('#rStart').disabled = on || !ok; $('#rStop').disabled = !on; $('#rClick').disabled = on;
+  if (!on) { $('#rTime').textContent = '0:00'; $('#rLevel').style.width = '0'; $('#rState').innerHTML = ok ? '' : 'この端末（ブラウザ）では録音できません。'; }
+  else $('#rState').innerHTML = '<span class="rdot"></span>録音しています';
+}
+function renderRecList() {
+  if (tab !== 'rec') return;
+  const m = M();
+  $('#rSum').textContent = RECS.length ? `${RECS.length}件` : '';
+  $('#rList').innerHTML = RECS.length ? RECS.map(r => {
+    const d = new Date(r.at), when = `${GKY.mdDate(GKY.ymd(d))} ${d.getHours()}:${GKY.pad(d.getMinutes())}`, p = m.plans.find(x => x.id === r.plan);
+    return `<div class="rrow" data-rid="${esc(r.id)}"><div style="min-width:0"><div class="t1">${esc(when)}<span class="chip">${esc(p ? p.name : r.planName || 'カット案')}</span>${p && p.measured && Math.round(recLen(r)) === p.measured ? '<span class="chip ok">実測に入れた</span>' : ''}</div>
+      <div class="t2">${r.trim ? `演奏 <b>${GKY.clock(recLen(r))}</b>（前 ${GKY.clock(r.trim.a)}・後ろ ${GKY.clock(Math.max(0, r.dur - r.trim.b))} の無音を除く）・録音 ${GKY.clock(r.dur)}` : `録音 <b>${GKY.clock(r.dur)}</b>`}${r.click ? `・クリックつき（${esc(r.click.from)}小節から${r.click.speed !== 100 ? '・' + r.click.speed + '%' : ''}）` : ''}・${GKY.bytes(r.size)}</div></div>
+      <div class="act"><button class="btn sm" data-rplay>聞く</button><button class="btn sm" data-rmeas>実測に入れる</button>${GKY.IN_VIEWER ? '' : `<a class="btn sm" data-rgs href="${esc(GKY.linkTo('gassou'))}#media=${esc(r.id)}" target="${GKY.targetOf('gassou')}">合奏ノートで開く</a>`}<button class="btn sm" data-rshare>送る</button><button class="ibtn del" data-rdel aria-label="この録音を消す">×</button></div>
+      ${waveSVG(r)}</div>`;
+  }).join('') : '<div class="empty">まだ録音はありません。左の「● 録音する」から録れます。</div>';
+  $$('#rList .rrow').forEach(row => {
+    const r = RECS.find(x => x.id === row.dataset.rid); if (!r) return;
+    $('[data-rplay]', row).onclick = async () => {
+      let au = $('audio', row); if (au) { au.paused ? au.play() : au.pause(); return; }
+      const g = await GKY.media.get(r.id).catch(() => null); if (!g || !g.blob) { toast('録音が見つかりませんでした'); return; }
+      au = document.createElement('audio'); au.controls = true; au.preload = 'auto'; au.src = URL.createObjectURL(g.blob); row.appendChild(au);
+      au.play().catch(() => {});
+    };
+    $('[data-rmeas]', row).onclick = () => {
+      const len = Math.round(recLen(r)); if (!(len > 0)) { toast('長さがわかりませんでした'); return; }
+      const pid = M().plans.some(p => p.id === r.plan) ? r.plan : M().plan;
+      edit(mm => { mm.plans.find(p => p.id === pid).measured = len; }, false);
+      renderTop(); renderRecList();
+      toast(`「${planOf(M(), pid).name}」の実際に計った時間を ${GKY.clock(len)} にしました`, '元に戻す', undo);
+    };
+    $('[data-rshare]', row).onclick = async () => { const g = await GKY.media.get(r.id).catch(() => null); if (!g || !g.blob) { toast('録音が見つかりませんでした'); return; } GKY.shareFiles([new File([g.blob], r.name, { type: r.type || g.blob.type })], { title: r.mapTitle || 'テンポマップの録音' }); };
+    GKY.arm($('[data-rdel]', row), async () => {
+      const keep = await GKY.media.get(r.id).catch(() => null);
+      try { await GKY.media.del(r.id); } catch (e) { toast('消せませんでした'); return; }
+      RECS = RECS.filter(x => x.id !== r.id); renderRecList();
+      toast('録音を消しました', keep && keep.blob ? '元に戻す' : '', async () => { try { await GKY.media.put(keep.blob, keep.meta); await loadRecs(); renderRecList(); toast('元に戻しました'); } catch (e) { toast('元に戻せませんでした'); } }, 6000);
+    }, '消す？');
+  });
+}
+async function recStart() {
+  if (rec) return;
+  if (!recOk()) { toast('この端末（ブラウザ）では録音できません'); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch (e) { toast(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError') ? 'マイクを使うことが許可されていません。ブラウザの設定で、このページのマイクを許可してください' : 'マイクが見つからないか、ほかのアプリが使っています', null, null, 6000); return; }
+  const type = REC_TYPES.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+  let mr; try { mr = new MediaRecorder(stream, type ? { mimeType: type, audioBitsPerSecond: 96000 } : {}); } catch (e) { stream.getTracks().forEach(t => t.stop()); toast('録音を始められませんでした'); return; }
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); await ac.resume(); } catch (e) { ac = null; }
+  const r = rec = { mr, stream, chunks: [], lv: [], type: mr.mimeType || type || 'audio/webm', plan: $('#rPlan').value, map: S.current, click: null, t0: 0, acT0: 0, wake: null, timer: 0, raf: 0 };
+  mr.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+  await new Promise(res => { mr.onstart = res; try { mr.start(1000); } catch (e) { res(); } });   // 1秒ごとに区切る（長い録音でも途中で止まりにくい）
+  r.t0 = performance.now(); r.acT0 = ac ? ac.currentTime : 0;
+  // 音の大きさ：0.1秒ごとに記録（止めたあと、前後の無音を見つけるのに使う）
+  let an = null, src = null; const fb = new Float32Array(2048);
+  if (ac) { try { src = ac.createMediaStreamSource(stream); an = ac.createAnalyser(); an.fftSize = 2048; src.connect(an); r.src = src; } catch (e) { an = null; } }
+  r.timer = setInterval(() => {
+    let v = 0; if (an) { an.getFloatTimeDomainData(fb); let s = 0; for (let i = 0; i < fb.length; i++) s += fb[i] * fb[i]; const db = 20 * Math.log10(Math.sqrt(s / fb.length) + 1e-9); v = Math.max(0, Math.min(100, Math.round((db + 60) / 60 * 100))); }
+    const k = Math.floor((performance.now() - r.t0) / 100); while (r.lv.length <= k) r.lv.push(v);
+    r.cur = v;
+  }, 100);
+  const draw = () => { if (rec !== r) return; $('#rTime').textContent = GKY.clock((performance.now() - r.t0) / 1000); const el = $('#rLevel'); el.style.width = (r.cur || 0) + '%'; el.classList.toggle('hot', (r.cur || 0) > 95); r.raf = requestAnimationFrame(draw); };
+  r.raf = requestAnimationFrame(draw);
+  try { if (navigator.wakeLock) r.wake = await navigator.wakeLock.request('screen'); } catch (e) { r.wake = null; }
+  recUI(); $('#rPlan').disabled = true;
+  // クリックも鳴らす：はじめる小節の頭が鳴る時刻を、録音の中の時刻にして残す
+  if ($('#rClick').checked && ac) {
+    renderClick(); $('#pPlan').value = r.plan; await play();
+    if (playing && lastPlay) r.click = { from: lastPlay.from, plan: r.plan, speed: lastPlay.speed, at: Math.round(Math.max(0, lastPlay.startAt + lastPlay.offReal - r.acT0) * 1000) / 1000 };
+  }
+}
+async function recStop() {
+  const r = rec; if (!r) return;
+  rec = null; clearInterval(r.timer); cancelAnimationFrame(r.raf);
+  if (playing) stop();
+  const dur = (performance.now() - r.t0) / 1000;
+  await new Promise(res => { r.mr.onstop = res; try { if (r.mr.state !== 'inactive') r.mr.stop(); else res(); } catch (e) { res(); } });
+  r.stream.getTracks().forEach(t => t.stop()); try { if (r.src) r.src.disconnect(); } catch (e) { /* もう外れている */ }
+  if (r.wake) { r.wake.release().catch(() => {}); r.wake = null; }
+  recUI(); $('#rPlan').disabled = false;
+  const blob = new Blob(r.chunks, { type: r.type.split(';')[0] });
+  if (!blob.size) { toast('録音できませんでした（音が入っていません）'); return; }
+  await saveRec(blob, { dur, lv: r.lv, click: r.click, plan: r.plan, map: r.map });
+}
+/* 録音をファイル置き場に入れる（入れられなければ、ファイルとして保存） */
+async function saveRec(blob, { dur, lv = [], click = null, plan = '', map = S.current }) {
+  const m = S.maps[map] || M(), p = planOf(m, plan), d = new Date();
+  const name = `${fileSafe(m.title)}_${GKY.ymd(d)}_${GKY.pad(d.getHours())}${GKY.pad(d.getMinutes())}${extOfType(blob.type)}`;
+  let tr = trimOf(lv); if (tr && click && click.at > tr.a && click.at < tr.b) tr = { a: click.at, b: tr.b };   // クリックのときは、はじめる小節の頭から
+  try {
+    const meta = await GKY.media.put(blob, { cat: 'audio', name, type: blob.type, dur: Math.round(dur * 100) / 100, from: 'tempomap', map: m.id, mapTitle: m.title, plan: p.id, planName: p.name, lv, trim: tr, click });
+    GKY.media.persist();
+    if (map === S.current) { RECS = [meta].concat(RECS.filter(x => x.id !== meta.id)); renderRecList(); }
+    toast(tr ? `録音しました（演奏 ${GKY.clock(tr.b - tr.a)}）。「実測に入れる」で、カット案の時間に入ります` : `録音しました（${GKY.clock(dur)}）`, '', null, 6000);
+    return meta;
+  } catch (e) {
+    toast('この端末に入れられませんでした（空きが足りないかもしれません）。ファイルとして保存します', '', null, 6000);
+    GKY.saveFile(name, blob, blob.type);
+    return null;
+  }
+}
+$('#rStart').onclick = recStart; $('#rStop').onclick = recStop;
+window.addEventListener('beforeunload', e => { if (rec) { e.preventDefault(); e.returnValue = ''; } });
 
 /* --- 共有・書き出し --- */
 /* 共有コード：曲の中身を短い文字にする（圧縮できる端末では圧縮） */
@@ -2266,7 +2467,7 @@ $('#btnUndo').onclick = undo; $('#btnRedo').onclick = redo;
 $('#brand').onclick = e => { e.preventDefault(); GKY.about({ name: 'テンポマップ', what: '練習番号ごとの小節数・拍子・テンポから演奏時間を計算し、コンクールなどのカット案を制限時間と比べるツールです。テンポや拍子の変化どおりに鳴る練習用クリックもあります。', version: APP_VERSION + '（' + APP_DATE + '）', changelog: CHANGELOG, feedback: FEEDBACK_URL }); };
 $('#homeLink').href = GKY.linkTo('gakuya');
 document.addEventListener('keydown', e => { if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return; e.preventDefault(); if (e.shiftKey) redo(); else undo(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && playing) stop(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && playing && !rec) stop(); if (!document.hidden && rec) toast('録音しています。画面を切りかえると、録音が止まる端末があります'); });
 GKY.fitTop(); GKY.offline();
 // 開くリンク（#TMZ…）で来たときは、その曲を読み込む
 (async () => {
@@ -2275,7 +2476,7 @@ GKY.fitTop(); GKY.offline();
 })();
 showTab('map');
 renderAll();
-if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, M, secTime, secMusic, totals, playOrder, beatsPerBar, buildClicks, encode, decode, normalizeMap, ratioOf, renderAll };
+if (GKY.TEST) window.__app = { ready: true, get S() { return S; }, M, secTime, secMusic, totals, playOrder, beatsPerBar, buildClicks, encode, decode, normalizeMap, ratioOf, renderAll, trimOf, saveRec, loadRecs, get RECS() { return RECS; }, get rec() { return rec; } };
 })();
 </script>
 </body>
