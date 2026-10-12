@@ -667,6 +667,12 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
             <div id="usage"></div>
             <div id="mediaUsage"></div>
           </div>
+          <div class="sec">
+            <h2>この端末のデータをすべて消す</h2>
+            <p class="lead">端末を人に渡すとき・はじめからやり直すときに。楽屋シリーズとバミリ・ドリルボードで、この端末に保存しているデータを消します。消す範囲は、次の画面で選べます。</p>
+            <div class="btnrow"><button class="btn danger" id="wipeAll">データをすべて消す…</button></div>
+            <p class="note">消したデータは元に戻せません。先に「バックアップを保存」してください。ほかの端末や、配った見るだけのリンクは変わりません。</p>
+          </div>
         </div>
         <div>
           <div class="sec" data-staff>
@@ -2845,7 +2851,7 @@ function renderBackup() {
   if (document.activeElement !== $('#hoMemo')) $('#hoMemo').value = GKY.pref('handoverMemo', '');
   const w = W();
   ['#hoStaffL', '#orgStaffL'].forEach(s => $(s).textContent = `${w.staff}・指導者のメモも入れる`);
-  if (GKY.IN_VIEWER) { $('#bkList').innerHTML = '<p class="muted" style="font-size:13px">Claudeの画面の中では、ほかのツールのデータが見えないので、まとめてのバックアップはできません。公開ページで使ってください。</p>'; ['#bkSave', '#bkLoad', '#hoSave'].forEach(s => $(s).disabled = true); $('#usage').innerHTML = ''; return; }
+  if (GKY.IN_VIEWER) { $('#bkList').innerHTML = '<p class="muted" style="font-size:13px">Claudeの画面の中では、ほかのツールのデータが見えないので、まとめてのバックアップはできません。公開ページで使ってください。</p>'; ['#bkSave', '#bkLoad', '#hoSave', '#wipeAll'].forEach(s => $(s).disabled = true); $('#usage').innerHTML = ''; return; }
   const ks = myKeys();
   const size = k => k.length + (GKY.store.raw(k) || '').length;
   const groups = {}; ks.forEach(k => { const g = k.startsWith('gakuya.profile.') ? 'profile' : PREFIX.find(x => k.startsWith(x)); (groups[g] = groups[g] || []).push(k); });
@@ -2899,6 +2905,51 @@ $('#bkLoad').onclick = async () => {
       renderAll(); toast(bad ? `${bad}つ戻せませんでした（容量がいっぱいかもしれません）` : `${ks.length}つのデータを戻しました。開いているほかのツールも新しくなります`, null, null, 5000);
       if (ho && ho.memo) setTimeout(() => sheet({ title: '引き継ぎのメモ', content: `<p class="muted" style="margin:0 0 6px;font-size:12.5px">${esc(ho.from || '')}${ho.at ? '（' + esc(ho.at) + '）' : ''}から</p><div style="white-space:pre-wrap;line-height:1.8">${esc(ho.memo)}</div>`, actions: [{ label: '閉じる', primary: true }] }), 300);
     } }] });
+};
+/* この端末のデータをすべて消す。表示の好み・ログインの記録は、選んだときだけ消す */
+const WIPE_PREFS = new Set(['gakuya.ui', 'bamiri.auth', 'bamiri.survey', 'bamiri.guided', 'gyakusan.hideDone', 'gakufu.distView', 'gassou.piRange']);
+const wipeKeys = prefs => GKY.store.keys().filter(k => PREFIX.some(p => k.startsWith(p)) && (prefs || !WIPE_PREFS.has(k)));
+/* ある IndexedDB の名前（調べられないブラウザでは null） */
+const idbNames = async () => { try { return indexedDB.databases ? new Set((await indexedDB.databases()).map(d => d.name)) : null; } catch (e) { return null; } };
+/* ほかのタブで開いたままだと、閉じるまで消えない（false） */
+const dropDB = name => new Promise(res => { try { const r = indexedDB.deleteDatabase(name); r.onsuccess = () => res(true); r.onerror = () => res(false); r.onblocked = () => res(false); } catch (e) { res(false); } });
+async function wipeAll({ photos, media, prefs }) {
+  // 打ちかけの内容（少し待ってから保存するもの）が、消したあとに書き戻されないように
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  await new Promise(r => setTimeout(r, 500));
+  wipeKeys(prefs).forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* 使えない環境 */ } });
+  // 消した時刻を残すと、同期ファイルで合わせたときにほかの端末のデータまで消えるので、記録ごと消す
+  try { localStorage.removeItem('gakuya.mtime'); } catch (e) { /* 使えない環境 */ }
+  const dbs = [photos && 'gakki', media && 'gakuya-media', media && 'drillboard-audio'].filter(Boolean);
+  const ok = (await Promise.all(dbs.map(dropDB))).every(Boolean);
+  return ok;
+}
+$('#wipeAll').onclick = async () => {
+  const names = await idbNames(), has = n => !names || names.has(n);
+  const nKeys = wipeKeys(false).length, nPrefs = wipeKeys(true).length - nKeys;
+  const nPhotos = has('gakki') ? Object.keys(await idbAll('gakki', 'photos')).length : 0;
+  let files = []; try { if (has('gakuya-media') && GKY.media.ok()) files = await GKY.media.list(); } catch (e) { files = []; }
+  const fileSize = files.reduce((t, m) => t + (m.size || 0), 0), drill = names ? names.has('drillboard-audio') : false;
+  const sh = sheet({ title: 'この端末のデータをすべて消す', content: `
+    <p style="margin:0 0 10px">消したデータは<b style="color:var(--bad)">元に戻せません</b>。残しておきたいときは、先にバックアップを保存してください。</p>
+    <div class="btnrow" style="margin:0 0 12px"><button class="btn sm" type="button" data-wbk>先にバックアップを保存</button></div>
+    <label class="chk" style="display:flex;margin:6px 0"><input type="checkbox" checked disabled> 楽屋シリーズ・バミリ・ドリルボードのデータ（${nKeys}つ。しまってあるほかの団体も）</label>
+    <label class="chk" style="display:flex;margin:6px 0"><input type="checkbox" data-w="photos" checked> 楽器台帳の写真（${nPhotos}枚）</label>
+    <label class="chk" style="display:flex;margin:6px 0"><input type="checkbox" data-w="media"> 録音・楽譜のファイル（${files.length}つ${fileSize ? '・' + GKY.bytes(fileSize) : ''}${drill ? '・ドリルボードの音源も' : ''}）<span class="muted" style="font-size:12px">バックアップには入っていません</span></label>
+    <label class="chk" style="display:flex;margin:6px 0"><input type="checkbox" data-w="prefs"> 表示の好み・ログインの記録など（${nPrefs}つ）</label>
+    <p class="note">ほかのタブで楽屋シリーズのツールを開いているときは、先に閉じてください。消したあと、この画面を読み込み直します。</p>`, actions: [{ label: 'やめる' }] });
+  $('[data-wbk]', sh.body).onclick = backupSave;
+  const go = document.createElement('button');
+  go.className = 'btn primary danger'; go.id = 'wipeGo'; go.textContent = '消す';
+  $('footer', sh.el).appendChild(go);
+  GKY.arm(go, async () => {
+    const opt = k => $(`[data-w="${k}"]`, sh.body).checked;
+    go.disabled = true;
+    const ok = await wipeAll({ photos: opt('photos'), media: opt('media'), prefs: opt('prefs') });
+    sh.close();
+    toast(ok ? 'この端末のデータを消しました' : 'データを消しました。ファイルの一部は、ほかのタブの楽屋シリーズを閉じると消えます', null, null, 5000);
+    setTimeout(() => location.reload(), ok ? 800 : 3000);
+  }, 'もう一度押すと消す');
 };
 $('#hoMemo').addEventListener('input', GKY.debounce(() => GKY.setPref('handoverMemo', $('#hoMemo').value), 400));
 $('#hoSave').onclick = async () => {
