@@ -648,7 +648,7 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
         <div>
           <div class="sec">
             <h2>まとめてバックアップ</h2>
-            <p class="lead">この端末に保存している、楽屋シリーズとバミリ・ドリルボードのデータを、1つのファイルにまとめます。機種変更やブラウザのデータを消す前に。学校のChromebook・iPadは、サインアウトでデータが消える設定のこともあるので、こまめに保存してください。</p>
+            <p class="lead">この端末に保存している、楽屋シリーズ（バミリ・ドリルボードも）のデータを、1つのファイルにまとめます。機種変更やブラウザのデータを消す前に。学校のChromebook・iPadは、サインアウトでデータが消える設定のこともあるので、こまめに保存してください。</p>
             <p class="note" id="bkLast" style="margin:0 0 8px"></p>
             <div id="bkList"></div>
             <label class="chk" style="margin:8px 0"><input type="checkbox" id="bkPhotos" checked> 楽器台帳の写真も入れる</label>
@@ -669,7 +669,7 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
           </div>
           <div class="sec">
             <h2>この端末のデータをすべて消す</h2>
-            <p class="lead">端末を人に渡すとき・はじめからやり直すときに。楽屋シリーズとバミリ・ドリルボードで、この端末に保存しているデータを消します。消す範囲は、次の画面で選べます。</p>
+            <p class="lead">端末を人に渡すとき・はじめからやり直すときに。楽屋シリーズ（バミリ・ドリルボードも）で、この端末に保存しているデータを消します。消す範囲は、次の画面で選べます。</p>
             <div class="btnrow"><button class="btn danger" id="wipeAll">データをすべて消す…</button></div>
             <p class="note">消したデータは元に戻せません。先に「バックアップを保存」してください。ほかの端末や、配った見るだけのリンクは変わりません。</p>
           </div>
@@ -1993,8 +1993,12 @@ const GKY = (() => {
 (() => {
 'use strict';
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
-const APP_VERSION = '6', APP_DATE = '2026-10-11';
+const APP_VERSION = '7', APP_DATE = '2026-10-13';
 const CHANGELOG = [
+  { v: '7', d: '2026-10-13', items: [
+    'バミリ（舞台配置図）とドリルボード（マーチング）を、楽屋シリーズの1つとして同じ場所に作り直しました。今までのデータはそのまま使えます。どちらにも右上に「楽屋」へのボタンがあり、ホーム画面に追加すると「楽屋」のアプリの中で開きます',
+    'バミリのGoogleアカウントでのログインと、利用の記録を送るしくみをなくしました。楽屋シリーズのほかのツールと同じく、入力した内容はこの端末の中だけに保存します',
+  ] },
   { v: '6', d: '2026-10-11', items: [
     'ステマネ（司会原稿・進行表・タイムスケジュール）も、ほかのツールと同じ公開ページ（stagemane/）で開くようにしました。楽屋の「本番」から、その本番の司会原稿・進行表を開く・作ることもできます',
     '本番ごとの「当日の案内」：集合・解散・タイムテーブル・持ち物・服装・担当・連絡先を1つの画面にまとめ、部員にリンク（QRコード）で配れるようにしました。当日は今の時刻の行に印がつき、持ち物はチェックできます。ひな形と、ステマネのタイスケからも入れられます',
@@ -2035,7 +2039,7 @@ const CHANGELOG = [
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（GKY.FEEDBACK_URL・バミリと同じ）を使います
 
-/* ---------- ツールの一覧（楽屋シリーズ＋前からあるツール） ---------- */
+/* ---------- ツールの一覧（楽屋シリーズ） ---------- */
 const TOOLS = [
   { slug: 'gyakusan', name: '本番逆算', color: '#44539E', phase: '本番までの準備', desc: '本番の日から、会場予約・チラシ・プログラム・運搬などの締め切りを逆算', key: 'gyakusan.v1', count: s => s && s.plans ? Object.keys(s.plans).length + '本番' : '' },
   { slug: 'gakufu', name: '楽譜ライブラリ', color: '#2F6CC8', phase: '本番までの準備', desc: '所蔵楽譜の台帳。パート譜の欠け・レンタル期限・演奏の記録・今の部員でできる曲', key: 'gakufu.v1', count: s => s && s.songs ? s.songs.length + '曲' : '' },
@@ -2043,16 +2047,16 @@ const TOOLS = [
   { slug: 'kouban', name: 'コウバン', color: '#D23B45', phase: '本番までの準備', desc: '香盤表。曲ごとに誰がどのパートを受け持つか、空き・二重・休み・人数の上限を確かめる', key: 'kouban.v1', count: s => s && s.projects ? Object.keys(s.projects).length + '演奏会' : '' },
   { slug: 'gakkigime', name: '楽器決め・編成計画', color: '#C43F7D', phase: '本番までの準備', desc: '新入部員の楽器の割り振り案（理由つき）と、来年・再来年のパートの人数', key: 'gakkigime.v1', count: s => s && s.newbies ? s.newbies.length + '人' : '' },
   { slug: 'stagemane', name: 'ステマネ', color: '#A3192B', phase: '本番の資料', desc: '司会原稿・進行表・タイムスケジュールを1つの入力から。点検・本番モード・PDF', key: 'stagemane.v1', count: s => s && Array.isArray(s.order) ? s.order.length + '演奏会' : '' },
-  { slug: 'bamiri', name: 'バミリ', color: '#E3B23C', phase: '本番の資料', desc: '吹奏楽・オーケストラ・バンドの舞台配置図', old: true, key: 'bamiri.current', count: s => s && s.items ? s.items.length + '個の部品' : '' },
+  { slug: 'bamiri', name: 'バミリ', color: '#E3B23C', phase: '本番の資料', desc: '吹奏楽・オーケストラ・バンドの舞台配置図', key: 'bamiri.current', count: s => s && s.items ? s.items.length + '個の部品' : '' },
   { slug: 'shikomi', name: '仕込み図', color: '#7A50C7', phase: '本番の資料', desc: '音響・照明の打合せ資料。インプットリスト・仕込み図・きっかけ表', key: 'shikomi.v1', count: s => s && s.events ? Object.keys(s.events).length + '本番' : '' },
-  { slug: 'drillboard', name: 'ドリルボード', color: '#A26A00', phase: '本番の資料', desc: 'マーチングの隊形と動きを作って確かめる', old: true, key: 'drillboard.v1', count: s => s && s.sets ? s.sets.length + 'セット' : '' },
+  { slug: 'drillboard', name: 'ドリルボード', color: '#A26A00', phase: '本番の資料', desc: 'マーチングの隊形と動きを作って確かめる', key: 'drillboard.v1', count: s => s && s.sets ? s.sets.length + 'セット' : '' },
   { slug: 'gakki', name: '楽器台帳', color: '#DD7A2B', phase: '楽器と運搬', desc: '楽器・備品の状態、1年間使う人、修理・貸し出しの記録、写真、QRラベル、消耗品', key: 'gakki.v1', count: s => s && s.items ? s.items.length + '台' : '' },
   { slug: 'hannyu', name: '搬入出リスト', color: '#178A86', phase: '楽器と運搬', desc: '運ぶもの・車・積む順。行き帰りのチェックと照合', key: 'hannyu.v1', count: s => s && s.trips ? Object.keys(s.trips).length + '本番' : '' },
   { slug: 'gassou', name: '合奏ノート', color: '#A8612A', phase: 'ふだんの練習', desc: '合奏ごとに自由に書けるノート。録音に小節の目印と時刻つきコメントをつけ、パートごとに配る', key: 'gassou.v1', count: s => s && s.notes ? Object.keys(s.notes).length + '回' : '' },
   { slug: 'shukketsu', name: '出欠', color: '#5B7A1B', phase: 'ふだんの練習', desc: '練習・本番ごとの出欠と理由。だれもいないパート、出席率、記入用の出欠表', key: 'shukketsu.v1', count: s => s && Array.isArray(s.events) ? s.events.length + '回' : '' },
   { slug: 'kaikei', name: '会計', color: '#506070', phase: '団体の運営', desc: '団費の集金、収入と支出の帳簿、演奏会ごとの予算と実績、会計報告', key: 'kaikei.v1', count: s => s && Array.isArray(s.ledger) ? s.ledger.length + '件' : '' },
 ];
-const urlOf = slug => slug === 'bamiri' || slug === 'drillboard' ? (GKY.IN_VIEWER ? 'https://bamiriunei-arch.github.io/' + slug + '/' : GKY.linkTo(slug)) : GKY.linkTo(slug);
+const urlOf = slug => GKY.linkTo(slug);
 const T = slug => TOOLS.find(t => t.slug === slug);
 const tn = slug => { const t = T(slug); return t ? `<span class="tn" style="--c:${t.color}"><i></i>${esc(t.name)}</span>` : esc(slug); };
 /* バックアップ・団体の切りかえで扱うデータ（ログインの記録・表示の好み・団体の切りかえの記録は入れかえない） */

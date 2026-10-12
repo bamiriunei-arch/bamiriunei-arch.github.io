@@ -14,7 +14,9 @@
 | テンポマップ | [`tempomap/`](tempomap/) | https://bamiriunei-arch.github.io/tempomap/ | 区間ごとの小節数・拍子・テンポ・くり返し・D.S.から演奏時間を計算し、コンクールなどのカット案を比べる。テンポの変化どおりに鳴る練習用クリックつき。通しの録音で演奏の長さを計り、実測に入れる |
 | コウバン | [`kouban/`](kouban/) | https://bamiriunei-arch.github.io/kouban/ | 演奏会で、曲ごとに誰がどのパートを受け持つかを決めて確かめる香盤表。出場人数の上限、見るだけのリンクで自分の出番。バミリの席が足りない人の表 |
 | 楽器決め・編成計画 | [`gakkigime/`](gakkigime/) | https://bamiriunei-arch.github.io/gakkigime/ | 新入部員の楽器の割り振り案を、希望・見立て・経験と定員から理由つきで出す。来年・再来年のパートの人数（一般の団体は欠員と募集） |
+| バミリ | [`bamiri/`](bamiri/) | https://bamiriunei-arch.github.io/bamiri/ | 吹奏楽・オーケストラ・バンドの舞台配置図。奏者・打楽器・平台などを置いて向きをそろえ、レイヤーで分けて作業し、画像にする（黒ステージ・印刷向けの白）。奏者名に楽屋の部員が候補に出る |
 | ステマネ | [`stagemane/`](stagemane/) | https://bamiriunei-arch.github.io/stagemane/ | 演奏会の司会原稿・進行表・タイムスケジュールを、1つの入力から作る。点検（時間の目安・抜け）、本番モード（いまの項目と次のきっかけを大きく）、PDF。楽屋の本番から開ける |
+| ドリルボード | [`drillboard/`](drillboard/) | https://bamiriunei-arch.github.io/drillboard/ | マーチングのドリル（隊形と動き）を作る・見る・練習する。セット・カウント・音源に合わせた再生、ドットシート・コンテの印刷、全員の自分用リンク、動画から隊形を拾う。楽屋の部員を隊員に、ファイル置き場の録音を音源に |
 | 仕込み図 | [`shikomi/`](shikomi/) | https://bamiriunei-arch.github.io/shikomi/ | 演奏会の音響・照明の打合せ資料。使うものを選ぶとインプットリストができ、配置図にマイクを置き、きっかけ表を作れる |
 | 楽器台帳 | [`gakki/`](gakki/) | https://bamiriunei-arch.github.io/gakki/ | 楽器・備品の台帳。状態、今年度の使う人（まとめて決める・使った人の記録）、修理・点検・貸し出しの記録、ほかの団体との貸し借り（貸出書・借用書）、写真、資産台帳、QRコードのラベル、消耗品の在庫 |
 | 搬入出リスト | [`hannyu/`](hannyu/) | https://bamiriunei-arch.github.io/hannyu/ | 演奏会やコンクールの楽器運搬。運ぶものの一覧、車の割り当て、積む順、行き帰りのチェックをスマホで。見るだけのリンクで運ぶ人もチェック |
@@ -22,8 +24,8 @@
 | 出欠 | [`shukketsu/`](shukketsu/) | https://bamiriunei-arch.github.io/shukketsu/ | 練習・本番ごとの出欠と理由。だれもいないパートの知らせ、出席率、記入用の出欠表。予定を見るだけのリンクで配り、届いた返事を貼り付けて取り込む |
 | 会計 | [`kaikei/`](kaikei/) | https://bamiriunei-arch.github.io/kaikei/ | 部費・団費の集金、収入と支出の帳簿（残高・立替）、演奏会や合宿ごとの予算と実績、年度の会計報告 |
 
-前からあるツールは、別のリポジトリのままです：バミリ（`bamiri`）、ドリルボード（`drillboard`）。
-どちらも同じ `bamiriunei-arch.github.io` の下にあるので、楽屋のバックアップにも入ります。ドリルボードは、楽屋の部員を隊員にし、ファイル置き場の録音を音源にできます。
+バミリとドリルボードは、前は別のリポジトリ（`bamiri`・`drillboard`）でしたが、このリポジトリの `bamiri/`・`drillboard/` に移しました（公開ページのURLと保存の場所は同じなので、今までのデータはそのまま使えます）。
+前からの見た目のまま使うので、この2つには「共通部品の見た目を元に戻す」の部分があり、`node sync-common.js` が共通部品から作り直します。
 
 録音（テンポマップ・合奏ノート・ドリルボード）と楽譜のPDF（楽譜ライブラリ）は、端末の中の「ファイル置き場」（IndexedDB の `gakuya-media`）に入り、同じ場所のツールで共有します。
 
@@ -43,6 +45,7 @@
 
 各 `index.html` の中の「楽屋シリーズ 共通部品 ここから〜ここまで」は、全ツールで同じ内容です。
 1つのツールだけを直すときは、その外側を直します。共通部品を変えるときは、楽屋（`gakuya/index.html`）で直してから `node sync-common.js` で全部のフォルダにそろえて写し、`GKY.VERSION` を上げます。
+バミリ・ドリルボードの「共通部品の見た目を元に戻す」も、このとき作り直されます。
 
 ## 自動テスト
 
@@ -61,7 +64,7 @@ node test-all.js kouban     … 1つだけ
 | ファイル | 役割 |
 | --- | --- |
 | `index.html` | 楽屋（`gakuya/`）へ移るだけのページ |
-| `sync-common.js` | 楽屋の `index.html` の共通部品を、全ツールの `index.html` に写す（`node sync-common.js`） |
+| `sync-common.js` | 楽屋の `index.html` の共通部品を、全ツールの `index.html` に写す（`node sync-common.js`）。バミリ・ドリルボードの「共通部品の見た目を元に戻す」も作り直す |
 | `.nojekyll` | GitHub Pages に、ファイルを手を加えずそのまま配ってもらうための印（中身は空） |
 | `.github/workflows/test.yml` | GitHub に上げるたびに自動テストを動かす設定 |
 | `package.json`・`test-all.js` | 自動テストの道具と、全ツールを順に調べるしくみ |
