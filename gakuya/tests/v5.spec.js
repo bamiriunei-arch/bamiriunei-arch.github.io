@@ -43,7 +43,7 @@ test('本番：足す・月ごと／年度ごと・押すとツールごとの�
   // 押すと：ツールごとの記録（あるものは「開く」、ないものは「作る」）
   await row.locator('.t1').click();
   const sh = page.locator('.gky-sheet', { hasText: 'ツールごとの記録' });
-  await expect(sh.locator('.ctool')).toHaveCount(8);
+  await expect(sh.locator('.ctool')).toHaveCount(9);
   await expect(sh.locator('.ctool', { hasText: 'コウバン' })).toContainText('定演の香盤表　曲 1');
   await expect(sh.locator('.ctool', { hasText: 'ステマネ' })).toContainText('司会原稿・進行表');
   await expect(sh.locator('.ctool', { hasText: 'ステマネ' })).toContainText('定演の司会原稿　曲 2');
@@ -224,12 +224,13 @@ test('代表者用と部員用：部員用の設定リンクを開くと、決�
   await expect(mp.locator('.gky-gate')).toContainText('コウバンは、団員用の画面では使いません');
   await mp.goto('/shukketsu/index.html?test'); await mp.waitForFunction(() => window.__app && window.__app.ready);
   await expect(mp.locator('.gky-gate')).toHaveCount(0);
-  // 代表者・顧問用にもどす
+  // 部員用の画面からは、代表者・顧問用にもどせない（もどすボタン・この端末の団体はない）
   await mp.goto('/index.html?test'); await mp.waitForFunction(() => window.__app && window.__app.ready);
   await mp.click('[data-tab="org"]');
-  await mp.click('#meStaff'); await mp.click('#meStaff');
-  await expect(mp.locator('html')).toHaveAttribute('data-role', 'staff');
-  await expect(mp.locator('[data-tab="links"]')).toBeVisible();
+  await expect(mp.locator('#meBox')).toBeVisible();
+  await expect(mp.locator('#meStaff')).toHaveCount(0);
+  await expect(mp.locator('#profList')).toBeHidden();
+  await expect(mp.locator('html')).toHaveAttribute('data-role', 'member');
   expect(merr).toEqual([]);
   await ctx.close();
   await noErrors(errors);

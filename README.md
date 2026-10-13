@@ -21,6 +21,7 @@
 | 楽器台帳 | [`gakki/`](gakki/) | https://bamiriunei-arch.github.io/gakki/ | 楽器・備品の台帳。状態、今年度の使う人（まとめて決める・使った人の記録）、修理・点検・貸し出しの記録、ほかの団体との貸し借り（貸出書・借用書）、写真、資産台帳、QRコードのラベル、消耗品の在庫 |
 | 搬入出リスト | [`hannyu/`](hannyu/) | https://bamiriunei-arch.github.io/hannyu/ | 演奏会やコンクールの楽器運搬。運ぶものの一覧、車の割り当て、積む順、行き帰りのチェックをスマホで。見るだけのリンクで運ぶ人もチェック |
 | 合奏ノート | [`gassou/`](gassou/) | https://bamiriunei-arch.github.io/gassou/ | 合奏ごとに自由に書けるノートと、録音への小節の目印・時刻つきコメント。部員のノートと個人練習の記録の提出、コメントと録音を配る（見るだけのリンク・zip）、その日の出欠。録音は端末の中だけで扱う |
+| 練習計画 | [`renshu/`](renshu/) | https://bamiriunei-arch.github.io/renshu/ | 出欠の練習の日ごとに、何を練習するか（曲・練習番号と小節・パート・形）とタイムテーブル。楽屋の本番から逆算した下書き（譜読み → 区間 → 通し → ゲネプロ）、見るだけのリンク、文でコピー、印刷、カレンダー（.ics） |
 | 出欠 | [`shukketsu/`](shukketsu/) | https://bamiriunei-arch.github.io/shukketsu/ | 練習・本番ごとの出欠と理由。だれもいないパートの知らせ、出席率、記入用の出欠表。予定を見るだけのリンクで配り、届いた返事を貼り付けて取り込む |
 | 会計 | [`kaikei/`](kaikei/) | https://bamiriunei-arch.github.io/kaikei/ | 部費・団費の集金、収入と支出の帳簿（残高・立替）、演奏会や合宿ごとの予算と実績、年度の会計報告 |
 

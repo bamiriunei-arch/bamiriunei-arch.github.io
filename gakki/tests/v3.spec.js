@@ -123,14 +123,13 @@ test('使う人をまとめて決める：同じパートの部員が先に出�
   await page.click('#userBulk');
   const sh = page.locator('.gky-sheet', { hasText: '使う人をまとめて決める' });
   await expect(sh.locator('tr[data-id]')).toHaveCount(3);                     // 個人の楽器は出さない
-  const dl = await sh.locator('tr[data-id="g1"] input').getAttribute('list');
-  expect(await sh.locator(`datalist#${dl} option`).evaluateAll(os => os.slice(0, 2).map(o => o.value))).toEqual(['赤井 一郎', '上野 空']);
+  expect(await sh.locator('tr[data-id="g1"] [data-upick] optgroup[label="同じパート"] option').evaluateAll(os => os.map(o => o.value))).toEqual(['赤井 一郎', '上野 空']);
   await expect(sh.locator('#ubFree')).toContainText('楽器が決まっていない部員');
   await expect(sh.locator('#ubFree')).toContainText('赤井 一郎（Tp）');
   await expect(sh.locator('#ubFree')).not.toContainText('石田 花');           // 自分の楽器を持っている
-  await sh.locator('tr[data-id="g1"] input').fill('赤井 一郎');
-  await sh.locator('tr[data-id="g2"] input').fill('上野 空');
-  await sh.locator('tr[data-id="g3"] input').fill('江口 海');
+  await sh.locator('tr[data-id="g1"] [data-upick]').selectOption('赤井 一郎');
+  await sh.locator('tr[data-id="g2"] [data-upick]').selectOption('上野 空');
+  await sh.locator('tr[data-id="g3"] [data-upick]').selectOption('江口 海');
   await expect(sh.locator('#ubFree')).toContainText('全員の楽器が決まっています');
   await sh.getByRole('button', { name: '決める' }).click();
   await expect(page.locator('#gkyToast')).toContainText('3台の使う人を変えました');
@@ -138,7 +137,7 @@ test('使う人をまとめて決める：同じパートの部員が先に出�
   // 使う人を変える → 使った人の記録
   await page.click('[data-tab="list"]');
   await page.locator('#instList .inst', { hasText: 'Tp-01' }).click();
-  await page.locator('#detail [data-k="user"]').fill('上野 空'); await page.locator('#detail [data-k="user"]').press('Tab');
+  await page.locator('#detail [data-upick]').selectOption('上野 空');
   const h = await page.evaluate(() => __app.S.items.find(i => i.id === 'g1').userHist.map(u => [u.name, !!u.since, !!u.until]));
   expect(h).toEqual([['赤井 一郎', true, true], ['上野 空', true, false]]);
   await expect(page.locator('#detail')).toContainText('使った人の記録');

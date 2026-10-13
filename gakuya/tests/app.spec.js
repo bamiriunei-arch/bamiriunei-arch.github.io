@@ -10,7 +10,7 @@ const SJIS_CSV = 'lryRTyyKd5ROLINwgVuDZw0KjlKTYyCJ1I5xLJKGMiyDToOJg4qDbINig2cNCp
 
 test('ツールの一覧：14のツールが出て、同じツールは同じタブで開く。ステマネも同じ場所のページ。置き方はなく、ご意見はバミリと同じフォーム', async ({ page }) => {
   const errors = await openApp(page);
-  await expect(page.locator('.tool')).toHaveCount(14);
+  await expect(page.locator('.tool')).toHaveCount(15);
   const kb = page.locator('.tool[data-slug="kouban"]');
   await expect(kb).toHaveAttribute('href', '../kouban/');
   await expect(kb).toHaveAttribute('target', 'gky-kouban');

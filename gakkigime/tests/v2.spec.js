@@ -59,7 +59,9 @@ test('楽屋にまだ足していない新入部員は、4月なら今年度の1
   await expect(page.locator('#fcCohortNote')).toContainText('楽屋にまだいない2人を今の中1に足しています');
   await page.selectOption('#fcCohort', 'next');
   await expect(page.locator('#fcCohortNote')).toContainText('来年の中1として数えています');
+  // 楽器決めの新入部員は楽屋の名簿にも入るが、楽屋の人数には二重に数えない
   await expect(page.locator('#fcTable tbody tr', { hasText: 'フルート' }).locator('td').nth(1)).toHaveText('');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('gakuya.org')).members.filter(m => m.name.startsWith('新田')).length)).toBe(2);
   await noErrors(errors);
 });
 
@@ -133,25 +135,21 @@ test('一般の団体：編成計画のかわりに「欠員と募集」。足�
   await noErrors(errors);
 });
 
-test('楽屋に足す：学年は団体の種類で（大学は大1、一般は入団した年）。もう楽屋にいる人は足さない', async ({ page }) => {
-  const errors = await openWith(page, { org: { type: 'daigaku', retire: '大4' }, members: [M('既存 太郎', '大1', 'Cl')] });
-  await page.evaluate(() => { const S = __app.S; S.newbies = [{ id: 'a', name: '既存 太郎', decided: 'Cl' }, { id: 'b', name: '新入 花子', decided: 'Fl' }].map(n => Object.assign({ w: ['', '', ''], apt: [], exp: '', fixed: '', note: '' }, n)); __app.renderAll(); });
+test('楽屋に足す：学年は団体の種類で（大学は大1、一般は入団した年）。もう楽屋にいる人は二重に足さない', async ({ page }) => {
+  const errors = await openWith(page, { org: { type: 'daigaku', retire: '大4', year: 2026 }, members: [Object.assign(M('既存 太郎', '大1', 'Cl'), { id: 'm0' })] });
+  await page.click('#nbAdd'); await page.locator('#nbTable [data-k="name"]').last().fill('既存 太郎'); await page.locator('#nbTable [data-k="name"]').last().press('Tab');
+  await page.click('#nbAdd'); await page.locator('#nbTable [data-k="name"]').last().fill('新入 花子'); await page.locator('#nbTable [data-k="name"]').last().press('Tab');
+  const ms = await page.evaluate(() => JSON.parse(localStorage.getItem('gakuya.org')).members.map(m => [m.name, m.grade, m.part, m.status, m.joined]));
+  expect(ms).toEqual([['既存 太郎', '大1', 'Cl', 'active', null], ['新入 花子', '大1', '', 'active', 2026]]);
   await page.click('[data-tab="plan"]');
-  await page.click('#toOrg');
-  await expect(page.locator('.gky-sheet')).toContainText('もう楽屋にいる1人は足しません');
-  await expect(page.locator('.gky-sheet #gr')).toHaveValue('大1');
-  await page.click('.gky-sheet footer .btn.primary');
-  const ms = await page.evaluate(() => JSON.parse(localStorage.getItem('gakuya.org')).members.map(m => [m.name, m.grade, m.part, m.status]));
-  expect(ms).toEqual([['既存 太郎', '大1', 'Cl', 'active'], ['新入 花子', '大1', 'Fl', 'active']]);
-  // 一般の団体：学年のかわりに入団した年。ボタンの名前も「団員」
-  await page.evaluate(() => { const o = JSON.parse(localStorage.getItem('gakuya.org')); o.org.type = 'ippan'; o.members = []; localStorage.setItem('gakuya.org', JSON.stringify(o)); __app.renderAll(); });
-  await expect(page.locator('#toOrg')).toHaveText('楽屋の団員に足す');
-  await page.click('#toOrg');
-  await expect(page.locator('.gky-sheet #gr')).toHaveCount(0);
-  await page.locator('.gky-sheet #jn').fill('2026');
-  await page.click('.gky-sheet footer .btn.primary');
+  await expect(page.locator('#toOrg')).toHaveText('楽屋の名簿を開く');
+  await expect(page.locator('#toOrg')).toHaveAttribute('href', /gakuya\/#members$/);
+  // 一般の団体：学年なし・入団した年
+  await page.evaluate(() => { const o = JSON.parse(localStorage.getItem('gakuya.org')); o.org.type = 'ippan'; o.members = []; localStorage.setItem('gakuya.org', JSON.stringify(o)); __app.S.newbies = []; __app.renderAll(); });
+  await page.click('[data-tab="wish"]');
+  await page.click('#nbAdd'); await page.locator('#nbTable [data-k="name"]').last().fill('団員 一郎'); await page.locator('#nbTable [data-k="name"]').last().press('Tab');
   const ip = await page.evaluate(() => JSON.parse(localStorage.getItem('gakuya.org')).members.map(m => [m.name, m.grade, m.joined]));
-  expect(ip).toEqual([['既存 太郎', '', 2026], ['新入 花子', '', 2026]]);
+  expect(ip).toEqual([['団員 一郎', '', 2026]]);
   await noErrors(errors);
 });
 
