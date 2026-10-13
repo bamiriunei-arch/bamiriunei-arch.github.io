@@ -92,3 +92,70 @@ test('楽器決めの「楽屋の名簿を開く」：#members で部員のタ�
   await expect(page.locator('#mLead')).toContainText('楽器決めの新しい部員に出ます');
   await noErrors(errors);
 });
+
+test('カレンダー：行事・休みを期間つきで入れると、1年の表と月の表に色の帯で出る。印刷・.ics にも入り、消せる', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-11T10:00:00'));
+  const errors = await openApp(page);
+  await setOrg(page, Object.assign({}, BASE, { concerts: [{ id: 'c1', title: '定期演奏会', date: '2026-10-31', start: '14:00', kind: 'concert' }] }));
+  await reopen(page);
+  await page.click('[data-tab="cal"]');
+  await expect(page.locator('#calYearG .ym')).toHaveCount(12);
+  await expect(page.locator('#calSum')).toContainText('2026年4月〜2027年3月　本番 1');
+  await page.click('#calAdd');
+  await page.locator('#yT').fill('2学期 期末テスト');
+  await page.selectOption('#yK', 'test');
+  await page.locator('#yD').fill('2026-11-20'); await page.locator('#yE').fill('2026-11-27');
+  await page.click('.gky-sheet footer .btn.primary');
+  // 1年の表：期間の日に色。月の表は11月になる
+  await expect(page.locator('#calYearG td[data-day="2026-11-23"]')).toHaveClass(/b-test/);
+  await expect(page.locator('#calYearG td[data-day="2026-11-28"]')).not.toHaveClass(/b-test/);
+  await expect(page.locator('#calMonthSec')).toContainText('11月');
+  await expect(page.locator('#calMonthSec td[data-day="2026-11-20"] .ev')).toHaveText(['2学期 期末テスト']);   // 名前ははじまりの日と日曜だけ
+  await expect(page.locator('#calMonthSec td[data-day="2026-11-21"] .ev')).toHaveCount(0);
+  await expect(page.locator('#calMonthSec td[data-day="2026-11-22"] .ev')).toHaveCount(1);
+  await expect(page.locator('#calMonthSec .agenda .ar')).toHaveCount(1);
+  await expect(page.locator('#calMonthSec .agenda')).toContainText('（〜11/27（金））');
+  await expect(page.locator('#calEvSec .er')).toContainText('11/20（金）〜11/27（金）');
+  // 月を行き来する
+  await page.click('#calMP');
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-31"] .ev')).toHaveText(['定期演奏会']);
+  // .ics：期間は1つの終日の予定
+  const ics = await page.evaluate(async () => { let out = ''; const sf = GKY.saveFile; GKY.saveFile = async (n, d) => { out = d; return true; }; document.querySelector('#calIcs').click(); await new Promise(r => setTimeout(r, 100)); GKY.saveFile = sf; return out; });
+  expect(ics.split('SUMMARY:2学期 期末テスト').length - 1).toBe(1);
+  expect(ics).toContain('DTSTART;VALUE=DATE:20261120');
+  expect(ics).toContain('DTEND;VALUE=DATE:20261128');
+  // 印刷（1年を1枚）に入る
+  await page.click('#calPrint'); await page.click('[data-cp="year"]');
+  await expect(page.locator('.gky-pv .gky-page').first()).toContainText('20日〜27日 2学期 期末テスト');
+  await page.click('.gky-pv [data-act="close"]');
+  // 行事・休みを切るとかくれる
+  await page.locator('[data-layer="calEv"]').uncheck();
+  await expect(page.locator('#calYearG td[data-day="2026-11-23"]')).not.toHaveClass(/b-test/);
+  await page.locator('[data-layer="calEv"]').check();
+  // 消す（元に戻せる）
+  await page.locator('#calEvSec .er').click();
+  await page.locator('.gky-sheet footer .btn', { hasText: '消す' }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('gakuya.calendar')).list.length)).toBe(0);
+  await noErrors(errors);
+});
+
+test('カレンダー：練習計画のある練習の日は、段階と曲を出して「練習計画で開く」。練習計画を切ると、ふつうの練習として出る', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-11T10:00:00'));
+  const errors = await openApp(page);
+  await setOrg(page, BASE);
+  await page.evaluate(() => {
+    localStorage.setItem('shukketsu.v1', JSON.stringify({ v: 1, events: [{ id: 'e1', date: '2026-10-20', start: '16:00', end: '18:00', title: '合奏', kind: 'practice', place: '音楽室' }, { id: 'e2', date: '2026-10-22', start: '16:00', end: '18:00', title: 'パート練習', kind: 'practice' }], att: {} }));
+    localStorage.setItem('renshu.v1', JSON.stringify({ v: 1, days: { e1: { phase: 'sec', items: [{ fmt: 'kiso', min: 15 }, { fmt: 'gassou', title: '宝島', range: 'A', min: 60 }, { fmt: 'bunsou', title: 'ふるさと', min: 30 }] } }, targets: [] }));
+  });
+  await reopen(page);
+  await page.click('[data-tab="cal"]');
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-20"] .ev.k-plan')).toHaveText('合奏');
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-22"] .ev.k-att')).toHaveText('パート練習');
+  await expect(page.locator('#calMonthSec .agenda')).toContainText('区間　宝島・ふるさと');
+  await page.locator('#calMonthSec td[data-day="2026-10-20"]').click();
+  await expect(page.locator('.gky-sheet a', { hasText: '練習計画で開く' })).toHaveAttribute('href', /renshu\/#day=e1$/);
+  await page.keyboard.press('Escape');
+  await page.locator('[data-layer="calPlan"]').uncheck();
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-20"] .ev.k-att')).toHaveText('合奏');
+  await noErrors(errors);
+});

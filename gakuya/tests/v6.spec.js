@@ -122,42 +122,41 @@ test('年間カレンダー：本番に、出欠の予定と本番逆算の締�
     localStorage.setItem('gyakusan.v1', JSON.stringify({ v: 1, plans: { a: { id: 'a', title: '定演', date: '2026-10-31', tasks: [{ id: 't1', name: 'プログラムを印刷', off: -10, done: false }, { id: 't2', name: '会場予約', off: -180, done: true }] }, s: { id: 's', title: '例', date: '2026-10-31', sample: true, tasks: [{ id: 'x', name: '例の締め切り', off: -3 }] } } }));
   });
   await reopen(page);
-  await page.click('[data-tab="concerts"]');
-  await page.click('#cView [data-v="cal"]');
-  await expect(page.locator('#cList .calm')).toHaveCount(12);
-  await expect(page.locator('#cList .calm').first()).toContainText('4月');
-  await expect(page.locator('#cList td[data-day="2026-10-31"] .ev')).toHaveText(['第13回 定期演奏会']);      // 本番とつないだ出欠の予定は重ねない
-  await expect(page.locator('#cList td[data-day="2026-10-20"] .ev')).toHaveText(['合奏']);
-  await expect(page.locator('#cList td[data-day="2026-10-21"] .ev')).toHaveCount(0);                          // 締め切りははじめは出さない
-  await page.locator('#calDue').check();
-  await expect(page.locator('#cList td[data-day="2026-10-21"] .ev')).toHaveText(['〆プログラムを印刷']);      // すんだもの・例の本番は出さない
-  await page.locator('#calAtt').uncheck();
-  await expect(page.locator('#cList td[data-day="2026-10-20"] .ev')).toHaveCount(0);
-  await page.locator('#calAtt').check();
+  await page.click('[data-tab="cal"]');
+  await expect(page.locator('#calYearG .ym')).toHaveCount(12);
+  await expect(page.locator('#calYearG .ym').first()).toContainText('4月');
+  await expect(page.locator('#calMonthSec')).toContainText('10月');            // 今の月
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-31"] .ev')).toHaveText(['第13回 定期演奏会']);      // 本番とつないだ出欠の予定は重ねない
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-20"] .ev')).toHaveText(['合奏']);
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-21"] .ev')).toHaveCount(0);                          // 締め切りははじめは出さない
+  await page.locator('[data-layer="calDue"]').check();
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-21"] .ev')).toHaveText(['〆プログラムを印刷']);      // すんだもの・例の本番は出さない
+  await page.locator('[data-layer="calAtt"]').uncheck();
+  await expect(page.locator('#calMonthSec td[data-day="2026-10-20"] .ev')).toHaveCount(0);
+  await page.locator('[data-layer="calAtt"]').check();
   // 日を押すと、その日の一覧。本番を押すと本番の画面
-  await page.locator('#cList td[data-day="2026-10-20"]').click();
+  await page.locator('#calMonthSec td[data-day="2026-10-20"]').click();
   await expect(page.locator('.gky-sheet')).toContainText('16:00');
   await expect(page.locator('.gky-sheet')).toContainText('〜18:00　音楽室');
   await page.keyboard.press('Escape');
-  await page.locator('#cList td[data-day="2026-10-31"]').click();
+  await page.locator('#calMonthSec td[data-day="2026-10-31"]').click();
   await page.locator('.gky-sheet .crow[data-c="c1"]').click();
   await expect(page.locator('.gky-sheet')).toContainText('ツールごとの記録');
   await page.keyboard.press('Escape');
   // 印刷：1年を1枚（横）・月ごと（12ページ）
-  await expect(page.locator('#cPrint')).toHaveText('カレンダーを印刷・PDF');
-  await page.click('#cPrint');
+  await page.click('#calPrint');
   await page.click('[data-cp="year"]');
   const pg = page.locator('.gky-pv .gky-page');
   await expect(pg).toHaveCount(1);
   await expect(pg.first()).toHaveClass(/landscape/);
   await expect(pg.first()).toContainText('31日 第13回 定期演奏会');
   await page.click('.gky-pv [data-act="close"]');
-  await page.click('#cPrint');
+  await page.click('#calPrint');
   await page.click('[data-cp="month"]');
   await expect(page.locator('.gky-pv .gky-page')).toHaveCount(12);
   await page.click('.gky-pv [data-act="close"]');
   // .ics：練習（終わりの時刻つき）と締め切りも入る
-  const ics = await page.evaluate(async () => { let out = ''; const sf = GKY.saveFile; GKY.saveFile = async (n, d) => { out = d; return true; }; document.querySelector('#cIcs').click(); await new Promise(r => setTimeout(r, 100)); GKY.saveFile = sf; return out; });
+  const ics = await page.evaluate(async () => { let out = ''; const sf = GKY.saveFile; GKY.saveFile = async (n, d) => { out = d; return true; }; document.querySelector('#calIcs').click(); await new Promise(r => setTimeout(r, 100)); GKY.saveFile = sf; return out; });
   expect(ics).toContain('SUMMARY:合奏');
   expect(ics).toContain('DTSTART:20261020T160000');
   expect(ics).toContain('DTEND:20261020T180000');

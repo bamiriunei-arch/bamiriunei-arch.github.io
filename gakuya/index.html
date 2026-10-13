@@ -458,7 +458,36 @@ a.gky-cchip:hover{border-color:var(--tape)}
 .callegend{display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin:0 0 10px; font-size:12.5px}
 .callegend span,.callegend label{display:inline-flex; align-items:center; gap:5px; margin:0}
 .callegend i,.calg .dots i{display:inline-block; width:10px; height:10px; border-radius:2px}
-.k-concert{background:var(--tape)} .k-att{background:var(--line-strong)} .k-due{background:var(--warn)}
+.k-concert{background:var(--tape)} .k-att{background:var(--line-strong)} .k-due{background:var(--warn)} .k-plan{background:#1F7A99}
+/* 行事・休みの帯（期間のある日の地の色） */
+.b-test{--band:var(--bad-soft)} .b-holiday{--band:var(--surface-3)} .b-school{--band:var(--ok-soft)} .b-stop{--band:var(--warn-soft)} .b-other{--band:var(--tape-soft)}
+.callegend .band{display:inline-block; width:14px; height:10px; border-radius:2px; background:var(--band); border:1px solid var(--line-strong)}
+.calg td[class*="b-"]{background:var(--band)}
+.calg .ev.k-ev{background:transparent; color:var(--ink); font-weight:700; padding:0 1px}
+.calg .ev.k-plan{background:color-mix(in srgb,#1F7A99 14%,var(--surface)); color:var(--ink); border:1px solid color-mix(in srgb,#1F7A99 45%,var(--line))}
+.calnav{display:inline-flex; align-items:center; gap:2px}
+.yearg{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 14px}
+@media (max-width:900px){ .yearg{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:600px){ .yearg{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px} }
+.ym>button{display:flex; align-items:baseline; gap:6px; width:100%; border:0; background:transparent; padding:0 0 3px; font:inherit; color:inherit; cursor:pointer; text-align:left}
+.ym>button b{font-size:14px} .ym>button small{font-size:11px; color:var(--muted)}
+.ym.on>button b{color:var(--tape); text-decoration:underline; text-underline-offset:3px}
+table.calg.mini td{height:22px; padding:1px; text-align:center; font-size:10px; position:relative}
+table.calg.mini .n{font-size:10px; line-height:1.2}
+table.calg.mini .dots{display:flex; justify-content:center; gap:1px; line-height:0}
+table.calg.mini .dots i{width:5px; height:5px; border-radius:50%}
+table.calg.mini td.today{box-shadow:inset 0 0 0 2px var(--tape)}
+table.calg.mini td.hc{background:var(--tape)} table.calg.mini td.hc .n{color:var(--tape-ink)} table.calg.mini td.hc .dots{display:none}
+table.calg.mini th{font-size:9.5px; padding:1px 0}
+.agenda{display:flex; flex-direction:column; gap:4px; margin-top:10px}
+.agenda .ar{display:grid; grid-template-columns:9.2em 5.6em minmax(0,1fr); gap:8px; align-items:baseline; padding:5px 8px; border-radius:6px; background:var(--surface-2); font-size:13px; cursor:pointer}
+.agenda .ar .d{font-family:var(--f-mono); font-weight:600; font-size:12.5px; white-space:nowrap}
+.agenda .ar .k{font-size:11px; font-weight:700; color:var(--muted)}
+@media (max-width:600px){ .agenda .ar{grid-template-columns:8.6em minmax(0,1fr)} .agenda .ar .k{display:none} }
+.evl{display:flex; flex-direction:column; gap:6px}
+.evl .er{display:flex; align-items:center; gap:10px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); cursor:pointer}
+.evl .er .sw{width:12px; height:12px; border-radius:3px; background:var(--band); border:1px solid var(--line-strong); flex:none}
+.evl .er .d{font-family:var(--f-mono); font-size:12.5px; min-width:9em}
 .calwrap{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px}
 .calm>h3{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin:0 0 4px}
 .calm>h3 small{font-weight:700; color:var(--ink)}
@@ -504,6 +533,7 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
   <nav class="gky-tabs" id="tabs" role="tablist">
     <button data-tab="tools">ツール</button>
     <button data-tab="concerts">本番<span class="count ok" id="cntC"></span></button>
+    <button data-tab="cal">カレンダー</button>
     <button data-tab="members"><span id="wMember">部員</span><span class="count ok" id="cntM"></span></button>
     <button data-tab="org">団体・年度</button>
     <button data-tab="notice" data-staff>お知らせ</button>
@@ -535,7 +565,7 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
         <p class="lead" id="cLead"></p>
         <div class="btnrow" style="margin-bottom:10px">
           <button class="btn primary" id="cAdd" data-staff>＋ 本番を足す</button>
-          <div class="seg" role="group" aria-label="見かた" id="cView"><button data-v="month">月ごと</button><button data-v="year">年度ごと</button><button data-v="cal">カレンダー</button></div>
+          <div class="seg" role="group" aria-label="見かた" id="cView"><button data-v="month">月ごと</button><button data-v="year">年度ごと</button></div>
           <select id="cYear" aria-label="どの年度を出すか"></select>
           <select id="cStart" aria-label="年度の区切り"><option value="4">4月はじまり（年度）</option><option value="1">1月はじまり（年）</option></select>
         </div>
@@ -546,6 +576,26 @@ table.calg{width:100%; border-collapse:collapse; table-layout:fixed; background:
         </div>
         <p class="note" data-staff>「部員に見せない」にした本番は、見るだけのリンクと部員用の設定リンクに入りません。カレンダー（.ics）は、iPhone・Googleカレンダーなどに入れられます。</p>
       </div>
+    </section>
+
+    <section data-panel="cal" hidden>
+      <div class="sec">
+        <h2>年間カレンダー<small id="calSum"></small></h2>
+        <p class="lead" id="calLead"></p>
+        <div class="btnrow" style="margin-bottom:10px">
+          <button class="btn primary" id="calAdd" data-staff>＋ 行事・休みを足す</button>
+          <span class="calnav"><button class="ibtn" id="calPrev" aria-label="前の年度">‹</button><select id="calYear" aria-label="どの年度を出すか"></select><button class="ibtn" id="calNext" aria-label="次の年度">›</button></span>
+          <select id="calStart" aria-label="年度の区切り"><option value="4">4月はじまり（年度）</option><option value="1">1月はじまり（年）</option></select>
+        </div>
+        <div id="calLegend"></div>
+        <div class="yearg" id="calYearG"></div>
+      </div>
+      <div class="sec" id="calMonthSec"></div>
+      <div class="sec" id="calEvSec" data-staff></div>
+      <div class="btnrow">
+        <button class="btn" id="calPrint">カレンダーを印刷・PDF</button><button class="btn" id="calIcs">カレンダーに入れる（.ics）</button>
+      </div>
+      <p class="note">日を押すと、その日の本番・練習・練習計画・行事を見られます。カレンダー（.ics）には、いま出しているものが入ります。</p>
     </section>
 
     <section data-panel="members" hidden>
@@ -1996,6 +2046,8 @@ const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
 const APP_VERSION = '8', APP_DATE = '2026-10-13';
 const CHANGELOG = [
   { v: '8', d: '2026-10-13', items: [
+    '「カレンダー」のタブを足しました。1年（年度）の12か月を1画面で見渡し、選んだ月の大きな表と予定の一覧も出します。本番・練習と予定（出欠）・練習計画（その日の段階と曲）・準備の締め切り（本番逆算）・行事と休みを、選んで重ねられます。前の「本番」のカレンダーの見かたは、こちらに移しました',
+    '定期テスト・長期休み・学校行事・部活動停止などの「行事・休み」を、期間つきで入れられるようにしました。カレンダーに色の帯で出て、印刷・カレンダー（.ics）・部員用の設定リンクにも入ります',
     '新しいツール「練習計画」を足しました。出欠の練習の日ごとに、何を練習するか（曲・練習番号と小節・パート・形）とタイムテーブルを決めます。楽屋の本番を選ぶと、本番までの練習の日に曲を「譜読み → 区間 → 通し → ゲネプロ」の順で割り振った下書きを作ります。楽屋の本番から開け、バックアップ・同期ファイルにも入ります',
     '「年度末・年度はじめにやること」を、「団体・年度」の「いまの名簿の年度」に合わせて出すようにしました（年度を変えると、見出しと済んだ印もその年度のものになります）。進級したばかりのときは、進級の前の年度のまま続けて案内します',
     '部員用の端末から「代表者・顧問用にもどす」と「この端末の団体」をなくしました。部員用の端末は、データをすべて消しても、バックアップや楽屋のデータを読み込んでも、部員用のままです',
@@ -2098,7 +2150,8 @@ function renderAll() {
   // 部員用の端末：決めたものだけ出す
   $('[data-tab="concerts"]').hidden = mem && !cfg.concerts;
   $('[data-tab="members"]').hidden = mem && !cfg.roster;
-  if ((tab === 'concerts' && mem && !cfg.concerts) || (tab === 'members' && mem && !cfg.roster) || ((tab === 'links' || tab === 'notice') && mem)) { showTab('tools'); return; }
+  $('[data-tab="cal"]').hidden = mem && !cfg.concerts;
+  if (((tab === 'concerts' || tab === 'cal') && mem && !cfg.concerts) || (tab === 'members' && mem && !cfg.roster) || ((tab === 'links' || tab === 'notice') && mem)) { showTab('tools'); return; }
   const act = o.members.filter(m => m.status === 'active').length;
   $('#cntM').textContent = act && !mem ? String(act) : '';
   const up = o.concerts.filter(c => c.date && c.date >= GKY.ymd()).length;
@@ -2108,7 +2161,7 @@ function renderAll() {
   $('#viewerNote').innerHTML = GKY.IN_VIEWER ? '<div class="intro"><p>Claudeの画面の中では、ツールどうしがデータを共有できません（それぞれ別の場所として開くため）。部員・曲・楽器を全部のツールで使うには、公開ページ（bamiriunei-arch.github.io）に置いて開いてください。ここでは、各ツールをためしに開いたり、楽屋のデータをファイルに保存したりできます。</p></div>' : '';
   renderTab();
 }
-function renderTab() { ({ tools: renderTools, concerts: renderConcerts, members: renderMembers, org: renderOrg, notice: renderNotices, links: renderLinks, backup: renderBackup })[tab](); }
+function renderTab() { ({ tools: renderTools, concerts: renderConcerts, cal: renderCalTab, members: renderMembers, org: renderOrg, notice: renderNotices, links: renderLinks, backup: renderBackup })[tab](); }
 
 /* --- バックアップのお知らせ --- */
 const bkDays = () => { const t = +GKY.pref('lastBackup', 0); return t ? Math.floor((Date.now() - t) / 86400000) : null; };
@@ -2181,7 +2234,7 @@ function wireTypes(root) {
 
 /* --- 本番 --- */
 let cy = null;   // 月ごと・カレンダーで出す年度
-const cViewOf = () => { const v = GKY.pref('cView', 'month'); return v === 'year' || v === 'cal' ? v : 'month'; };
+const cViewOf = () => GKY.pref('cView', 'month') === 'year' ? 'year' : 'month';   // 前の「カレンダー」の見かたは、カレンダーのタブに移した
 const cStart = () => +GKY.pref('cStart', 4) === 1 ? 1 : 4;
 const fyOf = (d, st = cStart()) => { const x = GKY.parseYmd(d); return !x ? null : x.getMonth() + 1 >= st ? x.getFullYear() : x.getFullYear() - 1; };
 const yLabel = (y, st = cStart()) => st === 1 ? `${y}年` : `${y}年度`;
@@ -2235,7 +2288,6 @@ function renderConcerts() {
   $('#cSum').textContent = cs.length ? `全部で${cs.length}・これから${up}` : '';
   let html = '';
   if (!cs.length) html = `<div class="empty"><b>まだ本番がありません</b>${mem ? '' : '「＋ 本番を足す」から、演奏会・コンクール・行事を入れてください。'}</div>`;
-  else if (view === 'cal') html = renderCal(cy);
   else if (view === 'month') {
     const und = cs.filter(c => !c.date);
     if (und.length && cy === cur) html += `<div class="cmonth"><h3><span class="tape">日付はまだ</span></h3>${und.map(c => concertRow(c, states)).join('')}</div>`;
@@ -2252,10 +2304,7 @@ function renderConcerts() {
     }).join('') + (cs.some(c => !c.date) ? `<details class="cyear" open><summary>日付がまだの本番</summary><div class="crows">${cs.filter(c => !c.date).map(c => concertRow(c, states)).join('')}</div></details>` : '');
   }
   $('#cList').innerHTML = html;
-  $('#cList').classList.toggle('calview', view === 'cal');
-  if (view === 'cal') wireCal($('#cList'), cy);
   wireRows($('#cList'));
-  $('#cPrint').textContent = view === 'cal' ? 'カレンダーを印刷・PDF' : '一覧を印刷・PDF';
   // ほかのツールで見つけた本番
   const fs = mem ? [] : foundConcerts(states);
   $('#cFound').innerHTML = fs.length ? `<details class="found"${o.concerts.length ? '' : ' open'}><summary>ほかのツールで見つけた本番（${fs.length}）</summary><p class="note" style="margin:6px 0">ほかのツールにある本番のうち、楽屋の本番の一覧にまだないものです。入れると、楽屋からそのツールの記録を開けるようになります（同じ日付の記録が、その本番のものになります）。</p>${fs.map((f, i) => `<div class="frow"><div><b>${esc(GKY.jpDate(f.date))}</b>　${esc(f.title)}<div style="margin-top:2px">${f.tools.map(tn).join('')}</div></div><button class="btn sm" data-found="${i}">入れる</button></div>`).join('')}${fs.length > 1 ? '<div class="btnrow" style="margin-top:8px"><button class="btn sm primary" id="foundAll">全部入れる</button></div>' : ''}</details>` : '';
@@ -2312,7 +2361,6 @@ function concertsForOut() {
   return { year, xs: year == null ? cs : cs.filter(c => c.date && fyOf(c.date) === year) };
 }
 $('#cPrint').onclick = () => {
-  if (cViewOf() === 'cal') { calPrint(cy == null ? fyOf(GKY.ymd()) : cy); return; }
   const { year, xs } = concertsForOut(), o = GKY.org();
   if (!xs.length) { toast('印刷する本番がありません'); return; }
   const title = year == null ? '本番の一覧' : `${yLabel(year)}の本番`;
@@ -2336,7 +2384,7 @@ function icsOf(xs, name) {
   xs.filter(c => c.date).forEach(c => {
     L.push('BEGIN:VEVENT', 'UID:' + c.id + '@gakuya.bamiriunei-arch.github.io', 'DTSTAMP:' + stamp);
     if (c.start) { const [h, m] = c.start.split(':').map(Number), d0 = GKY.parseYmd(c.date); const s0 = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), h, m), en = hmMin(c.end), e0 = en != null && en > h * 60 + m ? new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), Math.floor(en / 60), en % 60) : new Date(s0.getTime() + 3 * 3600000); L.push('DTSTART:' + lt(s0), 'DTEND:' + lt(e0)); }
-    else L.push('DTSTART;VALUE=DATE:' + c.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + GKY.addDays(c.date, 1).replace(/-/g, ''));
+    else L.push('DTSTART;VALUE=DATE:' + c.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + GKY.addDays(c.lastDay && c.lastDay > c.date ? c.lastDay : c.date, 1).replace(/-/g, ''));
     L.push('SUMMARY:' + e2(c.title));
     if (c.venue) L.push('LOCATION:' + e2(c.venue));
     if (c.note) L.push('DESCRIPTION:' + e2(c.note));
@@ -2345,7 +2393,7 @@ function icsOf(xs, name) {
   L.push('END:VCALENDAR');
   return L.map(fold).join('\r\n') + '\r\n';
 }
-$('#cIcs').onclick = () => { if (cViewOf() === 'cal') { calIcs(cy == null ? fyOf(GKY.ymd()) : cy); return; } const { year, xs } = concertsForOut(), o = GKY.org(); if (!xs.some(c => c.date)) { toast('日付の入った本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'の本番'), 'text/calendar'); };
+$('#cIcs').onclick = () => { const { year, xs } = concertsForOut(), o = GKY.org(); if (!xs.some(c => c.date)) { toast('日付の入った本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'の本番'), 'text/calendar'); };
 $('#cCsv').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.saveFile(`本番_${year == null ? '全部' : yLabel(year)}_${GKY.stamp()}.csv`, GKY.csv([['日付', '曜日', '開演', '本番', '種類', '会場', 'メモ', '部員に見せない'], ...xs.map(c => [c.date, c.date ? GKY.WD[GKY.parseYmd(c.date).getDay()] : '', c.start, c.title, GKY.CONCERT_KINDS[c.kind], c.venue, c.note, c.hide ? '○' : ''])]), 'text/csv'); };
 const concertText = (xs, head) => [head, ...xs.map(c => `${c.date ? GKY.mdDate(c.date) : '日付まだ'}${c.start ? ' ' + c.start + '〜' : ''}　${c.title}${c.venue ? '（' + c.venue + '）' : ''}`)].join('\n');
 $('#cCopy').onclick = () => { const { year, xs } = concertsForOut(); if (!xs.length) { toast('本番がありません'); return; } GKY.copyText(concertText(xs, `【${year == null ? '本番の一覧' : yLabel(year) + 'の本番'}】${GKY.org().org.name ? '　' + GKY.org().org.name : ''}`), '本番の一覧をコピーしました'); };
@@ -2397,6 +2445,7 @@ $('#joinLink').onclick = async () => {
   if (!cfg.tools.length) { toast(`${w.member}の端末に出すツールを、1つ以上えらんでください`); return; }
   const p = { k: 'join', v: 1, o: { name: o.org.name, type: o.org.type, year: o.org.year }, cfg: Object.assign({}, cfg, { at: GKY.ymd() }), at: GKY.ymd() };
   if (cfg.concerts) p.c = o.concerts.filter(c => !c.hide).map(c => c.day ? [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note, c.day] : [c.id, c.date, c.start, c.title, c.kind, c.venue, c.note]);
+  if (cfg.concerts) { const ys = calEvents().map(x => [x.id, x.date, x.end, x.title, x.kind]); if (ys.length) p.y = ys; }
   if (cfg.roster) p.m = o.members.filter(m => ['active', 'semi', 'extra'].includes(m.status)).map(m => [m.name, m.part, m.grade]);
   if (cfg.songs) p.s = o.songs.map(x => [x.title, x.composer, x.arranger, x.dur, x.parts]);
   try {
@@ -2436,6 +2485,7 @@ function applyJoin(p, mode) {
   GKY.saveOrg('org', { name: p.o.name, type: p.o.type || '', year: p.o.year || null, role: 'member', member: Object.assign({}, p.cfg || {}, { at: p.at || GKY.ymd() }) });
   if (p.c) GKY.saveOrg('concerts', cs); else if (wasMember) GKY.saveOrg('concerts', []);
   if (p.m) GKY.saveOrg('members', p.m.map(a => ({ name: a[0], part: a[1], grade: a[2], status: 'active' }))); else if (wasMember) GKY.saveOrg('members', []);
+  if (p.y || wasMember) saveCalEvents((p.y || []).map(a => ({ id: a[0], date: a[1], end: a[2], title: a[3], kind: a[4] })));
   if (p.s) GKY.saveOrg('songs', p.s.map(a => ({ title: a[0], composer: a[1], arranger: a[2], dur: a[3], parts: a[4] || [] })));
   renderAll(); showTab('tools');
   toast(`この端末を「${p.o.name}」の${GKY.words(p.o.type || '').member}用にしました`, null, null, 5000);
@@ -3144,66 +3194,148 @@ function daySheet(id) {
   wireDay(sh.body, c.id);
 }
 
-/* ---------- 年間カレンダー（本番に、出欠の予定と準備の締め切りも重ねる） ---------- */
-const CAL_KIND = { concert: '本番', att: '予定', due: '締め切り' };
+/* ---------- 年間カレンダー（本番に、練習・練習計画・準備の締め切り・行事と休みも重ねる） ---------- */
+const CAL_KIND = { concert: '本番', att: '練習・予定', plan: '練習計画', due: '締め切り', ev: '行事・休み' };
+const CAL_ORDER = ['ev', 'concert', 'plan', 'att', 'due'];
+/* 行事・休み（定期テスト・長期休み・学校行事・部活動停止など）。期間があるものは end まで */
+const CEV_KEY = 'gakuya.calendar';
+const EV_KINDS = { test: '定期テスト', holiday: '休み', school: '学校行事', stop: '部活動停止', other: 'その他' };
+const normCalEv = x => { x = x && typeof x === 'object' ? x : {}; const d = /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : ''; const e = /^\d{4}-\d{2}-\d{2}$/.test(x.end) && x.end > d ? x.end : ''; return { id: typeof x.id === 'string' && x.id ? x.id : uid('y'), date: d, end: e, title: norm(x.title) || EV_KINDS[x.kind] || '行事', kind: EV_KINDS[x.kind] ? x.kind : 'other', note: String(x.note ?? '') }; };
+const calEvents = () => { const s = GKY.store.get(CEV_KEY); return (s && Array.isArray(s.list) ? s.list : []).map(normCalEv).filter(x => x.date).sort((a, b) => a.date.localeCompare(b.date)); };
+const saveCalEvents = list => GKY.store.set(CEV_KEY, { v: 1, list: list.map(normCalEv).filter(x => x.date) });
+const calLayer = (k, def) => !!GKY.pref(k, def);
+/* 練習計画のその日のまとめ（段階と曲） */
+const PLAN_PH = { read: '譜読み', sec: '区間', run: '通し', gp: 'ゲネプロ' };
+const planSum = d => { const ts = [...new Set((d.items || []).filter(x => x && x.fmt !== 'rest' && x.fmt !== 'kiso' && x.title).map(x => x.title))]; return [d.phase && PLAN_PH[d.phase], ts.slice(0, 2).join('・') + (ts.length > 2 ? ' ほか' : '')].filter(Boolean).join('　'); };
 function calItems(y) {
   const o = GKY.org(), mem = GKY.isMember(), st = cStart(), inY = d => d && fyOf(d, st) === y;
   const cs = (mem ? o.concerts.filter(c => !c.hide) : o.concerts).filter(c => inY(c.date));
   const out = cs.map(c => ({ date: c.date, k: 'concert', t: c.title, s: c.start, v: c.venue, ck: c.kind, id: c.id }));
-  if (!mem && !GKY.IN_VIEWER && GKY.pref('calAtt', true)) {
-    const s = GKY.store.get('shukketsu.v1');
-    if (s && !s.sample && Array.isArray(s.events)) s.events.filter(e => e && inY(e.date) && !(e.concert && cs.some(c => c.id === e.concert)) && !(e.kind === 'show' && cs.some(c => c.date === e.date))).forEach(e => out.push({ date: e.date, k: 'att', t: e.title || '予定', s: e.start || '', e: e.end || '', v: e.place || '' }));
+  const att = calLayer('calAtt', true), plan = calLayer('calPlan', true);
+  if (!mem && !GKY.IN_VIEWER && (att || plan)) {
+    const s = GKY.store.get('shukketsu.v1'), r = GKY.store.get('renshu.v1'), days = r && !r.sample && r.days ? r.days : {};
+    if (s && !s.sample && Array.isArray(s.events)) s.events.filter(e => e && inY(e.date) && !(e.concert && cs.some(c => c.id === e.concert)) && !(e.kind === 'show' && cs.some(c => c.date === e.date))).forEach(e => {
+      const d = days[e.id], has = d && Array.isArray(d.items) && d.items.length && e.kind !== 'show';
+      if (has && plan) out.push({ date: e.date, k: 'plan', t: e.title || '練習', p: planSum(d), s: e.start || '', e: e.end || '', v: e.place || '', id: e.id });
+      else if (att) out.push({ date: e.date, k: 'att', t: e.title || '予定', s: e.start || '', e: e.end || '', v: e.place || '' });
+    });
   }
-  if (!mem && !GKY.IN_VIEWER && GKY.pref('calDue', false)) {
+  if (!mem && !GKY.IN_VIEWER && calLayer('calDue', false)) {
     const g = GKY.store.get('gyakusan.v1');
     if (g && g.plans) Object.values(g.plans).filter(p => p && !p.sample && p.date).forEach(p => (p.tasks || []).filter(t => t && !t.done).forEach(t => { const d = t.due || GKY.addDays(p.date, +t.off || 0); if (inY(d)) out.push({ date: d, k: 'due', t: t.name, v: p.title }); }));
   }
-  return out.sort((a, b) => a.date.localeCompare(b.date) || ['concert', 'att', 'due'].indexOf(a.k) - ['concert', 'att', 'due'].indexOf(b.k) || String(a.s || '').localeCompare(String(b.s || '')));
+  // 行事・休み：期間の日ごとに入れる（名前は、はじまりの日・日曜・1日だけに出す）
+  if (calLayer('calEv', true)) calEvents().forEach(x => { const last = x.end || x.date; for (let d = x.date, n = 0; d <= last && n < 370; d = GKY.addDays(d, 1), n++) { if (!inY(d)) continue; const dt = GKY.parseYmd(d); out.push({ date: d, k: 'ev', t: x.title, ek: x.kind, id: x.id, first: d === x.date || dt.getDay() === 0 || dt.getDate() === 1, from: x.date, to: x.end, note: x.note }); } });
+  return out.sort((a, b) => a.date.localeCompare(b.date) || CAL_ORDER.indexOf(a.k) - CAL_ORDER.indexOf(b.k) || String(a.s || '').localeCompare(String(b.s || '')));
 }
-/* 1か月の表（楽屋の画面と印刷で同じ形。big は印刷の月ごと） */
+/* 1か月の表（楽屋の画面と印刷で同じ形。big は印刷の月ごと、mini は1年を見渡す小さな表） */
 function monthGrid(y, m, items, { big = false, mini = false } = {}) {
   const first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay(), today = GKY.ymd();
   const cells = []; for (let i = 0; i < lead; i++) cells.push('<td class="o"></td>');
   for (let dd = 1; dd <= days; dd++) {
     const ds = `${y}-${GKY.pad(m)}-${GKY.pad(dd)}`, xs = items.filter(x => x.date === ds), wd = (lead + dd - 1) % 7;
-    const lim = big ? 6 : mini ? 0 : 3;
-    cells.push(`<td class="${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''}${ds === today ? ' today' : ''}${xs.length ? ' has' : ''}" data-day="${ds}"><span class="n">${dd}</span>${mini ? (xs.length ? `<span class="dots">${xs.slice(0, 3).map(x => `<i class="k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}"></i>`).join('')}</span>` : '') : xs.slice(0, lim).map(x => `<span class="ev k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}" title="${esc((x.s ? x.s + ' ' : '') + x.t)}">${x.k === 'due' ? '〆' : ''}${esc(x.t)}</span>`).join('') + (xs.length > lim ? `<span class="more">ほか${xs.length - lim}</span>` : '')}</td>`);
+    const band = xs.find(x => x.k === 'ev'), main = xs.filter(x => x.k !== 'ev' || x.first);
+    const lim = big ? 6 : mini ? 0 : 3, dots = xs.filter(x => x.k !== 'ev');
+    cells.push(`<td class="${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''}${ds === today ? ' today' : ''}${xs.length ? ' has' : ''}${band ? ' b-' + band.ek : ''}${mini && xs.some(x => x.k === 'concert') ? ' hc' : ''}" data-day="${ds}"${mini && xs.length ? ` title="${esc(xs.filter(x => x.k !== 'ev' || x.first).map(x => x.t).join('・'))}"` : ''}><span class="n">${dd}</span>${mini ? (dots.length ? `<span class="dots">${dots.slice(0, 3).map(x => `<i class="k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}"></i>`).join('')}</span>` : '') : main.slice(0, lim).map(x => `<span class="ev k-${x.k}${x.k === 'concert' ? ' ck-' + x.ck : ''}" title="${esc((x.s ? x.s + ' ' : '') + x.t + (x.p ? '　' + x.p : ''))}">${x.k === 'due' ? '〆' : ''}${esc(x.t)}</span>`).join('') + (main.length > lim ? `<span class="more">ほか${main.length - lim}</span>` : '')}</td>`);
   }
   while (cells.length % 7) cells.push('<td class="o"></td>');
   const rows = []; for (let i = 0; i < cells.length; i += 7) rows.push('<tr>' + cells.slice(i, i + 7).join('') + '</tr>');
   return `<table class="calg${big ? ' big' : ''}${mini ? ' mini' : ''}"><thead><tr>${GKY.WD.map((w, i) => `<th class="${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 const calMonths = y => { const st = cStart(); return Array.from({ length: 12 }, (_, i) => { const m = (st - 1 + i) % 12 + 1; return [st === 1 || m >= st ? y : y + 1, m]; }); };
-function renderCal(y) {
-  const items = calItems(y), mem = GKY.isMember();
-  const leg = `<div class="callegend"><span><i class="k-concert"></i>本番</span>${mem ? '' : `<label class="chk"><input type="checkbox" id="calAtt"${GKY.pref('calAtt', true) ? ' checked' : ''}> <i class="k-att"></i>練習・予定（出欠）</label><label class="chk"><input type="checkbox" id="calDue"${GKY.pref('calDue', false) ? ' checked' : ''}> <i class="k-due"></i>準備の締め切り（本番逆算）</label>`}</div>`;
-  return leg + `<div class="calwrap">${calMonths(y).map(([yy, m]) => { const n = items.filter(x => x.k === 'concert' && x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`).length; return `<div class="calm"><h3><span class="tape">${m}月</span>${yy}年${n ? `<small>本番 ${n}</small>` : ''}</h3>${monthGrid(yy, m, items)}</div>`; }).join('')}</div>`;
+/* カレンダーのタブ：上に1年を見渡す12か月、下に選んだ月の大きな表と予定の一覧、行事・休みの一覧 */
+let calY = null, calMon = '';
+function renderCalTab() {
+  const o = GKY.org(), mem = GKY.isMember(), st = cStart(), today = GKY.ymd(), cur = fyOf(today);
+  const evs = calEvents(), cs = mem ? o.concerts.filter(c => !c.hide) : o.concerts;
+  const years = [...new Set(cs.map(c => fyOf(c.date)).concat(evs.map(x => fyOf(x.date))).filter(y => y != null).concat([cur, cur + 1]))].sort((a, b) => a - b);
+  if (calY == null) calY = cur;
+  if (!years.includes(calY)) years.push(calY), years.sort((a, b) => a - b);
+  $('#calYear').innerHTML = years.map(y => `<option value="${y}"${y === calY ? ' selected' : ''}>${esc(yLabel(y))}${y === cur ? '（いま）' : ''}</option>`).join('');
+  $('#calStart').value = String(st);
+  const ms = calMonths(calY), keys = ms.map(([yy, m]) => `${yy}-${GKY.pad(m)}`);
+  if (!keys.includes(calMon)) calMon = keys.includes(today.slice(0, 7)) ? today.slice(0, 7) : keys[0];
+  const items = calItems(calY), nC = items.filter(x => x.k === 'concert').length, nP = items.filter(x => x.k === 'plan' || x.k === 'att').length;
+  $('#calSum').textContent = `${ySpan(calY)}　本番 ${nC}${mem ? '' : '・練習と予定 ' + nP}`;
+  $('#calLead').textContent = mem ? '本番と、学校や団体の行事・休みの予定です。日を押すと、くわしく見られます。'
+    : '1年の本番・練習・練習計画・行事と休みを、まとめて見られます。下の月の表で日を押すと、その日の予定を見られます。定期テストや長期休みなどは「＋ 行事・休みを足す」で入れます（期間も入れられます）。';
+  const box = (k, lab, def, sw) => `<label class="chk"><input type="checkbox" data-layer="${k}"${calLayer(k, def) ? ' checked' : ''}> ${sw}${lab}</label>`;
+  $('#calLegend').innerHTML = `<div class="callegend"><span><i class="k-concert"></i>本番</span>${mem ? '' : box('calAtt', '練習・予定（出欠）', true, '<i class="k-att"></i>') + box('calPlan', '練習計画', true, '<i class="k-plan"></i>') + box('calDue', '準備の締め切り（本番逆算）', false, '<i class="k-due"></i>')}${box('calEv', '行事・休み', true, '<span class="band b-test"></span>')}</div>`;
+  $$('#calLegend [data-layer]').forEach(x => x.onchange = () => { GKY.setPref(x.dataset.layer, x.checked); renderCalTab(); });
+  $('#calYearG').innerHTML = ms.map(([yy, m]) => { const k = `${yy}-${GKY.pad(m)}`, xs = items.filter(x => x.date.slice(0, 7) === k), n = xs.filter(x => x.k === 'concert').length; return `<div class="ym${k === calMon ? ' on' : ''}" data-ym="${k}"><button type="button"><b>${m}月</b><small>${m === 1 || k === keys[0] ? yy + '年　' : ''}${n ? '本番 ' + n : ''}</small></button>${monthGrid(yy, m, xs, { mini: true })}</div>`; }).join('');
+  $$('#calYearG .ym>button').forEach(b => b.onclick = () => { calMon = b.parentElement.dataset.ym; renderCalTab(); const sec = $('#calMonthSec'); if (sec && window.matchMedia('(max-width:900px)').matches) sec.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+  $$('#calYearG td.has').forEach(td => td.onclick = () => calDay(td.dataset.day, calY));
+  // 選んだ月
+  const [cyy, cmm] = calMon.split('-').map(Number), mx = items.filter(x => x.date.slice(0, 7) === calMon), ki = keys.indexOf(calMon);
+  const ag = mx.filter(x => x.k !== 'ev' || x.date === x.from || x.date.slice(8) === '01');
+  $('#calMonthSec').innerHTML = `<h2><span class="calnav"><button class="ibtn" id="calMP" aria-label="前の月"${ki > 0 ? '' : ' disabled'}>‹</button><span class="tape">${cmm}月</span><button class="ibtn" id="calMN" aria-label="次の月"${ki < 11 ? '' : ' disabled'}>›</button></span><small>${cyy}年</small></h2>${monthGrid(cyy, cmm, mx)}
+    <div class="agenda">${ag.map(x => `<div class="ar" data-day="${x.date}"><span class="d">${esc(GKY.mdDate(x.date))}${x.s ? ' ' + esc(x.s) : ''}</span><span class="k">${esc(x.k === 'ev' ? EV_KINDS[x.ek] : CAL_KIND[x.k])}</span><span>${x.k === 'concert' ? '<b>' + esc(x.t) + '</b>' : esc(x.t)}${x.k === 'ev' && x.to ? `<span class="muted">（〜${esc(GKY.mdDate(x.to))}）</span>` : ''}${x.p ? `<span class="muted">　${esc(x.p)}</span>` : ''}${x.k === 'due' ? `<span class="muted">（${esc(x.v)}）</span>` : ''}</span></div>`).join('') || '<p class="muted" style="font-size:13px;margin:0">この月の予定はありません。</p>'}</div>`;
+  $('#calMP').onclick = () => { calMon = keys[ki - 1]; renderCalTab(); };
+  $('#calMN').onclick = () => { calMon = keys[ki + 1]; renderCalTab(); };
+  $$('#calMonthSec td.has, #calMonthSec .ar').forEach(el => el.onclick = () => calDay(el.dataset.day, calY));
+  // 行事・休みの一覧（この年度）
+  const ye = evs.filter(x => fyOf(x.date) === calY || (x.end && fyOf(x.end) === calY));
+  $('#calEvSec').innerHTML = `<h2>行事・休み<small>${esc(yLabel(calY))}　${ye.length}</small></h2>
+    ${ye.length ? `<div class="evl">${ye.map(x => `<div class="er" data-ev="${esc(x.id)}"><span class="sw b-${x.kind}"></span><span class="d">${esc(GKY.mdDate(x.date))}${x.end ? '〜' + esc(GKY.mdDate(x.end)) : ''}</span><b style="flex:1;min-width:0">${esc(x.title)}</b><span class="chip">${esc(EV_KINDS[x.kind])}</span></div>`).join('')}</div>` : '<p class="muted" style="font-size:13px;margin:0">まだありません。定期テスト・夏休み・文化祭・部活動停止の期間などを入れると、1年のカレンダーに色で出ます。</p>'}
+    <p class="note">行事・休みは、${esc(GKY.words().member)}用の設定リンク（本番の予定を見る）にも入ります。</p>`;
+  $$('#calEvSec .er').forEach(r => r.onclick = () => calEvSheet(r.dataset.ev));
 }
-function wireCal(root, y) {
-  const a = $('#calAtt', root), d = $('#calDue', root);
-  if (a) a.onchange = () => { GKY.setPref('calAtt', a.checked); renderConcerts(); };
-  if (d) d.onchange = () => { GKY.setPref('calDue', d.checked); renderConcerts(); };
-  $$('td.has', root).forEach(td => td.onclick = () => calDay(td.dataset.day, y));
+$('#calYear').onchange = e => { calY = +e.target.value; calMon = ''; renderCalTab(); };
+$('#calPrev').onclick = () => { calY = (calY ?? fyOf(GKY.ymd())) - 1; calMon = ''; renderCalTab(); };
+$('#calNext').onclick = () => { calY = (calY ?? fyOf(GKY.ymd())) + 1; calMon = ''; renderCalTab(); };
+$('#calStart').onchange = e => { GKY.setPref('cStart', +e.target.value); calY = null; calMon = ''; cy = null; renderCalTab(); };
+$('#calAdd').onclick = () => calEvSheet(null);
+$('#calPrint').onclick = () => calPrint(calY ?? fyOf(GKY.ymd()));
+$('#calIcs').onclick = () => calIcs(calY ?? fyOf(GKY.ymd()));
+/* 行事・休みを足す・直す */
+function calEvSheet(id, date = '') {
+  if (GKY.isMember()) return;
+  const all = calEvents(), x = id ? all.find(e => e.id === id) : normCalEv({ date: date || GKY.ymd(), kind: 'test' });
+  if (!x) return;
+  const sh = sheet({ title: id ? '行事・休みを直す' : '行事・休みを足す', content: `<div class="grid">
+      <label class="fld wide"><span>名前</span><input type="text" id="yT" value="${esc(id ? x.title : '')}" placeholder="例：1学期 期末テスト・夏休み・文化祭" list="yTs"></label>
+      <label class="fld"><span>種類</span><select id="yK">${Object.entries(EV_KINDS).map(([k, v]) => `<option value="${k}"${x.kind === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+      <label class="fld"><span>はじまりの日</span><input type="date" id="yD" value="${esc(x.date)}"></label>
+      <label class="fld"><span>おわりの日（1日だけなら空）</span><input type="date" id="yE" value="${esc(x.end)}"></label>
+      <label class="fld wide"><span>メモ</span><input type="text" id="yN" value="${esc(x.note)}" placeholder="例：テスト1週間前から部活動停止"></label>
+    </div><datalist id="yTs">${['中間テスト', '期末テスト', '学年末テスト', '夏休み', '冬休み', '春休み', '文化祭', '体育祭', '修学旅行', '入学式', '卒業式', '部活動停止'].map(v => `<option value="${v}">`).join('')}</datalist>`,
+    actions: [...(id ? [{ label: '消す', danger: true, left: true, onClick: () => { const before = calEvents(); saveCalEvents(before.filter(e => e.id !== id)); renderAll(); toast(`「${x.title}」を消しました`, '元に戻す', () => { saveCalEvents(before); renderAll(); }); } }] : []), { label: 'やめる' },
+      { label: id ? '直す' : '足す', primary: true, onClick: body => {
+        const d = $('#yD', body).value, e = $('#yE', body).value;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { $('#yD', body).classList.add('bad'); return false; }
+        if (e && e < d) { $('#yE', body).classList.add('bad'); toast('おわりの日は、はじまりの日より後にしてください'); return false; }
+        const n = normCalEv({ id: x.id, date: d, end: e, title: $('#yT', body).value, kind: $('#yK', body).value, note: $('#yN', body).value });
+        const list = calEvents().filter(v => v.id !== n.id).concat([n]);
+        if (!saveCalEvents(list)) { toast('保存できませんでした'); return false; }
+        calY = fyOf(n.date); calMon = n.date.slice(0, 7); renderAll(); toast(id ? '直しました' : `「${n.title}」を入れました`);
+      } }] });
+  // 種類を選んで名前が空なら、種類の名前を入れておく
+  $('#yK', sh.body).addEventListener('change', () => { const t = $('#yT', sh.body); if (!t.value) t.placeholder = EV_KINDS[$('#yK', sh.body).value]; });
 }
 function calDay(ds, y) {
-  const xs = calItems(y).filter(x => x.date === ds);
-  const sh = sheet({ title: GKY.jpDate(ds), content: xs.map(x => x.k === 'concert' ? concertRow(GKY.concertOf(x.id), null) : `<div class="crow cal-${x.k}" style="cursor:default"><div class="d">${esc(x.s || '')}<small>${esc(CAL_KIND[x.k])}</small></div><div><div class="t1">${esc(x.t)}</div>${x.v || x.e ? `<div class="t2">${esc([x.e ? '〜' + x.e : '', x.v].filter(Boolean).join('　'))}</div>` : ''}</div></div>`).join('') || '<p class="muted">予定はありません。</p>', actions: [{ label: '閉じる', primary: true }] });
+  const xs = calItems(y).filter(x => x.date === ds), mem = GKY.isMember();
+  const row = x => x.k === 'concert' ? concertRow(GKY.concertOf(x.id), null)
+    : x.k === 'ev' ? `<div class="crow cal-ev" data-ev="${esc(x.id)}" style="cursor:${mem ? 'default' : 'pointer'}"><div class="d"><span class="sw b-${x.ek}" style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--band)"></span><small>${esc(EV_KINDS[x.ek])}</small></div><div><div class="t1">${esc(x.t)}</div><div class="t2">${esc([x.to ? GKY.mdDate(x.from) + '〜' + GKY.mdDate(x.to) : '', x.note].filter(Boolean).join('　'))}</div></div></div>`
+    : `<div class="crow cal-${x.k}" style="cursor:default"><div class="d">${esc(x.s || '')}<small>${esc(CAL_KIND[x.k])}</small></div><div><div class="t1">${esc(x.t)}</div>${x.v || x.e || x.p ? `<div class="t2">${esc([x.e ? '〜' + x.e : '', x.v, x.p].filter(Boolean).join('　'))}</div>` : ''}${x.k === 'plan' ? `<div style="margin-top:4px"><a class="btn sm" href="${esc(GKY.linkTo('renshu'))}#day=${esc(encodeURIComponent(x.id))}" target="${GKY.targetOf('renshu')}">練習計画で開く</a></div>` : ''}</div></div>`;
+  const sh = sheet({ title: GKY.jpDate(ds), content: (xs.map(row).join('') || '<p class="muted">予定はありません。</p>') + (mem ? '' : `<div class="btnrow" style="margin-top:10px"><button class="btn sm" id="cdEv">＋ この日に行事・休みを足す</button></div>`), actions: [{ label: '閉じる', primary: true }] });
   $$('.crow[data-c]', sh.body).forEach(r => r.onclick = () => { sh.close(); concertSheet(r.dataset.c); });
+  if (!mem) $$('.crow[data-ev]', sh.body).forEach(r => r.onclick = () => { sh.close(); calEvSheet(r.dataset.ev); });
+  const ce = $('#cdEv', sh.body); if (ce) ce.onclick = () => { sh.close(); calEvSheet(null, ds); };
 }
 function calPrint(y) {
   const o = GKY.org(), items = calItems(y), ms = calMonths(y), name = o.org.name;
   const sh = sheet({ title: `${yLabel(y)}のカレンダーを印刷`, content: `<div class="list">
       <button class="item" data-cp="year"><div class="main"><div class="t1">1年を1枚に（A4 横）</div><div class="t2">12か月の小さなカレンダーと、月ごとの本番の一覧</div></div></button>
-      <button class="item" data-cp="month"><div class="main"><div class="t1">1か月を1ページに（A4 横・12ページ）</div><div class="t2">日ごとのマスに、本番${GKY.pref('calAtt', true) && !GKY.isMember() ? '・練習や予定' : ''}${GKY.pref('calDue', false) && !GKY.isMember() ? '・締め切り' : ''}の名前</div></div></button>
+      <button class="item" data-cp="month"><div class="main"><div class="t1">1か月を1ページに（A4 横・12ページ）</div><div class="t2">日ごとのマスに、いまカレンダーに出している本番・練習・練習計画・締め切り・行事の名前</div></div></button>
     </div>`, actions: [{ label: 'やめる' }] });
   $$('[data-cp]', sh.body).forEach(b => b.onclick = () => {
     sh.close();
     const yearOne = b.dataset.cp === 'year';
     const d = GKY.doc({ title: `${yLabel(y)}のカレンダー`, sub: [name, ySpan(y)].filter(Boolean).join('　'), orient: 'landscape', foot: name, file: `カレンダー_${yLabel(y)}` });
-    const css = '<style>.calp{width:100%;border-collapse:collapse;table-layout:fixed}.calp th{font-size:9px;padding:1px;border:1px solid #999;background:#eee}.calp td{border:1px solid #999;vertical-align:top;padding:1px 2px;font-size:8px;overflow:hidden}.calp .sun{color:#B3261E}.calp .sat{color:#1F5FBF}.calp td.o{background:#f3f3f3}.calp .n{font-weight:700}.calp .ev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#000}.calp .k-concert{font-weight:700}.calp .k-due{color:#7A4A00}.calp .k-att{color:#333}.calp .more{display:block;color:#666}.calp.mini td{height:13px;font-size:8px;text-align:center;padding:0}.calp.mini td.has{background:#ddd}.calp.mini td.hc{background:#222;color:#fff}.calp.big td{height:84px;font-size:10px}.calp.big th{font-size:11px}.calp.big .n{font-size:12px}.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 10px}.mgrid h4{margin:0 0 2px;font-size:11px}.mgrid ul{margin:2px 0 0;padding:0;list-style:none;font-size:8.5px;line-height:1.35}</style>';
+    const css = '<style>.calp{width:100%;border-collapse:collapse;table-layout:fixed}.calp th{font-size:9px;padding:1px;border:1px solid #999;background:#eee}.calp td{border:1px solid #999;vertical-align:top;padding:1px 2px;font-size:8px;overflow:hidden}.calp .sun{color:#B3261E}.calp .sat{color:#1F5FBF}.calp td.o{background:#f3f3f3}.calp .n{font-weight:700}.calp .ev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#000}.calp .k-concert{font-weight:700}.calp .k-due{color:#7A4A00}.calp .k-att{color:#333}.calp .k-plan{color:#0F4F66}.calp .k-ev{font-style:italic}.calp td.b-test{background:#FBE3E0}.calp td.b-holiday{background:#ECECEC}.calp td.b-school{background:#E2F3E8}.calp td.b-stop{background:#FFF1D0}.calp td.b-other{background:#E3F0F5}.calp .more{display:block;color:#666}.calp.mini td{height:13px;font-size:8px;text-align:center;padding:0}.calp.mini td.has{background:#ddd}.calp.mini td.hc{background:#222;color:#fff}.calp.big td{height:84px;font-size:10px}.calp.big th{font-size:11px}.calp.big .n{font-size:12px}.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 10px}.mgrid h4{margin:0 0 2px;font-size:11px}.mgrid ul{margin:2px 0 0;padding:0;list-style:none;font-size:8.5px;line-height:1.35}</style>';
     if (yearOne) {
-      const mm = ms.map(([yy, m]) => { const xs = items.filter(x => x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`); const g = monthGrid(yy, m, xs, { mini: true }).replace('class="calg mini"', 'class="calp mini"').replace(/<td class="([^"]*)has([^"]*)" data-day="([^"]+)">/g, (all, a, b, ds) => `<td class="${a}has${b}${xs.some(x => x.date === ds && x.k === 'concert') ? ' hc' : ''}">`).replace(/<span class="dots">.*?<\/span>/g, ''); return `<div><h4>${m}月 <span style="font-weight:400;color:#555">${yy}年</span></h4>${g}<ul>${xs.filter(x => x.k === 'concert').map(x => `<li>${+x.date.slice(8)}日 <b>${esc(x.t)}</b></li>`).join('')}</ul></div>`; }).join('');
-      d.block(css + `<div class="mgrid">${mm}</div><p style="font-size:9px;margin:6px 0 0">黒いマス：本番　灰色のマス：${GKY.pref('calAtt', true) && !GKY.isMember() ? '練習・予定' : ''}${GKY.pref('calDue', false) && !GKY.isMember() ? '・締め切り' : ''}</p>`);
+      const mm = ms.map(([yy, m]) => { const xs = items.filter(x => x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`); const g = monthGrid(yy, m, xs, { mini: true }).replace('class="calg mini"', 'class="calp mini"').replace(/<td class="([^"]*)has([^"]*)" data-day="([^"]+)">/g, (all, a, b, ds) => `<td class="${a}has${b}${xs.some(x => x.date === ds && x.k === 'concert') ? ' hc' : ''}">`).replace(/<span class="dots">.*?<\/span>/g, ''); return `<div><h4>${m}月 <span style="font-weight:400;color:#555">${yy}年</span></h4>${g}<ul>${xs.filter(x => x.k === 'concert').map(x => `<li>${+x.date.slice(8)}日 <b>${esc(x.t)}</b></li>`).join('')}${xs.filter(x => x.k === 'ev' && (x.date === x.from || x.date.slice(8) === '01')).map(x => `<li>${+x.date.slice(8)}日${x.to && x.to.slice(0, 7) === x.date.slice(0, 7) ? '〜' + (+x.to.slice(8)) + '日' : x.to ? '〜' : ''} ${esc(x.t)}</li>`).join('')}</ul></div>`; }).join('');
+      d.block(css + `<div class="mgrid">${mm}</div><p style="font-size:9px;margin:6px 0 0">黒いマス：本番　灰色のマス：練習・予定などのある日　色のついたマス：行事・休み</p>`);
     } else {
       ms.forEach(([yy, m], i) => { const xs = items.filter(x => x.date.slice(0, 7) === `${yy}-${GKY.pad(m)}`); if (i) d.page(); d.block(css + `<h3 style="font-size:18px;margin:0 0 6px">${m}月 <span style="font-size:13px;font-weight:400">${yy}年</span></h3>` + monthGrid(yy, m, xs, { big: true }).replace('class="calg big"', 'class="calp big"')); });
     }
@@ -3213,7 +3345,9 @@ function calPrint(y) {
 /* カレンダーの見かたのときの .ics：出欠の予定・締め切りも入れる */
 function calIcs(y) {
   const items = calItems(y), o = GKY.org();
-  const xs = items.map((x, i) => x.k === 'concert' ? GKY.concertOf(x.id) : { id: `${x.k}-${x.date}-${i}`, date: x.date, start: x.k === 'att' ? x.s : '', title: x.k === 'due' ? `〆 ${x.t}（${x.v}）` : x.t, venue: x.k === 'att' ? x.v : '', note: x.k === 'due' ? '本番逆算の締め切り' : x.e ? `〜${x.e}` : '', end: x.e }).filter(Boolean);
+  const xs = items.filter(x => x.k !== 'ev' || x.date === x.from || !items.some(z => z.k === 'ev' && z.id === x.id && z.date < x.date)).map((x, i) => x.k === 'concert' ? GKY.concertOf(x.id)
+    : x.k === 'ev' ? { id: `ev-${x.id}`, date: x.date, title: x.t, note: [EV_KINDS[x.ek], x.note].filter(Boolean).join('　'), lastDay: x.to || '' }
+    : { id: `${x.k}-${x.date}-${i}`, date: x.date, start: x.k === 'att' || x.k === 'plan' ? x.s : '', title: x.k === 'due' ? `〆 ${x.t}（${x.v}）` : x.t, venue: x.k === 'att' || x.k === 'plan' ? x.v : '', note: x.k === 'due' ? '本番逆算の締め切り' : [x.e ? `〜${x.e}` : '', x.p ? '練習計画：' + x.p : ''].filter(Boolean).join('\n'), end: x.e }).filter(Boolean);
   GKY.saveFile(`カレンダー_${yLabel(y)}.ics`, icsOf(xs, (o.org.name || '楽屋') + 'のカレンダー'), 'text/calendar');
 }
 

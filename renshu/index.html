@@ -1730,7 +1730,7 @@ const GKY = (() => {
 const { $, $$, esc, uid, clone, norm, toast, sheet } = GKY;
 const APP_VERSION = '1', APP_DATE = '2026-10-13';
 const CHANGELOG = [
-  { v: '1', d: '2026-10-13', items: ['はじめての版：出欠の練習の日ごとに、何を練習するか（曲・練習番号と小節・パート・形）とタイムテーブル。本番から逆算した下書き（譜読み → 区間 → 通し → ゲネプロ）、見るだけのリンク、文でコピー、印刷、カレンダー（.ics）'] },
+  { v: '1', d: '2026-10-13', items: ['楽屋の「カレンダー」に、練習計画のある日（段階と曲）が出ます。カレンダーの「練習計画で開く」から、その日を開けます', 'はじめての版：出欠の練習の日ごとに、何を練習するか（曲・練習番号と小節・パート・形）とタイムテーブル。本番から逆算した下書き（譜読み → 区間 → 通し → ゲネプロ）、見るだけのリンク、文でコピー、印刷、カレンダー（.ics）'] },
 ];
 const FEEDBACK_URL = '';   // 空のときは、共通部品の「ご意見・ご要望」のフォーム（バミリと同じ）を使います
 const KEY = 'renshu.v1', ATT = 'shukketsu.v1';
@@ -2218,7 +2218,11 @@ GKY.onOrgChange(quietRender);
 window.addEventListener('storage', e => { if ([ATT, 'tempomap.v1', 'gakufu.v1', 'kouban.v1'].includes(e.key)) quietRender(); });
 window.addEventListener('focus', quietRender);
 GKY.fitTop(); GKY.offline();
+/* 楽屋のカレンダーから開いたとき（アドレスの #day=〈出欠の予定の id〉）：その日を開く */
+const dayFromUrl = () => { const m = location.hash.match(/^#day=([A-Za-z0-9_%-]+)$/); if (!m) return; const id = decodeURIComponent(m[1]); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ } if (practiceEvents(events()).some(e => e.id === id)) { sel = id; showTab('plan'); } else toast('その練習の日が見つかりませんでした（出欠で消したのかもしれません）'); };
+window.addEventListener('hashchange', dayFromUrl);
 showTab('plan');
+dayFromUrl();
 renderAll();
 startViewer().then(viewing => {
   // 楽屋の「本番」から開いたとき：その本番の下書きの画面を開く（まだ作っていなければ作るか聞く）

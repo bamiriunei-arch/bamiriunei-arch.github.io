@@ -125,3 +125,10 @@ test('部員用の端末では、出欠の予定を書きかえない', async ({
   expect((await att(page)).events).toEqual([]);
   await noErrors(errors);
 });
+
+test('楽屋のカレンダーから #day= で開くと、その練習の日が開く', async ({ page }) => {
+  const errors = await openWith(page, { 'gakuya.org': ORG, 'shukketsu.v1': { v: 1, events: [ev('a', '2027-05-11'), ev('b', '2027-05-13')], att: {}, extra: [] } });
+  await page.goto('/index.html?test=day#day=b'); await page.waitForFunction(() => window.__app && window.__app.ready);
+  await expect(page.locator('#day .day-head .when')).toContainText('2027年5月13日');
+  await noErrors(errors);
+});
